@@ -100,7 +100,10 @@ def player_season_excel(player_seasons,season_count=-1,averages=None,deviations=
         path = "ControlPlayerStats.xlsx"
         player_date_time = datetime.now().strftime("%m-%d_%H:%M")
 
-        current_seasons = pd.read_excel(path, engine='openpyxl')
+        try:
+            current_seasons = pd.read_excel(path, engine='openpyxl')
+        except FileNotFoundError:
+            return None
         for season in player_seasons:
             player_stats_df = pd.concat([player_stats_df, player_stats_as_df(season,player_date_time,season_count,averages,deviations)])
 
@@ -108,6 +111,7 @@ def player_season_excel(player_seasons,season_count=-1,averages=None,deviations=
 
         with pd.ExcelWriter(path, engine='openpyxl') as writer:
             all_seasons.to_excel(writer, index=False)
+            return None
 
 
 def weighted_averages(team, team_date_time, season_no=-1,appending=False):  # takes in a team and calculates weighted average of each stat, returns a dataframe
@@ -1987,7 +1991,7 @@ def league_season(TEAMS,use_saved=False,season_count=-1,final_reversed=True,regi
 
 
 
-    write_champ(champ, season_count, region, league=final_standings)
+    #write_champ(champ, season_count, region, league=final_standings)
 
 
     abbreviated_region = {'Darkwing' : 'DW', 'Shining-Core' : 'SC', 'Diamond-Sea' : 'DS', 'Web-of-Nations' : 'WON', 'Ice-Wall' : 'IW',
