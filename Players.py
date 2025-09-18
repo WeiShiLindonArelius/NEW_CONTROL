@@ -1,0 +1,1084 @@
+from random import uniform, seed, choice
+
+import pandas as pd
+from colorama import Fore, Style
+import math
+import numpy as np
+from collections import OrderedDict
+import sqlite3
+
+NO_SQL = True
+
+def QUERY(sql, connect=sqlite3.connect('ControlDataBase.db'), params=None, is_select=True):
+    if NO_SQL:
+        return 0
+    elif is_select:
+        if params:
+            return pd.read_sql_query(sql, connect, params=params)
+        else:
+            return pd.read_sql_query(sql, connect)
+    else:
+        cur = connect.cursor()
+        if params:
+            cur.execute(sql, params)
+        else:
+            cur.execute(sql)
+        connect.commit()
+        return cur.lastrowid
+
+def write_to_file(filename=None, words=None, mode='w', error=False):
+    if error:
+        filename = 'error_output'
+        mode = 'a'
+
+    with open(filename, mode) as f:
+        f.write(words + '\n')
+
+def ordinal_string(n: int) -> str:
+    if 10 <= n % 100 < 20:
+        suffix = "th"
+    else:
+        suffix = {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
+    if n == 0:
+        suffix = ''
+    return f"{n}{suffix}"
+
+def calculate_standard_deviation(number, sample_size, sample_average):
+    deviation = number - sample_average
+    standard_deviation = deviation / math.sqrt(sample_size)
+    return standard_deviation
+
+
+multiplier = 1
+
+def grade_seasons(seasons, print_averages=False, import_averages = None, context = None, avg_stats_df = None, region=None):
+
+    DATA_FRAME = False
+
+    #todo at the moment, this is creating a new DF for each player season and appending it to the  excel file in both
+    # best_of_stats and region_mvp, massively slowing down the code
+    # adding a check for region  == 'All' makes it so that only one player gets added to the sheet for some reason
+
+    MULT_NO_USE = True
+    full_season = False
+    avg_stats_df = None
+
+    #iterate through each object, and create lists with values corresponding to each player
+    #put each list through calculate_standard_deviations and use it to assign a coefficient variable to each player equivalent
+    #a total season's grade is determined by the sum of all coefficients
+
+    #the import_averages function is for when seasons are being graded for a team, so their season grades can be compared to those of the league they were in
+    #instead of just the team
+
+    if import_averages:
+        size = len(import_averages)
+
+        total_kills = 0
+        total_deaths = 0
+        total_crit_kills = 0
+        total_damage = 0
+        total_effect = 0
+        total_overkill = 0
+        total_mitigated = 0
+        total_d_pct_blocked = 0
+        total_d_abs_blocked = 0
+
+        kills_list = []
+        deaths_list = []
+        crit_kills_list = []
+        damage_list = []
+        effect_list = []
+        overkill_list = []
+        mitigated_list = []
+        d_pct_blocked_list = []
+        d_abs_blocked_list = []
+
+        #Remnant of a discarded function
+
+        for season in import_averages:
+
+            kills_list.append(season.kills*multiplier)
+            deaths_list.append(season.deaths*multiplier)
+            crit_kills_list.append(season.crit_kills*multiplier)
+            damage_list.append(season.damage*multiplier)
+            effect_list.append(season.effect*multiplier)
+            overkill_list.append(season.overkill*multiplier)
+            mitigated_list.append(season.mitigated*multiplier)
+            d_abs_blocked_list.append(season.d_abs_blocked*multiplier)
+            d_pct_blocked_list.append(season.d_pct_blocked * multiplier)
+
+            total_kills += season.kills * multiplier
+            total_deaths += season.deaths * multiplier
+            total_crit_kills += season.crit_kills * multiplier
+            total_damage += season.damage * multiplier
+            total_effect += season.effect * multiplier
+            total_overkill += season.overkill * multiplier
+            total_mitigated += season.mitigated * multiplier
+            total_d_pct_blocked += season.d_pct_blocked*multiplier
+            total_d_abs_blocked += season.d_abs_blocked*multiplier
+    else:
+        size = len(seasons)
+
+        total_kills = 0
+        total_deaths = 0
+        total_crit_kills = 0
+        total_damage = 0
+        total_effect = 0
+        total_overkill = 0
+        total_mitigated = 0
+        total_d_pct_blocked = 0
+        total_d_abs_blocked = 0
+
+        kills_list = []
+        deaths_list = []
+        crit_kills_list = []
+        damage_list = []
+        effect_list = []
+        overkill_list = []
+        mitigated_list = []
+        d_pct_blocked_list = []
+        d_abs_blocked_list = []
+
+        for season in seasons:
+
+            kills_list.append(season.kills * multiplier)
+            deaths_list.append(season.deaths * multiplier)
+            damage_list.append(season.damage * multiplier)
+            crit_kills_list.append(season.crit_kills*multiplier)
+            effect_list.append(season.effect * multiplier)
+            overkill_list.append(season.overkill * multiplier)
+            mitigated_list.append(season.mitigated * multiplier)
+            d_abs_blocked_list.append(season.d_abs_blocked * multiplier)
+            d_pct_blocked_list.append(season.d_pct_blocked * multiplier)
+
+            total_kills += season.kills * multiplier
+            total_deaths += season.deaths * multiplier
+            total_crit_kills += season.crit_kills * multiplier
+            total_damage += season.damage * multiplier
+            total_effect += season.effect * multiplier
+            total_overkill += season.overkill * multiplier
+            total_mitigated += season.mitigated * multiplier
+            total_d_pct_blocked += season.d_pct_blocked * multiplier
+            total_d_abs_blocked += season.d_abs_blocked * multiplier
+
+    try:
+        avg_kills = total_kills / size
+        avg_deaths = total_deaths / size
+        avg_crit_kills = total_crit_kills / size
+        avg_damage = total_damage / size
+        avg_effect = total_effect / size
+        avg_overkill = total_overkill / size
+        avg_mitigated = total_mitigated / size
+        avg_d_pct_blocked = total_d_pct_blocked/size
+        avg_d_abs_blocked = total_d_abs_blocked/size
+
+#        with open('error_output', 'a') as e:
+#            e.write(f"\n{context}League KD stats: {total_kills:.3f} total kills, {total_deaths:.3f} total deaths\n"
+#                    f"{avg_kills:.3f} average kills, {avg_deaths:.3f} average deaths.")
+#            if total_deaths == total_kills and avg_deaths == avg_kills:
+#                e.write("(Values Equal)\n")
+#            else:
+#                e.write("(Values Unequal)\n")
+
+
+    except ZeroDivisionError:
+        avg_kills = -1
+        avg_deaths = -1
+        avg_crit_kills = -1
+        avg_damage = -1
+        avg_effect = -1
+        avg_overkill = -1
+        avg_mitigated = -1
+        avg_d_pct_blocked = -1
+        avg_d_abs_blocked = -1
+
+    average_stats_num = {'Kills': avg_kills, 'Deaths': avg_deaths, 'Critical Kills' : avg_crit_kills, 'Damage': avg_damage, 'Effect': avg_effect, 'Overkill': avg_overkill, 'Mitigated': avg_mitigated, 'D% Blocked' : avg_d_pct_blocked, 'DAbs Blocked' : avg_d_abs_blocked}
+    stat_words = ['Kills', 'Deaths', 'Damage', 'Effect', 'Overkill', 'Mitigated','Critical Kills', 'D% Blocked', 'DAbs Blocked']
+
+    if not region:
+        region = 'Error'
+
+
+    average_stats_list = {'Kills' : kills_list, 'Deaths' : deaths_list, 'Critical Kills' : crit_kills_list, 'Damage' : damage_list, 'Effect' : effect_list,
+                          'Overkill' : overkill_list, 'Mitigated' : mitigated_list, 'D% Blocked' : d_pct_blocked_list, 'DAbs Blocked' : d_abs_blocked_list}
+
+    for season in seasons:
+
+        if print_averages:
+            season.grade_breakdown += f"Avg Kills: {avg_kills:.3f}, Avg Deaths: {avg_deaths:.3f}, Avg Critical Kills: {avg_crit_kills:.3f}, Avg Damage: {avg_damage:.3f},\n Avg Effect: {avg_effect:.3f}," \
+                                      f"Avg Overkill: {avg_overkill:.3f}, Avg Mitigated: {avg_mitigated:.3f}\n Avg D% Blocked: {avg_d_pct_blocked}, Average DAbs Blocked: {avg_d_abs_blocked}\n"
+
+        weights = {'Kills': 4, 'Deaths': -3, 'Damage': 0.75, 'Effect': 7, 'Overkill': 0.25, 'Mitigated': 0.2}
+
+
+        translate = {'Kills' : season.kills*multiplier, 'Deaths' : season.deaths*multiplier, 'Critical Kills' : season.crit_kills*multiplier, 'Damage' : season.damage*multiplier, 'Effect' : season.effect*multiplier,
+                     'Overkill' : season.overkill*multiplier, 'Mitigated' : season.mitigated*multiplier, 'D% Blocked' : season.d_pct_blocked*multiplier, 'DAbs Blocked' : season.d_abs_blocked*multiplier}
+
+        iqr_stats = {}
+
+        for word in stat_words:
+            #iqr_stats contains is a dictionary which contains the word for each stat as a key, and the difference between the
+            # 1st and 3rd quartiles as a value for each stat
+            iqr_stats[word] = np.percentile(average_stats_list[word], 75) - np.percentile(average_stats_list[word], 25)
+            season.league_averages[word] = round(average_stats_num[word], 3)
+
+        #the next thing to do is find the difference between the average stat and player stat for each season,
+        #and DIVIDE this number by the interquartile range to get the normalized difference between the average and player stat
+        #then, multiply each normalized difference by the chosen weights, and add everything together to get the total grade
+
+        norm_differences = {}
+
+        for word in stat_words[:6]:
+            if iqr_stats[word] != 0:
+                norm_differences[word] = (translate[word] - average_stats_num[word]) / iqr_stats[word]
+            elif word != 'Overkill':
+                norm_differences[word] = (translate[word] - average_stats_num[word])
+            else:
+                norm_differences[word] = (translate[word] - average_stats_num[word]) / 10000
+            season.season_grade_dict[word] = norm_differences[word] * weights[word]
+
+        season.season_grade_data = (season.season_grade_dict['Kills']) + (season.season_grade_dict['Deaths']) + (season.season_grade_dict['Damage']) + (season.season_grade_dict['Effect']) + (season.season_grade_dict['Overkill']) + (season.season_grade_dict['Mitigated'])
+        season.grade_breakdown += f"{season.season_grade_dict['Kills']:.3f} in kills * 5, {season.season_grade_dict['Deaths']:.3f} in deaths * -5, {season.season_grade_dict['Damage']:.3f} in damage / 2,\n{season.season_grade_dict['Effect']:.3f} in effect * 10, {season.season_grade_dict['Overkill']:.3f} in overkill effect / 4, {season.season_grade_dict['Mitigated']:.3f} in mitigated / 5."
+
+
+    # takes in a list of PlayerSeason objects
+
+class PlayerSeason:
+    def __init__(self, player, season_count, sub_season=None, capt_str=''):
+        #sub_season is for a PlayerSeason object is being created only for one part of the season, such as the regional regular season
+        #this will be a string value
+
+        self.tier = player.tier
+        self.atk_dmg = player.atk_dmg
+        self.atk_spd = player.atk_spd
+        self.dps = player.atk_dmg / player.atk_spd
+        self.insta_kill_pct = player.insta_kill_pct
+        self.crit_pct = player.crit_pct
+        self.crit_x = player.crit_x
+        self.mit_pct = player.mit_pct
+        self.defense_pct = player.defense_pct
+        self.defense_abs = player.defense_abs
+        self.overkill_x = 3
+        self.max_health = player.max_health  # redundant
+        self.spawn_time = player.spawn_time
+        self.power = player.power
+
+        self.trait_tag = player.trait_tag
+
+        self.season = season_count
+        self.player = player
+        self.age = self.player.age
+        self.game_count = player.games_played['This-Season']
+        self.game_wins = player.game_wins #this season only
+        self.game_losses = player.game_losses #this season only
+        self.match_count = player.games_played['Matches']
+        self.sub_season = sub_season
+        self.season_grade_dict = {'Kills' : 0, 'Deaths' : 0, 'Damage' : 0, 'Effect' : 0, 'Overkill' : 0, 'Mitigated' : 0}
+        self.league_averages = {'Kills' : 0, 'Deaths' : 0, 'Critical Kills' : 0, 'Damage' : 0, 'Effect' : 0, 'Overkill' : 0, 'Mitigated' : 0, "D% Blocked" : 0, "DAbs Blocked" : 0}
+        self.season_grade_data = 0
+        self.grade_breakdown = ""
+        self.xWAR_breakdown = player.xWAR_breakdown
+        self.captain_stats = capt_str
+        if self.game_count > 0:
+            self.kills = player.kills / self.game_count
+            self.deaths = player.deaths / self.game_count
+            self.crit_kills = player.crit_kills / self.game_count
+            self.damage = player.damage_data['Total-Damage'] / self.game_count
+            self.effect = player.damage_data['Tesseract'] / self.game_count
+            self.total_attacks = player.damage_data['Total-Attacks'] / self.game_count
+            self.total_delayed_damage = player.damage_data['Total-Delayed-Damage'] / self.game_count
+            try:
+                self.avg_delayed_x_per_atk = player.damage_data['Total-Delayed-X'] / player.damage_data['Total-Attacks']
+            except ZeroDivisionError:
+                self.avg_delayed_x_per_atk = 0
+            self.overkill = player.damage_data['Overkill'] / self.game_count
+            self.healed = 0 if player.trait_tag != 'U-' else player.damage_data['Healed'] / self.game_count
+            self.revived = 0 if player.trait_tag != 'U-' else player.damage_data['Revived'] / self.game_count
+            self.reflected = 0 if player.trait_tag != 'R#' else player.damage_data['Reflected']/self.game_count
+            self.reflect_kills = 0 if player.trait_tag != 'R#' else player.damage_data['Reflect-Kills'] / self.game_count
+            self.reflect_count = 0 if player.trait_tag != 'R#' else player.damage_data['Reflect-Count'] / self.game_count
+            self.crit_reflected = 0 if player.trait_tag != 'R#' else player.damage_data['Crit-Reflects'] / self.game_count
+            self.explosion_dmg = 0 if player.trait_tag != 'X+' else player.damage_data['Explosion'] / self.game_count
+            self.explosion_kills = 0 if player.trait_tag != 'X+' else player.damage_data['Explosion-Kills'] / self.game_count
+            self.toxin_dmg = 0 if player.trait_tag != 'Tx' else player.damage_data['Toxin'] / self.game_count
+            self.toxin_kills = 0 if player.trait_tag != 'Tx' else player.damage_data['Toxin Kills'] / self.game_count
+            self.attacks_stunned = 0 if player.trait_tag != 'Fl' else player.damage_data['Attacks Stunned'] / self.game_count
+            self.vamp_heal = 0 if player.trait_tag != 'V.' else player.damage_data['Vampire Healed'] / self.game_count
+            self.extra_attacks = 0 if player.trait_tag != 'Sp' else player.damage_data['Extra Attacks'] / self.game_count
+            self.team_heal = 0 if player.trait_tag != 'Hn' else player.damage_data['Team Healed'] / self.game_count
+
+            self.streak = player.kill_streak['Peak']
+            self.mitigated = player.crit_data['Mitigated'] / self.game_count
+            self.d_pct_blocked = player.damage_data['D% Blocked'] / self.game_count
+            self.d_abs_blocked = player.damage_data['DAbs Blocked'] / self.game_count
+            #self.crit_pct = player.crit_data['Ratio']
+            self.parry_pct = player.crit_data['P_Ratio']
+        else:
+            self.kills = self.deaths = self.crit_kills = self.damage = self.effect = self.overkill = self.streak = self.mitigated = self.crit_pct = self.parry_pct = -1
+            #self.healed = self.revived = self.reflected = self.reflect_kills = -1
+
+    def print_kills_deaths(self):
+        with open('best_stats', 'a') as p:
+            p.write(f"{self.player.name} (for S{self.season}_{self.player.team})\n"
+            f"Kills Per Game: {self.kills :.3f} (Avg {self.league_averages['Kills']})\n"
+            f"Critical Kills Per Game: {self.crit_kills :.3f} (Avg {self.league_averages['Critical Kills']})\n"
+            f"Deaths Per Game: {self.deaths :.3f} (Avg {self.league_averages['Deaths']})\n\n")
+
+    def print_effect(self):
+        with open('best_stats', 'a') as p:
+            p.write(f"{self.player.name} (for S{self.season}_{self.player.team})\n"
+                    f"Total Effect: {self.effect :.3f} (Avg {self.league_averages['Effect']})\n"
+                    f"Overkill Effect: {self.overkill :.3f} (Avg {self.league_averages['Overkill']})\n\n")
+
+    def print_streak(self):
+        with open('best_stats', 'a') as p:
+            p.write(f"{self.player.name} (for S{self.season}_{self.player.team})\n"
+                    f"Best Kill Streak: {self.streak}\n\n")
+
+    def print_mitigated(self):
+        with open('best_stats', 'a') as p:
+            p.write(f"{self.player.name} (for S{self.season}_{self.player.team})\n"
+                    f"Damage Mitigated Per Game via Parry: {self.mitigated :.3f} (Avg {self.league_averages['Mitigated']})\n\n")
+
+    def print_healed(self):
+        with open('best_stats', 'a') as p:
+            p.write(f"{self.player.name} (for S{self.season}_{self.player.team})\n"
+                    f"Damage Mitigated Per Game via Healing: {self.healed :.3f}\n\n")
+
+    def print_damage(self):
+        with open('best_stats', 'a') as p:
+            p.write(f"{self.player.name} (for S{self.season}_{self.player.team})\n"
+                    f"Damage Dealt Per Game: {self.damage :.3f} (Avg {self.league_averages['Damage']})\n\n")
+
+    def print_player_season(self, filename=None, team_standing=None):
+        undead_str = f"Health Healed Per Game: {self.healed:.3f}\nRevives Per Game: {self.revived:.3f}\n" if self.player.trait_tag == 'U-' else ""
+        reflector_str = f"Damage Reflected Per Game: {self.reflected:.3f}\nTotal Hits Reflected Per Game: {self.reflect_count:.3f}\nCritical Hits Reflected Per Game: {self.crit_reflected:.3f}\nKills via Reflect Per Game: {self.reflect_kills:.3f}\n" if self.player.trait_tag == 'R#' else ""
+        exploder_str = f"Explosion Damage Per Game: {self.explosion_dmg:.3f}\nKills via Explosion Per Game: {self.explosion_kills:.3f}\n" if self.player.trait_tag == 'X+' else ""
+        toxic_str = f"Toxin Damage Per Game: {self.toxin_dmg:.3f}\nKills via Toxin Per Game: {self.toxin_kills:.3f}\n" if self.player.trait_tag == 'Tx' else ""
+        flasher_str = f"Attacks Prevented via Stun Per Game: {self.attacks_stunned:.3f}\n" if self.player.trait_tag == 'Fl' else ""
+        vampire_str = f"Vampire Self-heal Per Game: {self.vamp_heal:.3f}\n" if self.trait_tag == 'V.' else ""
+        splitter_str = f"Extra Attacks Per Game: {self.extra_attacks:.3f}\n" if self.trait_tag == 'Sp' else ""
+        healer_str = f"Team Healing Per Game: {self.team_heal:.3f}\n" if self.trait_tag == 'Hn' else ""
+
+        if not filename:
+            print(f"{self.player.name} (for S{self.season}_{self.player.team}),", end='')
+            print(self.player.drafted + f" (this is their {ordinal_string(self.age+1)} season).\n")
+
+            if self.season_grade_data != 0:
+                print(f"Season Grade: {round(self.season_grade_data, 3)}\n")
+
+            #print(f"Breakdown: {self.grade_breakdown}\n\n"
+            print(f"Games Played: {self.player.games_played['This-Season']} ({self.match_count} matches)\n"
+            f"{self.captain_stats}"
+            f"Kills Per Game: {self.kills :.3f}\n"
+            f"Deaths Per Game: {self.deaths :.3f}\n"
+            f"Critical Kills Per Game: {self.crit_kills :.3f}\n"
+            f"Damage Dealt Per Game: {self.damage :.3f}\n"
+            f"Damage Mitigated Per Game: {self.mitigated :.3f}\n{reflector_str}{exploder_str}{toxic_str}{flasher_str}{vampire_str}{splitter_str}{healer_str}"
+            f"Defense % Damage Blocked Per Game: {self.d_pct_blocked:.3f}"
+            f"Defense Absolute Damage Blocked Per Game: {self.d_abs_blocked:.3f}"     
+            f"Total Effect Per Game: {self.effect :.3f}\n"
+            f"Overkill Effect Per Game: {self.overkill :.3f}\n{undead_str}"
+            f"Best Kill Streak: {self.streak}\n\n")
+        else:
+            team_standing_str = f", finished {ordinal_string(team_standing)}" if team_standing else ""
+            with open(filename, 'a') as p:
+                p.write(f"{self.player.name} (for S{self.season}_{self.player.team}{team_standing_str})\n")
+                p.write(self.player.drafted + f" (this is their {ordinal_string(self.age+1)} season)." + '\n')
+                if self.season_grade_data != 0:
+                    p.write(f"Season Grade: {round(self.season_grade_data, 3)}\n")
+                #p.write(f"Breakdown: {self.grade_breakdown}\n\n")
+                p.write(f"Games Played: {self.player.games_played['This-Season']} ({self.match_count} matches)\n"
+                f"{self.captain_stats}"
+                f"xWAR: {self.player.xWAR}\n"
+                f"Attack Damage: {self.player.atk_dmg}\n" 
+                f"Attack Speed: {self.player.atk_spd}\n" 
+                f"Crit %: {self.player.crit_pct}\n" 
+                f"Crit X: {self.player.crit_x}\n" 
+                f"Mitigated %: {self.player.mit_pct:.3f}\n"
+                f"Defense %: {self.player.defense_pct}\n"
+                f"Defense Absolute: {self.player.defense_abs}\n"
+                f"Health: {self.player.max_health}\n"
+                f"Power: {self.player.power}\n" 
+                f"Spawn Time: {self.player.spawn_time}\n" 
+                f"AGE: {self.player.age}\n"
+                f"Kills Per Game: {self.kills :.3f} (Avg {self.league_averages['Kills']})\n"
+                f"Deaths Per Game: {self.deaths :.3f} (Avg {self.league_averages['Deaths']})\n"
+                f"Critical Kills Per Game: {self.crit_kills :.3f} (Avg {self.league_averages['Critical Kills']})\n"
+                f"Damage Dealt Per Game: {self.damage :.3f} (Avg {self.league_averages['Damage']})\n"
+                f"Damage Mitigated Per Game: {self.mitigated :.3f} (Avg {self.league_averages['Mitigated']})\n{reflector_str}{exploder_str}{toxic_str}{flasher_str}{vampire_str}{splitter_str}{healer_str}"
+                f"Defense % Damage Blocked Per Game: {self.d_pct_blocked:.3f} (Avg {self.league_averages['D% Blocked']})\n"
+                f"Defense Absolute Damage Blocked Per Game: {self.d_abs_blocked:.3f} (Avg {self.league_averages['DAbs Blocked']})\n"
+                f"Total Attacks Per Game: {self.total_attacks:.3f}\nDelayed Damage Per Game: {self.total_delayed_damage:.3f}\n"
+                f"Average Delayed Multiplier Per Attack: {self.avg_delayed_x_per_atk:.3f}\n"
+                f"Total Effect Per Game: {self.effect :.3f} (Avg {self.league_averages['Effect']})\n"
+                f"Overkill Effect Per Game: {self.overkill :.3f} (Avg {self.league_averages['Overkill']})\n{undead_str}"
+                f"Best Kill Streak: {self.streak}\n\n")
+
+        if '**' in self.player.team or '!' in self.player.team:
+            team_standing_str = f", finished {ordinal_string(team_standing)}" if team_standing else ""
+            with open('my_team_playerstats', 'a') as p:
+                p.write(f"{self.player.name} (for S{self.season}_{self.player.team}{team_standing_str})\n")
+                p.write(self.player.drafted + f" (this is their {ordinal_string(self.age + 1)} season)." + '\n')
+                if self.season_grade_data != 0:
+                    p.write(f"Season Grade: {round(self.season_grade_data, 3)}\n")
+                # p.write(f"Breakdown: {self.grade_breakdown}\n\n")
+                p.write(f"Games Played: {self.player.games_played['This-Season']} ({self.match_count} matches)\n"
+                        f"{self.captain_stats}"
+                        f"xWAR: {self.player.xWAR}\n"
+                        f"Breakdown: {self.xWAR_breakdown}\n\n"
+                        f"Attack Damage: {self.player.atk_dmg}\n"
+                        f"Attack Speed: {self.player.atk_spd}\n"
+                        f"Crit %: {self.player.crit_pct}\n"
+                        f"Crit X: {self.player.crit_x}\n"
+                        f"Mitigated %: {self.player.mit_pct:.3f}\n"
+                        f"Defense %: {self.player.defense_pct}\n"
+                        f"Defense Absolute: {self.player.defense_abs}\n"
+                        f"Health: {self.player.max_health}\n"
+                        f"Power: {self.player.power}\n"
+                        f"Spawn Time: {self.player.spawn_time}\n"
+                        f"AGE: {self.player.age}\n"
+                        f"Kills Per Game: {self.kills :.3f} (Avg {self.league_averages['Kills']})\n"
+                        f"Deaths Per Game: {self.deaths :.3f} (Avg {self.league_averages['Deaths']})\n"
+                        f"Critical Kills Per Game: {self.crit_kills :.3f} (Avg {self.league_averages['Critical Kills']})\n"
+                        f"Damage Dealt Per Game: {self.damage :.3f} (Avg {self.league_averages['Damage']})\n"
+                        f"Damage Mitigated Per Game: {self.mitigated :.3f} (Avg {self.league_averages['Mitigated']})\n{reflector_str}{exploder_str}{toxic_str}{flasher_str}{vampire_str}{splitter_str}{healer_str}"
+                        f"Defense % Damage Blocked Per Game: {self.d_pct_blocked:.3f} (Avg {self.league_averages['D% Blocked']})\n"
+                        f"Defense Absolute Damage Blocked Per Game: {self.d_abs_blocked:.3f} (Avg {self.league_averages['DAbs Blocked']})\n"
+                        f"Total Attacks Per Game: {self.total_attacks:.3f}\nDelayed Damage Per Game: {self.total_delayed_damage:.3f}\n"
+                        f"Average Delayed Multiplier Per Attack: {self.avg_delayed_x_per_atk:.3f}\n"
+                        f"Total Effect Per Game: {self.effect :.3f} (Avg {self.league_averages['Effect']})\n"
+                        f"Overkill Effect Per Game: {self.overkill :.3f} (Avg {self.league_averages['Overkill']})\n{undead_str}"
+                        f"Best Kill Streak: {self.streak}\n\n")
+
+
+class Player:
+    def __init__(self, tier, atk_dmg, atk_spd, crit_pct, crit_x, health, power, spawn_time, crit_dmg, name, mit_pct=0,
+                 defense_abs=0, defense_pct=0,
+                 team="None", insta_kill_pct = 0, trait_tag = "None", amp=0, season_count=0, undead_chance=0,
+                 trait_multiplier=0):
+
+        trait_trans = {'$l' : 'Slasher', 'U-' : 'Undead', 'R#' : 'Reflector'}
+        try:
+            tag_param = trait_trans[trait_tag]
+        except KeyError:
+            tag_param = trait_tag
+        player_params = (amp, tier, tag_param, name, season_count)
+        player_sql = """
+        INSERT INTO Player(amp, tier, trait, player_name, season_of_origin)
+        VALUES(?, ?, ?, ?, ?)
+        """
+
+        #This is a universal number for calculating the impact of traits created AFTER Reflector.
+        #Clutch, Inconsistent, and Playoff Performer use this multiplier in a formula contained in
+        #a Google Doc called "CONTROL Traits"
+        self.trait_multiplier = trait_multiplier
+
+        #C% is assigned during the lineup. If the tick is above 90, it turns to true for the rest of the game
+        #I* is assigned at the beginning of each lineup with a roll, the number is the multiplier on power
+        #Pp is assigned at the beginning of a game and lasts throughout, the number is added to power
+        #ALL TRAITS are removed where they are created. C% should be set to False at the end of a lineup,
+        #I* should be set to False at the end of a lineup, and Pp should be set to False at the end of a game
+        self.trait_bools = {'C%' : False, 'I*' : 0, 'Pp' : 0}
+
+        self.player_id = QUERY(player_sql, params=player_params, is_select=False)
+
+        #baseline stats
+        self.tier = tier
+        self.atk_dmg = atk_dmg
+        self.atk_spd = atk_spd
+        self.insta_kill_pct = insta_kill_pct
+        self.crit_pct = crit_pct
+        self.mit_pct = mit_pct
+        self.defense_abs = defense_abs
+        self.defense_pct = defense_pct
+        self.crit_x = crit_x
+        self.overkill_x = 3
+        self.max_health = health #redundant
+        self.health = health
+        self.power = power
+        self.spawn_time = spawn_time
+        self.amp = amp
+        self.coach_amp = ["None", float(0)]
+        self.coach_trait_amp = ["N/A", 0] if trait_tag == "None" else ["None", float(0)]
+        self.slot = -1
+
+        self.drafted = "Not Drafted (Intro)"
+
+        #in-game and in-season stats
+        self.delayed_atk = 0
+        self.is_alive = True
+        self.countdown = 0
+        self.atk_counter = 0 #increases every tick; player attacks when this value = atk_spd
+        self.kills = 0
+        self.crit_kills = 0
+        self.deaths = 0
+        self.age = 0
+        if trait_tag not in ['Pp', 'None', '$l']:
+            self.name = f"{trait_tag}{name}"
+        elif trait_tag == 'Pp':
+            self.name = f"Pp!{name}"
+        else:
+            self.name = name
+        self.crit_dmg = crit_dmg
+        self.crit_data = {'Hit' : 0, 'Miss' : 0, 'Ratio' : 0.0, 'Parry' : 0, 'P_Miss' : 0, "P_Ratio" : 0.0, "Mitigated" : 0.0}
+        self.grade_data = 0
+        self.grade_dict = {'Power' : 0, 'DPS' : 0,'Critical X' : 0, 'Critical %' : 0, 'Health' : 0, 'Spawn Time' : 0, 'Kills' : 0, 'Deaths' : 0, 'Effect' : 0, 'Overkill' : 0, 'Mitigated' : 0, 'Damage' : 0, 'Trait Bonus' : 0, 'Rank' : -1}
+        self.ratio = -1
+        self.team = team.replace('*','').replace('!-','').replace('-!','').replace('#','')
+        self.dps = self.atk_dmg / self.atk_spd
+        self.no_power = 0
+        self.kill_streak = {'Current' : 0, 'Peak' : 0}
+        self.damage_data = {'Tesseract' : 0.0, 'Total-Attacks' : 0, 'Total-Damage' : 0.0, 'Total-Delayed-Damage' : 0.0, 'Reflected' : 0.0, 'Crit-Reflects' : 0, 'Reflect-Count' : 0,
+                            'Total-Delayed-X' : 0.0, 'Delayed-Count' : 0, 'Avg-Delayed-X' : 0.0, 'D% Blocked' : 0.0, "DAbs Blocked" : 0.0,
+                            'Avg-Delayed-Damage' : 0.0, 'Overkill' : 0.0, 'Overkill-Count' : 0,
+                            'Revived' : 0, 'Healed' : 0, 'Reflect-Kills' : 0, 'Explosion' : 0, 'Explosion-Kills' : 0,
+                            'Toxin' : 0, 'Toxin Kills' : 0, 'Attacks Stunned' : 0,
+                            'Vampire Healed' : 0, 'Extra Attacks' : 0, 'Team Healed' : 0}
+        self.games_played = {'All' : 0, 'This-Season' : 0, 'Playoffs' : 0, 'Matches' : 0}
+        self.game_wins = 0 #explicitly refers to this season
+        self.game_losses = 0 #only refers to this season
+        self.game_stats = []
+        self.team_wins = 0 #refers to games (lineups), NOT matches
+        self.team_losses = 0
+
+        self.xWAR = 0
+        self.xWAR_breakdown = ""
+        self.breakout = False
+
+        self.trait_tag = trait_tag #Can equal $l, U-, R#, C%, I*, Pp!, or X+ as of 11/09
+        self.status = {"Stun" : [0,None], "Toxin" : [0,0,None], "Bloodlust" : 0, "Armor Lock" : 0}
+
+    def __str__(self):
+        if self.deaths != 0:
+            self.ratio = round((self.kills/self.deaths),4)
+        x_breakdown = ""
+
+        for word in ['Power', 'DPS', 'Critical X', 'Critical %', 'Health', 'Spawn Time']:
+            x_breakdown += f"{word}({self.grade_dict[word]}), "
+        translated_tag = {'$l': 'Slasher', 'U-': 'Undead', 'R#': 'Reflector', 'X+': 'Exploder', 'I*': 'Inconsistent','Pp': 'Playoff Performer', 'C%': 'Clutch', "None" : "", "Sp": "Splitter", "V.": "Vampire", "Tx" : "Toxic", "Hn": "Healer", "Fl" : "Flasher"}
+        tag_str = f", {translated_tag[self.trait_tag]} amp: {self.trait_multiplier}" if self.trait_tag != "None" else ""
+        if self.trait_tag in ['$l', 'U-', 'R#', 'X+', 'C%']:
+            x_breakdown += f"{translated_tag[self.trait_tag]} Bonus({self.grade_dict['Trait Bonus']})"
+        if self.kills != 0:
+
+            holder = f"{self.name}{tag_str}\n" \
+            f"\t{self.team}\n"\
+            f"xWAR: {self.xWAR} (Rank {self.grade_dict['Rank']})\n" \
+                     f"{x_breakdown}\n" \
+            f"Attack Damage: {self.atk_dmg}\n" \
+            f"Attack Speed: {self.atk_spd}\n" \
+            f"Crit %: {self.crit_pct}\n" \
+            f"Mitigate %: {self.mit_pct}\n" \
+            f"Defense Absolute: {self.defense_abs}\n"\
+            f"Defense %: {self.defense_pct}\n"\
+            f"Crit X: {self.crit_x}\n" \
+            f"Health: {self.max_health}\n" \
+            f"Power: {self.power}\n" \
+            f"Spawn Time: {self.spawn_time}\n" \
+            f"AGE: {self.age}\n"
+        else:
+            holder = f"{self.name}\n" \
+            f"\t{self.team}\n" \
+            f"xWAR: {self.xWAR} (Rank {self.grade_dict['Rank']})\n" \
+            f"{x_breakdown}\n" \
+            f"Attack Damage: {self.atk_dmg}\n" \
+            f"Attack Speed: {self.atk_spd}\n" \
+            f"Crit %: {self.crit_pct}\n" \
+            f"Mitigate %: {self.mit_pct}\n" \
+            f"Defense Absolute: {self.defense_abs}\n" \
+            f"Defense %: {self.defense_pct}\n" \
+            f"Crit X: {self.crit_x}\n" \
+            f"Health: {self.max_health}\n" \
+            f"Power: {self.power}\n" \
+            f"Spawn Time: {self.spawn_time}\n" \
+            f"AGE: {self.age}\n"
+        return holder
+
+    def reflect_damage(self, receiver, crit=False):
+        #note that receiver, as in receiving the damage, is the attacker in an attack(), and self is the defender
+        dmg = (receiver.atk_dmg*receiver.crit_x) if crit else receiver.atk_dmg
+        dmg *= self.coach_trait_amp[1] if self.coach_trait_amp[0] == 'R#' else 1
+        receiver.health -= dmg
+        self.damage_data['Total-Damage'] += dmg
+        self.damage_data['Reflected'] += dmg
+        self.damage_data['Reflect-Count'] += 1
+        if crit:
+            self.damage_data['Crit-Reflects'] += 1
+        if receiver.health <= 0:
+            # game checks for defender life status after the attack function is over
+            undead_roll = uniform(0, 1)
+            coach_amp_increment = receiver.coach_trait_amp[1] if receiver.coach_trait_amp[0] == 'U-' else 1
+            if receiver.trait_tag == 'U-' and undead_roll <= receiver.trait_multiplier:
+                receiver.damage_data['Healed'] += (receiver.max_health * (2*receiver.trait_multiplier) * coach_amp_increment) - receiver.health
+                receiver.damage_data['Revived'] += 1
+                receiver.health = (receiver.max_health * (2*receiver.trait_multiplier) * coach_amp_increment)
+
+            else:
+                receiver.die()
+                self.damage_data['Overkill'] += abs(3 * receiver.health)
+                self.damage_data['Overkill-Count'] += 1
+                receiver.deaths += 1
+                self.damage_data['Reflect-Kills'] += 1
+                self.kills += 1
+                self.kill_streak['Current'] += 1
+                self.delayed_atk = 0
+
+
+    def attack(self, defender, captain_bonus=None, protector_bonus=None, clutch=False, defending_capt = 0): #defending_capt is the damage reduction factor for the defender's captain. If the captain is dead, the value is 0.
+        reflected=False
+        if self.status["Stun"][0] > 0:
+            self.status["Stun"][1].damage_data['Attacks Stunned'] += 1
+            return 0
+        if self.trait_tag == "Sp" and uniform(0, 1) <= self.trait_multiplier:
+            self.atk_counter = self.atk_spd-1
+            self.damage_data['Extra Attacks'] += 1
+        else:
+            self.atk_counter = 0
+        self.damage_data['Total-Attacks'] += 1
+        if self.trait_tag == "Tx" and uniform(0,1) < self.trait_multiplier[0]:
+            defender.status["Toxin"] = [self.trait_multiplier[1][0], self.trait_multiplier[1][1], self]
+            #toxin status: damage, ticks
+        elif self.trait_tag == "Fl" and uniform(0,1) < self.trait_multiplier[0]:
+            defender.status["Stun"] = [self.trait_multiplier[1], self]
+        damage = self.atk_dmg
+        damage += self.coach_amp[1] if self.coach_amp[0] == "Attack Damage" else 0
+        damage *= (1 + self.delayed_atk)
+        if clutch:
+            damage *= self.trait_multiplier
+            damage *= self.coach_trait_amp[1] if self.coach_trait_amp[0] == 'C%' else 1
+            damage += 2
+        if self.delayed_atk > 0:
+            self.damage_data['Total-Delayed-Damage'] += damage
+            self.damage_data['Total-Delayed-X'] += self.delayed_atk
+            self.damage_data['Delayed-Count'] += 1
+        crit = False
+        crit_roll = uniform(0, 1)
+        coach_crit_increment = self.coach_amp[1] if self.coach_amp[0] == "Critical Chance" else 0
+        if captain_bonus:
+            capt_crit_increment = captain_bonus[2]
+        else:
+            capt_crit_increment = 1
+
+        if crit_roll <= self.insta_kill_pct or (crit_roll <= self.crit_pct and self.tier == '$l'):
+            #insta_kill is the slasher variable for crit_pct, and every time they crit, they deal the max health of the defender
+            damage = defender.max_health * choice([2.8,2.9,3,3,3,3.1,3.2])
+            crit=True
+            if self.crit_data:
+                self.crit_data['Hit'] += 1
+        elif crit_roll <= ((self.crit_pct + coach_crit_increment) * capt_crit_increment) and self.insta_kill_pct == 0:
+            damage *= self.crit_x
+            if captain_bonus:
+                damage *= captain_bonus[1]
+            crit = True
+            if self.crit_data:
+                self.crit_data['Hit'] += 1
+        else:
+            if self.crit_data:
+                self.crit_data['Miss'] += 1
+
+        parry_roll = uniform(0,1)
+        if parry_roll <= defender.mit_pct: #if defender mitigates damage
+            if defender.crit_data:
+                defender.crit_data['Parry'] += 1
+                defender.crit_data['Mitigated'] += damage
+
+            if defender.trait_tag == 'R#':
+                temp_atkr = self
+                defender.reflect_damage(temp_atkr,crit)
+                reflected = True
+            damage = 0
+
+        else:
+            if defender.crit_data:
+                defender.crit_data['P_Miss'] += 1
+
+        if defender.trait_tag == 'R#' and not reflected: #if the reflector has already parried the attack, it should not have the chance to reflect again
+            reflect_roll = uniform(0,1)
+            if reflect_roll <= defender.trait_multiplier:
+                temp_atkr = self
+                defender.reflect_damage(temp_atkr,crit)
+                reflected=True
+
+        if captain_bonus:
+            damage*=captain_bonus[0]
+
+        if defending_capt != 0:
+            defending_capt_damage = damage * defending_capt
+            damage -= defending_capt_damage
+        else:
+            defending_capt_damage = 0
+
+        damage -= (damage*defender.defense_pct)
+        damage -= defender.defense_abs
+
+        defender.damage_data['D% Blocked'] += (damage*defender.defense_pct)
+        defender.damage_data['DAbs Blocked'] += defender.defense_abs
+
+        defender.health -= damage if not reflected else 0 #defender should not take damage if it was reflected
+        self.damage_data['Total-Damage'] += damage
+        if self.trait_tag == "V." and uniform(0,1) < self.trait_multiplier:
+            vamp_heal = damage*(uniform(0.5,0.7))
+            self.health += vamp_heal
+            self.damage_data['Vampire Healed'] += vamp_heal
+        if defender.health <= 0:
+            #lineup checks for defender life status after the attack function is over
+            if defender.trait_tag == 'U-':
+                undead_roll = uniform(0, 1)
+                undead_roll *= defender.coach_trait_amp[1] if defender.coach_trait_amp[0] == 'U-' else 1
+                coach_amp_increment = defender.coach_trait_amp[1] if defender.coach_trait_amp[0] == 'U-' else 1
+
+                if undead_roll <= defender.trait_multiplier:
+                    defender.damage_data['Healed'] += (defender.max_health * (2*defender.trait_multiplier) * coach_amp_increment) - defender.health
+                    defender.damage_data['Revived'] += 1
+                    defender.health = (defender.max_health * (2*defender.trait_multiplier) * coach_amp_increment)
+                    self.delayed_atk = 0
+
+                else:
+                    defender.die()
+                    self.damage_data['Overkill'] += abs(3 * defender.health)
+                    self.damage_data['Tesseract'] += abs(3 * defender.health)
+                    self.damage_data['Overkill-Count'] += 1
+                    defender.deaths += 1
+                    if crit:
+                        self.crit_kills += 1
+                    self.kills += 1
+                    self.kill_streak['Current'] += 1
+                    self.delayed_atk = 0
+
+            else:
+                defender.die()
+                self.damage_data['Overkill'] += abs(3 * defender.health)
+                self.damage_data['Tesseract'] += abs(3 * defender.health)
+                self.damage_data['Overkill-Count'] += 1
+                defender.deaths += 1
+                if crit:
+                    self.crit_kills += 1
+                self.kills += 1
+                self.kill_streak['Current'] += 1
+                self.delayed_atk = 0
+
+        else:
+            self.delayed_atk = 0
+        return defending_capt_damage
+
+    def die(self):
+        self.no_power += 1
+        self.is_alive = False
+        self.countdown = self.spawn_time
+        if self.kill_streak['Current'] >= self.kill_streak['Peak']:
+            self.kill_streak['Peak'] = self.kill_streak['Current']
+        self.kill_streak['Current'] = 0
+        self.status["Toxin"] = [0,0,None]
+        self.status["Stun"] = [0,None]
+        if self.trait_tag == 'X+':
+            self.trait_multiplier[1] = 1
+
+    #These are variables coming from Game() passed when a player's trait is active.
+    #When nothing is passed, they default to 0.
+    def tesseract(self,clutch=False,inc=0,pp=0,capt_bonus=0):
+        impact = self.power
+        if clutch:
+            impact *= self.trait_multiplier
+            impact = round(impact*self.coach_trait_amp[1]) if self.coach_trait_amp[0] == 'C%' else impact
+            impact += 1
+        elif inc != 0:
+            impact*=inc
+        elif pp != 0:
+            impact += pp
+        if self.coach_amp[0] == "Power":
+            coach_power_roll = uniform(0,1)
+            if coach_power_roll <= self.coach_amp[1]:
+                impact+=choice([1,1,1,2,2])
+        if capt_bonus != 0:
+            impact += round(uniform(0,capt_bonus))
+
+        self.damage_data['Tesseract'] += impact
+        return np.round(impact)
+
+    def respawn(self):
+        self.health = self.max_health
+        self.is_alive = True
+
+    def take_damage(self,dmg):
+        #this function is only used when damage is taken from a source other than a base attack
+        #so far, this only includes Exploder damage and Toxin damage
+        self.health -= dmg
+        if self.health <= 0:
+            #lineup checks for life status after the attack function is over
+            undead_roll = uniform(0, 1)
+            coach_amp_increment = self.coach_trait_amp[1] if self.coach_trait_amp[0] == 'U-' else 1
+            if self.trait_tag == 'U-' and undead_roll <= self.trait_multiplier:
+                self.damage_data['Healed'] += (self.max_health * (2*self.trait_multiplier) * coach_amp_increment) - self.health
+                self.damage_data['Revived'] += 1
+                self.health = (self.max_health * (2*self.trait_multiplier) * coach_amp_increment)
+                self.delayed_atk = 0
+            else:
+                self.die()
+                self.deaths += 1
+                if self.trait_tag == 'X+': #when exploders die from toxin or explosion, they cannot do explosion damage, so it doubles for next time
+                    self.trait_multiplier[1] += 1
+
+    def get_xWAR(self,averages=None,set_stats=None,deviations=None):
+        self.xWAR = 0
+
+        # Updated coefficients from Random Forest model
+        xWAR_coefficients = {
+            'Power': 100,
+            'DPS': 185.79,  # Combined Attack Damage & Speed
+            'Critical %': 121.39,
+            'Critical X': 137.56,
+            'Health': 184.64,
+            'Spawn Time': 84.72,
+            'Mitigated %' : 164.38,
+            'Defense %' : 107.67,
+            'Defense Absolute' : 128.88
+
+        }
+
+        trait_bonus = { #RandomForest Coefficient
+            'None' : 0,
+            '$l' : 0.1, #this is so low largely because slasher's biggest effect is the stats of the player
+            'C%' : 4.75,
+            'I*' : 11.7,
+            'Pp' : 5.75,
+            'R#' : 9.34,
+            'U-' : 1.64,
+            'X+' : 2.15,
+            'Sp' : 0, #attack damage value incremented in xWAR calculation
+            'V.' : 0, #health value incremented in xWAR calculation
+            'Tx' : 0, #attack damage value incremented in xWAR calculation
+            'Hn' : 13.8, #total guess. need more testing
+            'Fl' : 150, #total guess. need more testing
+        }
+
+        # Average stats
+        if not averages:
+            avg_stats = {
+            'Power': 55,
+            'DPS': 55.5 / 7.5,  # Attack Damage / Attack Speed = Damage Per Tick
+            'Critical %': 0.065,
+            'Critical X': 8,
+            'Health': 215,
+            'Spawn Time': 7,
+            'Mitigated %' : 0.0545,
+            'Defense Absolute' : 4,
+            'Defense %' : 0.045,
+        }
+        else:
+            avg_stats = averages
+
+        #Standard deviations (subject to change)
+        if not deviations: #only used in the very beginning; the values below spawn time are estimates
+            std_devs = {
+                'Power' : 2.784887140937835,
+                'DPS' : 1.286011929753189,
+                'Critical %' : 0.01608803831305744,
+                'Critical X' : 2.206467359778401,
+                'Health' : 19,
+                'Spawn Time' : 0.8424813872345137,
+                'Mitigated %' : 0.0115,
+                'Defense Absolute' : 0.65,
+                'Defense %' : 0.01
+
+
+            }
+        else:
+            std_devs = deviations
+
+        # Compute player's DPS
+        player_dps = self.atk_dmg / self.atk_spd
+
+        # Compute xWAR with normalization
+        self.xWAR_breakdown = ""
+        translated_stats = {'Power' : 'power', 'Critical %' : 'crit_pct', 'Critical X' : 'crit_x', 'Health' : 'max_health', 'Spawn Time' : 'spawn_time',
+                            'Mitigated %' : 'mit_pct', 'Defense %' : 'defense_pct', 'Defense Absolute' : 'defense_abs'}
+        for stat in xWAR_coefficients:
+            # Handle DPS separately
+
+            if set_stats:
+                stat_value = set_stats[stat]
+            else:
+                if stat == "DPS":
+                    stat_value = player_dps
+                    if self.trait_tag == "Sp":
+                        stat_value *= (1 + self.trait_multiplier)
+                    if self.trait_tag == "Tx":
+                        stat_value += ((self.trait_multiplier[0] * self.trait_multiplier[1][0] * self.trait_multiplier[1][1]) / 52)
+                else:
+                    stat_value = getattr(self, translated_stats[stat])
+                    if stat == "Health" and self.trait_tag == "V.":
+                        stat_value += (0.625 * self.trait_multiplier * self.atk_dmg)
+
+            avg_value = avg_stats[stat]
+            std_dev = std_devs[stat]
+
+            difference = stat_value - avg_value if stat != 'Spawn Time' else avg_value - stat_value
+
+            # Normalize difference
+            normalized_difference = difference / std_dev
+
+            # Calculate xWAR contribution
+            stat_xWAR = normalized_difference * xWAR_coefficients[stat]
+
+            self.xWAR += stat_xWAR
+            self.xWAR_breakdown += f"({stat}: {stat_xWAR:.2f}), "
+            self.grade_dict[stat] = stat_xWAR
+
+        self.xWAR = round(self.xWAR, 2) + trait_bonus[self.trait_tag]
+        return self.xWAR
+
+    def old_get_xWAR(self):
+        self.xWAR = 0
+        self.xWAR_breakdown = ""
+
+        pos_xWAR_coefficient = {'1 Attack Speed': -80, '1 Attack Damage': 18.50, '1 Health': 1.5,
+                                '1 Power': 200, '1 Spawn Time': -90, '.001 Critical Chance': 1.5,
+                                '.1 Critical Multiplier': 1.2}
+        # positive coefficient is multiplied by (player_stat - average_stat) if player_stat > average_stat
+
+        neg_xWAR_coefficient = {'1 Attack Speed': 75, '1 Attack Damage': -18.00, '1 Health': -1.8,
+                                '1 Power': -200, '1 Spawn Time': 90, '.001 Critical Chance': -1.5,
+                                '.1 Critical Multiplier': -1.2}
+        # negative coefficient is multiplied by (player_stat - average_stat) if player_stat < average_stat
+
+        #replace attack damage and speed with DPS, as they are connected
+
+        avg_power = 55
+        avg_atk_dmg = 55.5
+        avg_atk_spd = 7.5
+        avg_crit_x = 7.5
+        avg_crit_pct = 0.065
+        avg_health = 210
+        avg_spawn = 7
+
+        if self.power > avg_power:
+            self.grade_dict['Power'] = (self.power - avg_power) * pos_xWAR_coefficient['1 Power']
+        elif self.power < avg_power:
+            self.grade_dict['Power'] = -(self.power - avg_power) * neg_xWAR_coefficient['1 Power']
+        elif self.power == avg_power:
+            self.grade_dict['Power'] = 0
+        self.xWAR_breakdown += f"(Power: {self.grade_dict['Power']:.2f}), "
+
+
+        if self.atk_dmg > avg_atk_dmg:
+            self.grade_dict['Attack Damage'] = (self.atk_dmg - avg_atk_dmg) * pos_xWAR_coefficient['1 Attack Damage']
+        elif self.atk_dmg < avg_atk_dmg:
+            self.grade_dict['Attack Damage'] = -(self.atk_dmg - avg_atk_dmg) * neg_xWAR_coefficient['1 Attack Damage']
+        elif self.atk_dmg == avg_atk_dmg:
+            self.grade_dict['Attack Damage'] = 0
+        self.xWAR_breakdown += f"(Atk_Dmg: {self.grade_dict['Attack Damage']:.2f}), "
+
+        if self.atk_spd > avg_atk_spd:
+            self.grade_dict['Attack Speed'] = (self.atk_spd - avg_atk_spd) * pos_xWAR_coefficient['1 Attack Speed']
+        elif self.atk_spd < avg_atk_spd:
+            self.grade_dict['Attack Speed'] = -(self.atk_spd - avg_atk_spd) * neg_xWAR_coefficient['1 Attack Speed']
+        elif self.atk_spd == avg_atk_spd:
+            self.grade_dict['Attack Speed'] = 0
+        self.xWAR_breakdown += f"(Atk_Spd: {self.grade_dict['Attack Speed']:.2f})\n"
+
+        if self.crit_x > avg_crit_x:
+            self.grade_dict['Critical-X'] = (10*(self.crit_x - avg_crit_x)) * pos_xWAR_coefficient['.1 Critical Multiplier']
+        elif self.crit_x < avg_crit_x:
+            self.grade_dict['Critical-X'] = -(10*(self.crit_x - avg_crit_x)) * neg_xWAR_coefficient['.1 Critical Multiplier']
+        elif self.crit_x == avg_crit_x:
+            self.grade_dict['Critical-X'] = 0
+        self.xWAR_breakdown += f"(Crit-X: {self.grade_dict['Critical-X']:.2f}), "
+
+        if self.crit_pct > avg_crit_pct:
+            self.grade_dict['Critical-PCT'] = (1000*(self.crit_pct - avg_crit_pct)) * pos_xWAR_coefficient['.001 Critical Chance']
+        elif self.crit_pct < avg_crit_pct:
+            self.grade_dict['Critical-PCT'] = -(1000 * (self.crit_pct - avg_crit_pct)) * neg_xWAR_coefficient['.001 Critical Chance']
+        elif self.crit_pct == avg_crit_pct:
+            self.grade_dict['Critical-PCT'] = 0
+        self.xWAR_breakdown += f"(Crit-PCT: {self.grade_dict['Critical-PCT']:.2f}), "
+
+        if self.max_health > avg_health:
+            self.grade_dict['Health'] = (self.health - avg_health) * pos_xWAR_coefficient['1 Health']
+        elif self.max_health < avg_health:
+            self.grade_dict['Health'] = -(self.health - avg_health) * neg_xWAR_coefficient['1 Health']
+        elif self.max_health == avg_health:
+            self.grade_dict['Health'] = 0
+        self.xWAR_breakdown += f"(Health: {self.grade_dict['Health']:.2f}), "
+
+        if self.spawn_time > avg_spawn:
+            self.grade_dict['Spawn'] = (self.spawn_time - avg_spawn) * pos_xWAR_coefficient['1 Spawn Time']
+        elif self.spawn_time < avg_spawn:
+            self.grade_dict['Spawn'] = -(self.spawn_time - avg_spawn) * neg_xWAR_coefficient['1 Spawn Time']
+        elif self.spawn_time == avg_spawn:
+            self.grade_dict['Spawn'] = 0
+        self.xWAR_breakdown += f"(Spawn Time: {self.grade_dict['Spawn']:.2f})\n"
+
+        for word in ['Power', 'Attack Damage', 'Attack Speed', 'Critical-X', 'Critical-PCT', 'Health', 'Spawn']:
+            self.grade_dict[word] = round(self.grade_dict[word], 2)
+
+        if self.trait_tag == 'U-':
+            undead_bonus = (self.max_health * self.trait_multiplier) * pos_xWAR_coefficient['1 Health'] + (0.5*self.trait_multiplier*pos_xWAR_coefficient['1 Power']) + 5
+            self.xWAR_breakdown += f"(Undead Bonus: {undead_bonus:.2f})"
+            if self.coach_trait_amp[0] == "U-":
+                self.xWAR_breakdown += f", (Undead Coach Bonus: {undead_bonus*(0.1+self.coach_trait_amp[1]) - undead_bonus:.2f})\n"
+                undead_bonus*=(0.1+self.coach_trait_amp[1])
+            else:
+                self.xWAR_breakdown+='\n'
+
+            self.grade_dict['Trait Bonus'] = undead_bonus
+
+
+        elif self.trait_tag == 'R#':
+            reflector_bonus = (((5 * self.crit_pct) * pos_xWAR_coefficient['.001 Critical Chance']) + ((0.5 * self.crit_x) * pos_xWAR_coefficient['.1 Critical Multiplier']) + (25*self.trait_multiplier*pos_xWAR_coefficient['1 Attack Damage'])) + 60
+            self.xWAR_breakdown += f"(Reflector Bonus: {reflector_bonus:.2f})"
+            if self.coach_trait_amp[0] == 'R#':
+                self.xWAR_breakdown+=f", (Reflector Coach Bonus: {reflector_bonus*(((self.coach_trait_amp[1] - 1) / 2) + 1) - reflector_bonus:.2f})"
+                reflector_bonus*=(((self.coach_trait_amp[1] - 1) / 2) + 1)
+            else:
+                self.xWAR_breakdown+="\n"
+            self.grade_dict['Trait Bonus'] = reflector_bonus
+
+        elif self.trait_tag == 'X+':
+            exploder_bonus = (((2/13) * self.atk_dmg * self.trait_multiplier) * pos_xWAR_coefficient['1 Attack Damage']) + 10
+            self.xWAR_breakdown+=f"(Exploder Bonus: {exploder_bonus:.2f})"
+            if self.coach_trait_amp[0] == 'X+':
+                self.xWAR_breakdown += f", (Exploder Coach Bonus: {(self.coach_trait_amp[1] * self.trait_multiplier * pos_xWAR_coefficient['1 Attack Damage']):.2f})\n"
+                exploder_bonus+=self.coach_trait_amp[1] * self.trait_multiplier * pos_xWAR_coefficient['1 Attack Damage']
+            else:
+                self.xWAR_breakdown+='\n'
+            self.grade_dict['Trait Bonus']  = exploder_bonus
+
+
+        elif self.trait_tag == 'C%':
+            clutch_bonus = ((2 / 13) * self.atk_dmg * pos_xWAR_coefficient['1 Attack Damage']) + 25
+            self.xWAR_breakdown+=f"(Clutch Bonus: {clutch_bonus:.2f})"
+            if self.coach_trait_amp[0] == 'C%':
+                self.xWAR_breakdown+=f", (Clutch Coach Bonus: {clutch_bonus*self.coach_trait_amp[1] - clutch_bonus:.2f})\n"
+                clutch_bonus*=self.coach_trait_amp[1]
+            else:
+                self.xWAR_breakdown += '\n'
+            self.grade_dict['Trait Bonus'] = clutch_bonus
+
+        elif self.trait_tag == 'Pp':
+            pp_bonus = 0.85 * self.trait_multiplier * pos_xWAR_coefficient['1 Power']
+            self.xWAR_breakdown+=f"(Playoff-P Bonus: {pp_bonus:.2f})"
+            if self.coach_trait_amp[0] == 'Pp':
+                self.xWAR_breakdown+=f", (Playoff-P Coach Bonus: {((self.coach_trait_amp[1]/5) * self.trait_multiplier * pos_xWAR_coefficient['1 Power']):.2f})\n"
+                pp_bonus+=((self.coach_trait_amp[1]/5) * self.trait_multiplier * pos_xWAR_coefficient['1 Power'])
+            else:
+                self.xWAR_breakdown+='\n'
+            self.grade_dict['Trait Bonus'] = pp_bonus
+
+        elif self.trait_tag == 'I*':
+            inc_bonus = (0.05 * self.trait_multiplier * self.power * pos_xWAR_coefficient['1 Power']) + 30
+            self.xWAR_breakdown+=f"(Inconsistent Bonus: {inc_bonus:.2f})"
+            if self.coach_trait_amp[0] == 'I*':
+                self.xWAR_breakdown+=f", (Inconsistent Coach Bonus: {inc_bonus*2:.2f})\n"
+                inc_bonus*=3
+            else:
+                self.xWAR_breakdown+='\n'
+            self.grade_dict['Trait Bonus'] = inc_bonus
+
+        else:
+            self.grade_dict['Trait Bonus'] = 0
+
+        self.xWAR = round((self.grade_dict['Power'] + self.grade_dict['Attack Damage'] + self.grade_dict['Attack Speed']
+        + self.grade_dict['Critical-X'] + self.grade_dict['Critical-PCT'] + self.grade_dict['Health'] + self.grade_dict['Spawn'] + self.grade_dict['Trait Bonus']), 2)
+
+        return self.xWAR
