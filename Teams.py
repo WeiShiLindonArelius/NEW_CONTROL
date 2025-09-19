@@ -762,7 +762,7 @@ def choose_perks(team):
             print(f"Slot {slot_amp} ({team.players[slot_amp].name}) {attr_amp} +{common_increments[attr_amp]}")
         elif rarity_roll <= 0.8: #RARE
             slot_choice = input(
-                "You've rolled for a rare perk! Type 'Captain' to amp the captain by an attribute of choice, 'T' to give a random player a random trait, or 'I' to run increment_trait(1 or 2) on 3 players.")
+                "You've rolled for a rare perk! Type 'Captain' to amp the captain by an attribute of choice, 'T' to give a random player a random trait, or\n 'I' to run increment_trait(1 or 2) on 3 players.\n")
             if slot_choice == "Captain":
                 capt_choice = input("Damage Taken, Critical X, Damage X, or Health?")
                 if capt_choice == "Damage Taken":
@@ -777,7 +777,7 @@ def choose_perks(team):
                 elif capt_choice == "Health":
                     team.captain.max_health += 5
                     print(f"Captain health increased by 5 to {team.captain.max_health}")
-            elif slot_choice == 'T':
+            elif slot_choice in ['T', 't']:
                 for pl in team.players:
                     if pl.trait_tag == "None":
                         tag, mult = additional_trait_roll(tier=pl.tier,fixed='NotNone')
@@ -789,7 +789,7 @@ def choose_perks(team):
                     increment_trait(team.players[i], factor=choice([1,2]))
         elif rarity_roll <= 0.925: #EPIC
             slot_choice = input(
-                "You've rolled for an EPIC perk! Press 'A' to increment one stat for all players, 'T' to grant a random player a trait which synergizes with the coach, 'I' to increment all player trait mults and roll for traits for non-trait players")
+                "You've rolled for an EPIC perk! Press 'A' to increment one stat for all players, 'T' to grant a random player a trait which synergizes with the coach,\n 'I' to increment all player trait mults and roll for traits for non-trait players\n")
             if slot_choice == "A":
                 attr_choice = input("What attribute would you like to amplify?")
                 if attr_choice not in ["Damage", "Power", "Critical %", "Critical X", "Health", "Defense %"]:
@@ -809,7 +809,7 @@ def choose_perks(team):
                 for i in range(6):
                     increment_trait(team.players[i], factor=choice([1,2,2,3]))
         else: #LEGENDARY
-            slot_choice = input("You've rolled for an LEGENDARY perk! Press 'C' to gain TEN (10) random common perks, press 'I' to increment traits for all players with a factor of 4, 5, or 6.")
+            slot_choice = input("You've rolled for an LEGENDARY perk! Press 'C' to gain TEN (10) random common perks, press 'I' to increment traits for all players with a factor of 4, 5, or 6.\n")
             if slot_choice == 'C':
                 for _ in range(10):
                     slot_amp = randint(0, 5)

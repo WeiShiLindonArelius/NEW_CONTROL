@@ -17,7 +17,7 @@ from datetime import datetime
 from statistics import stdev
 from switches import make_coach_decisions
 
-def timed_input(prompt): #False = do nothing with coach decisions, True = manual coach decisions
+def timed_input(prompt): #False = do nothing with coach decisions, True = manual coach decisionsy
 
     if make_coach_decisions:
         user_input = input(prompt)
@@ -27,7 +27,7 @@ def timed_input(prompt): #False = do nothing with coach decisions, True = manual
         return "O"
 
 
-caps = [2500, 2500, 2850, 3125, 3250, 3300] + ([3330] * 50)
+caps = [2800, 2900, 3200, 3425, 3650, 3800] + ([3800] * 50)
 
 def closest_multiple_of_6(n):
     lower_multiple = (n // 6) * 6
