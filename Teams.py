@@ -12,9 +12,9 @@ import itertools
 import threading
 
 def timed_input(prompt): #False = auto-perk picks, True = manual perk picks
-    use_input_boolean = False
+    pick_perks = True
 
-    if use_input_boolean:
+    if pick_perks:
         user_input = input(prompt)
         return user_input
     else:
@@ -754,7 +754,7 @@ def choose_perks(team):
     translated_stats = {'Damage': 'atk_dmg', 'Power': 'power', 'Critical %': 'crit_pct', 'Critical X': 'crit_x',
                         'Health': 'max_health',
                         'Defense %': 'defense_pct'}
-    perk_choice = timed_input(f"\n{team.name}: Press Y to roll for a rare or epic perk, press any other key to gain one, two (most likely), or three random common perks.\n")
+    perk_choice = timed_input(f"\n{team.name}: Press Y to roll for a rare or epic perk, press any other key to gain two or three random common perks AND increment_trait(1) on 1 random player.\n")
     if perk_choice == 'Y' or perk_choice == 'y':
         rarity_roll = uniform(0, 1)
         if rarity_roll <= 0.50: #COMMON
@@ -827,12 +827,13 @@ def choose_perks(team):
 
 
     else:
-        for _ in range(choice([1,2,2,2,2,3])):
+        for _ in range(choice([2,2,2,2,3,3,3])):
             slot_amp = randint(0, 5)
             attr_amp = choice(["Damage", "Power", "Critical %", "Critical X", "Health", "Defense %"])
             setattr(team.players[slot_amp], translated_stats[attr_amp],
                     (getattr(team.players[slot_amp], translated_stats[attr_amp]) + common_increments[attr_amp]))
             print(f"Slot {slot_amp} ({team.players[slot_amp].name}) {attr_amp} +{common_increments[attr_amp]}")
+        increment_trait(choice(team.players), factor=1)
 
 
 

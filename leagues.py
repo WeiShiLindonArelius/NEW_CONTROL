@@ -18,9 +18,9 @@ from statistics import stdev
 import re
 
 def timed_input(prompt): #False = do nothing with coach decisions, True = manual coach decisions
-    use_input_boolean = False
+    make_coach_decisions = False
 
-    if use_input_boolean:
+    if make_coach_decisions:
         user_input = input(prompt)
         return user_input
     else:
@@ -899,12 +899,13 @@ def player_changes(teams, season_count=-1):
                     coins[1] = True
 
                 if coins[0] and coins[1]:
-                    #Heads and Heads, Attack Damage and Health
+                    #Heads and Heads: Attack Damage, Health, and Defense Absolute
                     pl_old_xWAR = player.get_xWAR()
                     old_team_xWAR += pl_old_xWAR
 
                     old_atk_dmg = player.atk_dmg
                     old_max_health = player.max_health
+                    #old_defense_abs = player.defense_abs
 
                     player.atk_dmg = round(player.atk_dmg * half_to_one(factor))
                     player.max_health = round(player.max_health * factor, 2) if factor < 1.2 else round(player.max_health * 1.2, 2)
@@ -2047,7 +2048,6 @@ def league_season(TEAMS,use_saved=False,season_count=-1,final_reversed=True,regi
     if stats_list:
 
         if region == 'Universal':
-            pass
             names_standings = {team.name.replace('*', '').replace('#',''): rank + 1 for rank, team in enumerate(reversed(final_standings))}
             a=0
             for team in final_standings:
