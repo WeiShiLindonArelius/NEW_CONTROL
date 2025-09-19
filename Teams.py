@@ -744,26 +744,47 @@ def increment_trait(player, factor):
             player.trait_multiplier = mult
             print(f"{player.name} given {tag} with a mult of {mult}!")
 
+perk_option_strings = {
+    "Rare" : ["'C' to amp the captain by an attribute of choice", "'T' to give one (1) random player a random trait",
+              "'I' to run increment_trait(1 or 2) on three (3) players", "'B' to ensure one (1) player will breakout next season"],
+
+    "Epic" : ["'A' to increment one stat for all players", "'T' to grant a random player a trait which synergizes with the coach",
+              "'I' to increment all player trait mults and roll for traits for non-trait players", "'B' to ensure two (2) players will breakout next season",
+              "'C' to pick a new captain from five (5) options"],
+
+
+}
+
 
 def choose_perks(team):
     # user has two choices: amp a specific stat on a specific player, OR roll for a perk
     # if the user rolls, there is a 70% chance of a random stat being amped on a random player, a 22.5% chance for a rare perk, and a 7.5% chance for an epic perk
+    option_str = ""
+
     translated_stats = {'Damage': 'atk_dmg', 'Power': 'power', 'Critical %': 'crit_pct', 'Critical X': 'crit_x',
                         'Health': 'max_health',
                         'Defense %': 'defense_pct'}
-    perk_choice = timed_input(f"\n{team.name}: Press Y to roll for a rare or epic perk, press any other key to gain two or three random common perks AND increment_trait(1) on 1 random player.\n")
+    perk_choice = timed_input(f"\n{team.name}: Press Y to roll for a rare or epic perk, press any other key to gain two \nor three random common perks AND increment_trait(1) on 1 random player OR pick a new captain.")
     if perk_choice == 'Y' or perk_choice == 'y':
         rarity_roll = uniform(0, 1)
-        if rarity_roll <= 0.50: #COMMON
+        if rarity_roll <= 0.01: #COMMON
             slot_amp = randint(0, 5)
             attr_amp = choice(["Damage", "Power", "Critical %", "Critical X", "Health", "Defense %"])
             setattr(team.players[slot_amp], translated_stats[attr_amp],
                     (getattr(team.players[slot_amp], translated_stats[attr_amp]) + common_increments[attr_amp]))
             print(f"Slot {slot_amp} ({team.players[slot_amp].name}) {attr_amp} +{common_increments[attr_amp]}")
         elif rarity_roll <= 0.8: #RARE
+            available_rare = [0,1,2,3]
+            for i in range(2):
+                available_rare_index = choice(available_rare)
+                option_str += perk_option_strings["Rare"][available_rare_index]
+                if i != 1:
+                    option_str += " or "
+                available_rare.remove(available_rare_index)
+
             slot_choice = input(
-                "You've rolled for a rare perk! Type 'Captain' to amp the captain by an attribute of choice, 'T' to give a random player a random trait, or\n 'I' to run increment_trait(1 or 2) on 3 players.\n")
-            if slot_choice == "Captain":
+                f"You've rolled for a rare perk! Type {option_str}")
+            if slot_choice in ['C', 'c']:
                 capt_choice = input("Damage Taken, Critical X, Damage X, or Health?")
                 if capt_choice == "Damage Taken":
                     team.captain.damage_taken -= 0.0075
@@ -784,13 +805,27 @@ def choose_perks(team):
                         pl.trait_tag = tag
                         pl.trait_multiplier = mult
                         print(f"{pl.name} given {tag} with a mult of {mult}!")
+            elif slot_choice in ['B', 'b']:
+                breakout_player = choice(team.players)
+                breakout_player.breakout = True
+                print(f"{breakout_player.name} will breakout next season!")
             else:
                 for i in [1,3,5]:
                     increment_trait(team.players[i], factor=choice([1,2]))
         elif rarity_roll <= 0.925: #EPIC
+            available_epic = [0, 1, 2, 3, 4]
+            for i in range(3):
+                available_epic_index = choice(available_epic)
+                option_str += perk_option_strings["Rare"][available_epic_index]
+                if i == 0:
+                    option_str += ", "
+                if i == 1:
+                    option_str += ", or "
+                available_epic.remove(available_epic_index)
+
             slot_choice = input(
-                "You've rolled for an EPIC perk! Press 'A' to increment one stat for all players, 'T' to grant a random player a trait which synergizes with the coach,\n 'I' to increment all player trait mults and roll for traits for non-trait players\n")
-            if slot_choice == "A":
+                f"You've rolled for an EPIC perk! Press {option_str}\n")
+            if slot_choice in ['A', 'a']:
                 attr_choice = input("What attribute would you like to amplify?")
                 if attr_choice not in ["Damage", "Power", "Critical %", "Critical X", "Health", "Defense %"]:
                     attr_choice = choice(["Damage", "Power", "Critical %", "Critical X", "Health", "Defense %"])
@@ -798,19 +833,50 @@ def choose_perks(team):
                     setattr(pl, translated_stats[attr_choice],
                             (getattr(pl, translated_stats[attr_choice]) + epic_increments[attr_choice]))
                 print(f"All players {attr_choice} +{epic_increments[attr_choice]}")
-            elif slot_choice == 'T':
+            elif slot_choice in ['T', 't']:
                 for pl in team.players:
                     if pl.trait_tag == "None":
                         tag, mult = additional_trait_roll(tier=pl.tier, fixed=team.team_coach.trait_effect[0])
                         pl.trait_tag = tag
                         pl.trait_multiplier = mult
                         print(f"{pl.name} given {tag} with a mult of {mult}!")
+            elif slot_choice in ['C', 'c']:
+                new_cap_1 = Captain()
+                new_cap_2 = Captain()
+                new_cap_3 = Captain()
+                new_cap_4 = Captain()
+                new_cap_5 = Captain()
+                print(f"Current captain: {str(team.captain)}")
+                print(f"Option 'A': {str(new_cap_1)}")
+                print(f"Option 'B': {str(new_cap_2)}")
+                print(f"Option 'C': {str(new_cap_3)}")
+                print(f"Option 'D': {str(new_cap_4)}")
+                print(f"Option 'E': {str(new_cap_5)}")
+                new_capt_choice = input("Press one of 'A' through 'E' for a new captain, or 'N' to keep the current captain.")
+                if new_capt_choice in ["A", "a"]:
+                    team.captain = new_cap_1
+                elif new_capt_choice in ["B", "b"]:
+                    team.captain = new_cap_2
+                elif new_capt_choice in ["C", "c"]:
+                    team.captain = new_cap_3
+                elif new_capt_choice in ["D", "d"]:
+                    team.captain = new_cap_4
+                elif new_capt_choice in ["E", "e"]:
+                    team.captain = new_cap_5
+            elif slot_choice in ['B', 'b']:
+                available_breakout = [0,1,2,3,4,5]
+                for _ in range(2):
+                    breakout_index = choice(available_breakout)
+                    team.players[breakout_index].breakout = True
+                    print(f"{team.players[breakout_index].name} will breakout next season!")
+                    available_breakout.remove(breakout_index)
+
             else:
                 for i in range(6):
                     increment_trait(team.players[i], factor=choice([1,2,2,3]))
         else: #LEGENDARY
-            slot_choice = input("You've rolled for an LEGENDARY perk! Press 'C' to gain TEN (10) random common perks, press 'I' to increment traits for all players with a factor of 4, 5, or 6.\n")
-            if slot_choice == 'C':
+            slot_choice = input("You've rolled for an LEGENDARY perk! Press 'C' to gain TWELVE (12) random common perks, press 'I' to increment traits for all players with a factor of 4, 5, or 6.\n")
+            if slot_choice in ['C', 'c']:
                 for _ in range(10):
                     slot_amp = randint(0, 5)
                     attr_amp = choice(["Damage", "Power", "Critical %", "Critical X", "Health", "Defense %"])
@@ -824,13 +890,26 @@ def choose_perks(team):
 
 
     else:
-        for _ in range(choice([2,2,2,2,3,3,3])):
-            slot_amp = randint(0, 5)
-            attr_amp = choice(["Damage", "Power", "Critical %", "Critical X", "Health", "Defense %"])
-            setattr(team.players[slot_amp], translated_stats[attr_amp],
-                    (getattr(team.players[slot_amp], translated_stats[attr_amp]) + common_increments[attr_amp]))
-            print(f"Slot {slot_amp} ({team.players[slot_amp].name}) {attr_amp} +{common_increments[attr_amp]}")
-        increment_trait(choice(team.players), factor=1)
+        no_roll_choice = input("Press 'P' to buff players, 'C' for new captain:\n")
+        if no_roll_choice in ["P", "p"]:
+            for _ in range(choice([2,2,2,2,3,3,3])):
+                slot_amp = randint(0, 5)
+                attr_amp = choice(["Damage", "Power", "Critical %", "Critical X", "Health", "Defense %"])
+                setattr(team.players[slot_amp], translated_stats[attr_amp],
+                        (getattr(team.players[slot_amp], translated_stats[attr_amp]) + common_increments[attr_amp]))
+                print(f"Slot {slot_amp} ({team.players[slot_amp].name}) {attr_amp} +{common_increments[attr_amp]}")
+            increment_trait(choice(team.players), factor=1)
+        else:
+            new_cap_1 = Captain()
+            new_cap_2 = Captain()
+            print(f"Current captain: {str(team.captain)}")
+            print(f"Option 'A': {str(new_cap_1)}")
+            print(f"Option 'B': {str(new_cap_2)}")
+            new_capt_choice = input("Press 'A' or 'B' for a new captain, or 'N' to keep the current captain.")
+            if new_capt_choice in ["A", "a"]:
+                team.captain = new_cap_1
+            elif new_capt_choice in ["B", "b"]:
+                team.captain = new_cap_2
 
 
 
