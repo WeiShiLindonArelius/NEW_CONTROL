@@ -15,10 +15,9 @@ import math
 from Teams import Coach
 from datetime import datetime
 from statistics import stdev
-import re
+from switches import make_coach_decisions
 
 def timed_input(prompt): #False = do nothing with coach decisions, True = manual coach decisions
-    make_coach_decisions = False
 
     if make_coach_decisions:
         user_input = input(prompt)

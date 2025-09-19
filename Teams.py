@@ -7,12 +7,9 @@ from numpy import mean
 from stat_functions import QUERY
 from lists import player_names
 
-import itertools
-
-import threading
+from switches import pick_perks
 
 def timed_input(prompt): #False = auto-perk picks, True = manual perk picks
-    pick_perks = True
 
     if pick_perks:
         user_input = input(prompt)
