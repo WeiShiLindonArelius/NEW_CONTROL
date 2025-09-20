@@ -2,4 +2,4 @@
 
 pick_perks = True
 
-make_coach_decisions = False
+make_coach_decisions = True

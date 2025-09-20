@@ -1061,9 +1061,9 @@ def main():
             season_wipe(group)
 
         print(Fore.GREEN + "GROUP 1 QUALIFYING ROUND, " + Fore.RESET, end='')
-        g1_pre_advance = round_robin(uni_qualif_g1, 8, len(uni_qualif_g1), franchise_mode=True, cyan_seeds=[0,1,2,3,4,5], yellow_seeds=[6,7,8,9,10,11], red_seeds=[r for r in range(12,len(uni_qualif_g1))])
+        g1_pre_advance = round_robin(uni_qualif_g1, 8, len(uni_qualif_g1), franchise_mode=True, cyan_seeds=[0,1,2,3,4,5], yellow_seeds=[6,7,8,9], red_seeds=[r for r in range(10,len(uni_qualif_g1))])
         print(Fore.GREEN + "GROUP 2 QUALIFYING ROUND, " + Fore.RESET, end='')
-        g2_pre_advance = round_robin(uni_qualif_g2, 8, len(uni_qualif_g2), franchise_mode=True, cyan_seeds=[0,1,2,3,4,5], yellow_seeds=[6,7,8,9,10,11], red_seeds=[r for r in range(12,len(uni_qualif_g2))])
+        g2_pre_advance = round_robin(uni_qualif_g2, 8, len(uni_qualif_g2), franchise_mode=True, cyan_seeds=[0,1,2,3,4,5], yellow_seeds=[6,7,8,9], red_seeds=[r for r in range(10,len(uni_qualif_g2))])
         uni_teams.reverse()
         g1_advance = [None for _ in range(24)]
         g2_advance = [None for _ in range(24)]

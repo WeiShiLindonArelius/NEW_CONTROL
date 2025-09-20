@@ -1952,7 +1952,6 @@ def league_season(TEAMS,use_saved=False,season_count=-1,final_reversed=True,regi
     print(Fore.RED + f"{champ.name} have won the {region} League." + Fore.RESET)
     if region == "Universal" and season_count != 0:
         sleep(3)
-        champ.is_noteworthy = True
 
 
     final_standings = playoff_standings + missed_playoffs
@@ -1976,14 +1975,16 @@ def league_season(TEAMS,use_saved=False,season_count=-1,final_reversed=True,regi
             print(Fore.BLUE + f"{team.name}: {team.history[season_count]}"
                   + Fore.RESET)
             fire_coach = timed_input(f"Press Y to fire {str(team.team_coach)}, Press L to change lineup, press any other key to do nothing:\n")
-            if fire_coach == "Y" or fire_coach == "y":
+            if fire_coach in ['Y', 'y']:
                 team.history[season_count] += f"\n\tFired {team.team_coach.name}"
                 new_coach = Coach(region=region)
                 team.history[season_count] += f", Hired {new_coach.name}"
                 team.change_coach(new_coach)
+                print(f"Hired {str(new_coach)}")
             elif fire_coach == 'l' or fire_coach == 'L':
                 new_lineup_mod = input("What lineup modifier would you like to use?")
                 team.team_coach.lineup_modifier = new_lineup_mod if new_lineup_mod in ['NC', '1S', '2S', '3S', '4S', '5S', '6S', '7S', '8S', '1C', '2C', '3C', '4C', '5C', '6C', '7C'] else choice(['1S', '2S', '3S', '4S', '5S', '6S', '7S', '8S', '1C', '2C', '3C', '4C', '5C', '6C', '7C'])
+                team.reset_lineups()
 
 
             write_to_file(filename='my_team_results', words=f"S{season_count}: {team.name}: {team.history[season_count]}", mode='a', error=False)
