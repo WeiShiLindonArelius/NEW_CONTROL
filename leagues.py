@@ -27,7 +27,9 @@ def timed_input(prompt): #False = do nothing with coach decisions, True = manual
         return "O"
 
 
-caps = [2800, 2900, 3200, 3425, 3650, 3800] + ([3800] * 50)
+caps = [2800, 2900, 3200, 3425, 3650, 3800] + ([3800] * 50) #these are hundreds of times higher than I expect xWAR to be
+                                                            #after the changes, so I will edit them after I get a better idea
+                                                            #of what xWAR looks like for teams now
 
 def closest_multiple_of_6(n):
     lower_multiple = (n // 6) * 6
@@ -76,7 +78,7 @@ def player_stats_as_df(player: "PlayerSeason", dt, season_count, averages = None
                   'Defense %' : (player.defense_pct - avg_stats["Defense %"]) / std_devs["Defense %"],
                   'Defense Absolute': (player.defense_abs - avg_stats["Defense Absolute"]) / std_devs["Defense Absolute"],
                   'Spawn Time' : (avg_stats["Spawn Time"] - player.spawn_time) / std_devs["Spawn Time"],
-                  'Trait' : player.trait_tag, 'xWAR' : player.player.get_xWAR(averages=averages,deviations=deviations),
+                  'Trait' : player.trait_tag, 'xWAR' : player.player.xWAR,
                   'Game Wins' : player.game_wins, 'Game Losses' : player.game_losses, 'Game Winrate' : 100*round((player.game_wins / (player.game_wins+player.game_losses)),4),
                   'Effect' : player.effect, 'Kills' : player.kills, 'Deaths' : player.deaths, 'Slot' : player.player.slot,
                   'Team Winrate' : 100*round((player.player.team_wins / (player.player.team_wins + player.player.team_losses)),4), "Time" : dt}
@@ -262,8 +264,8 @@ def get_league_averages(teams,season_count,region="None",for_xWAR=False,for_play
                 "Season" : season_count,
                 "Region": region,
                 "Team": "REGIONAL AVERAGES",
-                "Seed" : "N/A",
-                "xWAR" : dummy.get_xWAR(set_stats=avg_stats_dict),
+                "Seed" : "N/A"
+                #"xWAR" : dummy.xWAR(set_stats=avg_stats_dict),
 
             }
 
@@ -303,9 +305,7 @@ def x_over_one(num, times):
         return 1 + (times*over_one)
 
 
-def grade_players(players, is_team=None, averages=None, deviations=None):
-    for player in players:
-        player.get_xWAR(averages=averages, deviations=deviations)
+def grade_players(players, is_team=None):
 
     players.sort(key=lambda pl: pl.xWAR, reverse=True)
     rank_index = 0
@@ -506,7 +506,7 @@ def user_draft(teams, season_count, is_regional=False, void=False, second = Fals
     p = draft_class.copy()
     #not sure why this is an if/else block, but I don't want to mess with it
     #players in the draft class are graded here and given a grade_dict['Rank']
-    averages = get_league_averages(p.values(), season_count, for_xWAR=True,for_players=True)
+    #averages = get_league_averages(p.values(), season_count, for_xWAR=True,for_players=True)
     stats = ["power", "dps", "crit_pct", "crit_x", "mit_pct", "max_health", "spawn_time"]
     deviations = {"Power": 0, "DPS": 0, "Critical %": 0, "Critical X": 0, "Mitigated %" : 0, "Health": 0, "Spawn Time": 0}
     translated_stats = {'power': 'Power', 'dps': 'DPS', 'crit_pct': 'Critical %', 'crit_x': 'Critical X', 'mit_pct' : 'Mitigated %',
@@ -518,13 +518,13 @@ def user_draft(teams, season_count, is_regional=False, void=False, second = Fals
     if second:
         #ignore
         temp_players = list(p.values()) + second_all_players
-        grade_players(list(temp_players),averages=averages)
+        grade_players(list(temp_players))
     elif third:
         #ignore
         temp_players = list(p.values()) + third_all_players
-        grade_players(list(temp_players),averages=averages)
+        grade_players(list(temp_players))
     else:
-        grade_players(list(p.values()),averages=averages)
+        grade_players(list(p.values()))
 
     #if it is a second round, grade_players will assign player.grade_dict['Rank'] to all players
     #they are ranked in a list which contains all players from all teams with a Second Round draft pick, and
@@ -555,9 +555,9 @@ def user_draft(teams, season_count, is_regional=False, void=False, second = Fals
 
 
         for old_player in team_lineup:
-            old_xWAR = old_player.get_xWAR()
+            old_xWAR = old_player.xWAR
             for new_player in draft_pool:
-                new_xWAR = new_player.get_xWAR()
+                new_xWAR = new_player.xWAR
                 new_value = current_value + new_xWAR - old_xWAR
 
                 if cap >= new_value > best_value:
@@ -658,14 +658,14 @@ def user_draft(teams, season_count, is_regional=False, void=False, second = Fals
             else:
                 draft(player=team_choice[0], repl=team_choice[1], team=teams[i], index=i, season_count=season_count,
                       draft_name=draft_name,
-                      averages=averages, deviations=deviations,new_pl_rank=team_choice[2])
+                    deviations=deviations,new_pl_rank=team_choice[2])
                 for key, value in list(p.items()):
                     if value == team_choice[0]:
                         del p[key]
                         break
 
 
-def draft(player, team, index, season_count, repl="Name", draft_name="None", averages=None, deviations=None,new_pl_rank=None):
+def draft(player, team, index, season_count, repl="Name", draft_name="None", deviations=None,new_pl_rank=None):
     # team.print_roster()
 
     cap = caps[season_count]
@@ -899,7 +899,7 @@ def player_changes(teams, season_count=-1):
 
                 if coins[0] and coins[1]:
                     #Heads and Heads: Attack Damage, Health, and Defense Absolute
-                    pl_old_xWAR = player.get_xWAR()
+                    pl_old_xWAR = player.xWAR
                     old_team_xWAR += pl_old_xWAR
 
                     old_atk_dmg = player.atk_dmg
@@ -916,7 +916,7 @@ def player_changes(teams, season_count=-1):
 
                     pl_new_xWAR = player.get_xWAR()
                     player.xWAR = pl_new_xWAR
-                    new_team_xWAR += player.get_xWAR()
+                    new_team_xWAR += player.xWAR
 
                     total_xWAR_increment += (pl_new_xWAR - pl_old_xWAR)
                     total_xWAR_increment_count += 1
@@ -937,7 +937,7 @@ def player_changes(teams, season_count=-1):
                     if extra_trait_roll >= chance_for_extra_trait:
                         ex_coin1 = choice([True,False])
                         if ex_coin1: #Critical-X
-                            pl_old_xWAR = player.get_xWAR()
+                            pl_old_xWAR = player.xWAR
                             old_team_xWAR += pl_old_xWAR
 
                             old_crit_x = player.crit_x
@@ -949,7 +949,7 @@ def player_changes(teams, season_count=-1):
 
                             pl_new_xWAR = player.get_xWAR()
                             player.xWAR = pl_new_xWAR
-                            new_team_xWAR += player.get_xWAR()
+                            new_team_xWAR += player.xWAR
 
                             total_xWAR_increment += (pl_new_xWAR - pl_old_xWAR)
                             total_xWAR_increment_count += 1
@@ -966,7 +966,7 @@ def player_changes(teams, season_count=-1):
                                 with open('off_season_report', 'a') as file:
                                     file.write(f"Critical X: {crit_x_sign}{player.crit_x - old_crit_x :.5f}\n")
                         else: #Critical Percentage
-                            pl_old_xWAR = player.get_xWAR()
+                            pl_old_xWAR = player.xWAR
                             old_team_xWAR += pl_old_xWAR
 
                             old_crit_pct = player.crit_pct
@@ -978,7 +978,7 @@ def player_changes(teams, season_count=-1):
 
                             pl_new_xWAR = player.get_xWAR()
                             player.xWAR = pl_new_xWAR
-                            new_team_xWAR += player.get_xWAR()
+                            new_team_xWAR += player.xWAR
 
                             total_xWAR_increment += (pl_new_xWAR - pl_old_xWAR)
                             total_xWAR_increment_count += 1
@@ -1000,7 +1000,7 @@ def player_changes(teams, season_count=-1):
 
                 elif coins[0] and not coins[1]:
                     #Heads and Tails, Attack Damage and Critical Multiplier
-                    pl_old_xWAR = player.get_xWAR()
+                    pl_old_xWAR = player.xWAR
                     old_team_xWAR += pl_old_xWAR
 
                     old_atk_dmg = player.atk_dmg
@@ -1016,7 +1016,7 @@ def player_changes(teams, season_count=-1):
 
                     pl_new_xWAR = player.get_xWAR()
                     player.xWAR = pl_new_xWAR
-                    new_team_xWAR += player.get_xWAR()
+                    new_team_xWAR += player.xWAR
 
                     total_xWAR_increment += (pl_new_xWAR - pl_old_xWAR)
                     total_xWAR_increment_count += 1
@@ -1037,7 +1037,7 @@ def player_changes(teams, season_count=-1):
                     if extra_trait_roll >= chance_for_extra_trait:
                         ex_coin2 = choice([True,False])
                         if ex_coin2: #Health
-                            pl_old_xWAR = player.get_xWAR()
+                            pl_old_xWAR = player.xWAR
                             old_team_xWAR += pl_old_xWAR
 
                             old_max_health = player.max_health
@@ -1049,7 +1049,7 @@ def player_changes(teams, season_count=-1):
 
                             pl_new_xWAR = player.get_xWAR()
                             player.xWAR = pl_new_xWAR
-                            new_team_xWAR += player.get_xWAR()
+                            new_team_xWAR += player.xWAR
 
                             total_xWAR_increment += (pl_new_xWAR - pl_old_xWAR)
                             total_xWAR_increment_count += 1
@@ -1067,7 +1067,7 @@ def player_changes(teams, season_count=-1):
                                     file.write(f"Max Health: {max_health_sign}{player.max_health - old_max_health :.5f}\n")
 
                         else: #Critical Percentage
-                            pl_old_xWAR = player.get_xWAR()
+                            pl_old_xWAR = player.xWAR
                             old_team_xWAR += pl_old_xWAR
 
                             old_crit_pct = player.crit_pct
@@ -1079,7 +1079,7 @@ def player_changes(teams, season_count=-1):
 
                             pl_new_xWAR = player.get_xWAR()
                             player.xWAR = pl_new_xWAR
-                            new_team_xWAR += player.get_xWAR()
+                            new_team_xWAR += player.xWAR
 
                             total_xWAR_increment += (pl_new_xWAR - pl_old_xWAR)
                             total_xWAR_increment_count += 1
@@ -1098,7 +1098,7 @@ def player_changes(teams, season_count=-1):
 
                 elif not coins[0] and coins[1]:
                     #Tails and Heads, Critical Percentage and Health
-                    pl_old_xWAR = player.get_xWAR()
+                    pl_old_xWAR = player.xWAR
                     old_team_xWAR += pl_old_xWAR
 
                     old_crit_pct = player.crit_pct
@@ -1114,7 +1114,7 @@ def player_changes(teams, season_count=-1):
 
                     pl_new_xWAR = player.get_xWAR()
                     player.xWAR = pl_new_xWAR
-                    new_team_xWAR += player.get_xWAR()
+                    new_team_xWAR += player.xWAR
 
                     total_xWAR_increment += (pl_new_xWAR - pl_old_xWAR)
                     total_xWAR_increment_count += 1
@@ -1136,7 +1136,7 @@ def player_changes(teams, season_count=-1):
                     if extra_trait_roll >= chance_for_extra_trait:
                         ex_coin3 = choice([True,False])
                         if ex_coin3: #Attack Damage
-                            pl_old_xWAR = player.get_xWAR()
+                            pl_old_xWAR = player.xWAR
                             old_team_xWAR += pl_old_xWAR
 
                             old_atk_dmg = player.atk_dmg
@@ -1148,7 +1148,7 @@ def player_changes(teams, season_count=-1):
 
                             pl_new_xWAR = player.get_xWAR()
                             player.xWAR = pl_new_xWAR
-                            new_team_xWAR += player.get_xWAR()
+                            new_team_xWAR += player.xWAR
 
                             total_xWAR_increment += (pl_new_xWAR - pl_old_xWAR)
                             total_xWAR_increment_count += 1
@@ -1165,7 +1165,7 @@ def player_changes(teams, season_count=-1):
                                 with open('off_season_report', 'a') as file:
                                     file.write(f"Attack Damage: {atk_dmg_sign}{player.atk_dmg - old_atk_dmg :.5f}\n")
                         else: #Critical X
-                            pl_old_xWAR = player.get_xWAR()
+                            pl_old_xWAR = player.xWAR
                             old_team_xWAR += pl_old_xWAR
 
                             old_crit_x = player.crit_x
@@ -1177,7 +1177,7 @@ def player_changes(teams, season_count=-1):
 
                             pl_new_xWAR = player.get_xWAR()
                             player.xWAR = pl_new_xWAR
-                            new_team_xWAR += player.get_xWAR()
+                            new_team_xWAR += player.xWAR
 
                             total_xWAR_increment += (pl_new_xWAR - pl_old_xWAR)
                             total_xWAR_increment_count += 1
@@ -1197,7 +1197,7 @@ def player_changes(teams, season_count=-1):
 
                 else:
                     #Tails and Tails, Critical Percentage and Critical Multiplier
-                    pl_old_xWAR = player.get_xWAR()
+                    pl_old_xWAR = player.xWAR
                     old_team_xWAR += pl_old_xWAR
 
                     old_crit_pct = player.crit_pct
@@ -1213,7 +1213,7 @@ def player_changes(teams, season_count=-1):
 
                     pl_new_xWAR = player.get_xWAR()
                     player.xWAR = pl_new_xWAR
-                    new_team_xWAR += player.get_xWAR()
+                    new_team_xWAR += player.xWAR
 
                     total_xWAR_increment += (pl_new_xWAR - pl_old_xWAR)
                     total_xWAR_increment_count += 1
@@ -1235,7 +1235,7 @@ def player_changes(teams, season_count=-1):
                     if extra_trait_roll >= chance_for_extra_trait:
                         ex_coin4 = choice([True,False])
                         if ex_coin4: #Attack Damage
-                            pl_old_xWAR = player.get_xWAR()
+                            pl_old_xWAR = player.xWAR
                             old_team_xWAR += pl_old_xWAR
 
                             old_atk_dmg = player.atk_dmg
@@ -1247,7 +1247,7 @@ def player_changes(teams, season_count=-1):
 
                             pl_new_xWAR = player.get_xWAR()
                             player.xWAR = pl_new_xWAR
-                            new_team_xWAR += player.get_xWAR()
+                            new_team_xWAR += player.xWAR
 
                             total_xWAR_increment += (pl_new_xWAR - pl_old_xWAR)
                             total_xWAR_increment_count += 1
@@ -1264,7 +1264,7 @@ def player_changes(teams, season_count=-1):
                                 with open('off_season_report', 'a') as file:
                                     file.write(f"Attack Damage: {atk_dmg_sign}{player.atk_dmg - old_atk_dmg :.5f}\n")
                         else: #Health
-                            pl_old_xWAR = player.get_xWAR()
+                            pl_old_xWAR = player.xWAR
                             old_team_xWAR += pl_old_xWAR
 
                             old_max_health = player.max_health
@@ -1276,7 +1276,7 @@ def player_changes(teams, season_count=-1):
 
                             pl_new_xWAR = player.get_xWAR()
                             player.xWAR = pl_new_xWAR
-                            new_team_xWAR += player.get_xWAR()
+                            new_team_xWAR += player.xWAR
 
                             total_xWAR_increment += (pl_new_xWAR - pl_old_xWAR)
                             total_xWAR_increment_count += 1
@@ -2075,7 +2075,7 @@ def league_season(TEAMS,use_saved=False,season_count=-1,final_reversed=True,regi
 
 
         region_mvp(stats_list, season_count, region, names_standings)
-        player_season_excel(stats_list[season_count],season_count=season_count,averages=averages,deviations=deviations)
+        #player_season_excel(stats_list[season_count],season_count=season_count,averages=averages,deviations=deviations)
 
 
     season_end_time = time()

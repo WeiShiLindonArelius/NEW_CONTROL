@@ -20,7 +20,7 @@ def timed_input(prompt): #False = auto-perk picks, True = manual perk picks
 
 def grade_players(players, is_team=None):
     for player in players:
-        player.get_xWAR()
+        player.xWAR()
 
     players.sort(key=lambda pl: pl.xWAR, reverse=True)
     rank_index = 0
@@ -371,7 +371,7 @@ class Team:
         self.team_coach = fixed_coach if fixed_coach else Coach(region)
         self.fired_coach_this_season = False
 
-        grade_players(self.players)
+        #grade_players(self.players)
         self.players.sort(key= lambda p : p.grade_dict["Rank"])
         all_lineups = list(generate_lineups_six_to_four(self.players,self.team_coach)) if region != "OneLeague" else self.players
         self.lineups = all_lineups
@@ -491,7 +491,7 @@ class Team:
         return round((total_stat / 30), 2)
 
     def get_team_xWAR(self):
-        return sum(player.get_xWAR() for player in self.players)
+        return sum(player.xWAR for player in self.players)
         #list for the amount of time which each slot plays for each coach lineup modifier,
         # and therefore what their xWAR should be multiplied by in the final calculation
         #slot_mult_dict = { 'NC' : [9,7,6,6,4,4] ,
@@ -743,6 +743,7 @@ def increment_trait(player, factor):
             player.trait_tag = tag
             player.trait_multiplier = mult
             print(f"{player.name} given {tag} with a mult of {mult}!")
+            player.name = f"{tag}{player.name}"
 
 perk_option_strings = {
     "Rare" : ["'C' to amp the captain by an attribute of choice", "'T' to give one (1) random player a random trait",
@@ -767,13 +768,13 @@ def choose_perks(team):
     perk_choice = timed_input(f"\n{team.name}: Press Y to roll for a rare or epic perk, press any other key to gain two \nor three random common perks AND increment_trait(1) on 1 random player OR pick a new captain.")
     if perk_choice == 'Y' or perk_choice == 'y':
         rarity_roll = uniform(0, 1)
-        if rarity_roll <= 0.01: #COMMON
+        if rarity_roll <= 0.475: #COMMON (47.5%)
             slot_amp = randint(0, 5)
             attr_amp = choice(["Damage", "Power", "Critical %", "Critical X", "Health", "Defense %"])
             setattr(team.players[slot_amp], translated_stats[attr_amp],
                     (getattr(team.players[slot_amp], translated_stats[attr_amp]) + common_increments[attr_amp]))
             print(f"Slot {slot_amp} ({team.players[slot_amp].name}) {attr_amp} +{common_increments[attr_amp]}")
-        elif rarity_roll <= 0.8: #RARE
+        elif rarity_roll <= 0.775: #RARE (30%)
             available_rare = [0,1,2,3]
             for i in range(2):
                 available_rare_index = choice(available_rare)
@@ -805,6 +806,7 @@ def choose_perks(team):
                         pl.trait_tag = tag
                         pl.trait_multiplier = mult
                         print(f"{pl.name} given {tag} with a mult of {mult}!")
+                        pl.name = f"{tag}{pl.name}"
             elif slot_choice in ['B', 'b']:
                 breakout_player = choice(team.players)
                 breakout_player.breakout = True
@@ -812,11 +814,11 @@ def choose_perks(team):
             else:
                 for i in [1,3,5]:
                     increment_trait(team.players[i], factor=choice([1,2]))
-        elif rarity_roll <= 0.925: #EPIC
+        elif rarity_roll <= 0.925: #EPIC (15%)
             available_epic = [0, 1, 2, 3, 4]
             for i in range(3):
                 available_epic_index = choice(available_epic)
-                option_str += perk_option_strings["Rare"][available_epic_index]
+                option_str += perk_option_strings["Epic"][available_epic_index]
                 if i == 0:
                     option_str += ", "
                 if i == 1:
@@ -840,6 +842,7 @@ def choose_perks(team):
                         pl.trait_tag = tag
                         pl.trait_multiplier = mult
                         print(f"{pl.name} given {tag} with a mult of {mult}!")
+                        pl.name = f"{tag}{pl.name}"
             elif slot_choice in ['C', 'c']:
                 new_cap_1 = Captain()
                 new_cap_2 = Captain()
@@ -874,7 +877,7 @@ def choose_perks(team):
             else:
                 for i in range(6):
                     increment_trait(team.players[i], factor=choice([1,2,2,3]))
-        else: #LEGENDARY
+        else: #LEGENDARY (7.5%)
             slot_choice = input("You've rolled for an LEGENDARY perk! Press 'C' to gain TWELVE (12) random common perks, press 'I' to increment traits for all players with a factor of 4, 5, or 6.\n")
             if slot_choice in ['C', 'c']:
                 for _ in range(10):

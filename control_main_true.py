@@ -388,7 +388,7 @@ def main():
     # file clearing:
     clear_file(['my_teams', 'region_mvp.txt','region_mvp.txt','champs', 'error_output', 'upsets', 'draft_list', 'draft_history',
                 'player_trait_data', 'team_coach_data', 'execution_time', 'playerstats', 'off_season_report', 'my_team_playerstats',
-                'my_team_results', 'std_devs', 'cumulative_avg_std_devs', 'comebacks', 'cap_fallback'])
+                'my_team_results', 'std_devs', 'cumulative_avg_std_devs', 'comebacks', 'cap_fallback', 'xWAR_tests'])
 
     #try:
     #    clear_file('PlayerSeasons.xlsx', excel=True)

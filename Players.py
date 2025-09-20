@@ -6,8 +6,74 @@ import math
 import numpy as np
 from collections import OrderedDict
 import sqlite3
+import lightgbm as lgb
+from datetime import datetime
 
 NO_SQL = True
+
+bst = lgb.Booster(model_file="player_model.bin")
+
+def xwar_stats_df(player, dt, season_count, for_model=False):
+    # averages and std devs
+    avg_stats = {
+        'Power': 55,
+        'DPS': 55.5 / 7.5,
+        'Critical %': 0.065,
+        'Critical X': 7.5,
+        'Mitigated %': 0.58,
+        'Defense %': 0.04,
+        'Defense Absolute': 4,
+        'Health': 210,
+        'Spawn Time': 6.9
+    }
+    std_devs = {
+        'Power': 2.83,
+        'DPS': 1.285,
+        'Critical %': 0.01649,
+        'Critical X': 1.1,
+        'Mitigated %': 0.02381,
+        'Defense %': 0.01155,
+        'Defense Absolute': 1.155,
+        'Health': 25.43,
+        'Spawn Time': 0.849
+    }
+
+    # traits list
+    trait_keys = ["$l","C%","I*","Pp","R#","U-","X+","Hn","Tx","Fl","Sp","V."]
+
+    # calculate numeric stats
+    crit_value = player.insta_kill_pct if player.trait_tag == "$l" else player.crit_pct
+
+    values = [
+        round((player.power - avg_stats["Power"]) / std_devs["Power"],3),
+        round((crit_value - avg_stats["Critical %"]) / std_devs["Critical %"],3),
+        round((player.crit_x - avg_stats["Critical X"]) / std_devs["Critical X"],3),
+        round((player.max_health - avg_stats["Health"]) / std_devs["Health"],3),
+        round((avg_stats["Spawn Time"] - player.spawn_time) / std_devs["Spawn Time"],3),
+        round((player.dps - avg_stats["DPS"]) / std_devs["DPS"],3)
+    ]
+
+    # add one-hot traits
+    for t in trait_keys:
+        values.append(1 if player.trait_tag == t else 0)
+
+    # add remaining numeric stats
+    values += [
+        round((player.mit_pct - avg_stats['Mitigated %']) / std_devs['Mitigated %'],3),
+        round((player.defense_pct - avg_stats["Defense %"]) / std_devs["Defense %"],3),
+        round((player.defense_abs - avg_stats["Defense Absolute"]) / std_devs["Defense Absolute"],3)
+    ]
+
+    # define column names
+    cols = ["Power","Critical %","Critical X","Health","Spawn Time","DPS"] + \
+           [f"Trait_{t}" for t in trait_keys] + \
+           ["Mitigated %","Defense %","Defense Absolute"]
+
+    if for_model:
+        df = pd.DataFrame([values], columns=cols)
+    else:
+        df = pd.DataFrame([values])
+    return df
 
 def QUERY(sql, connect=sqlite3.connect('ControlDataBase.db'), params=None, is_select=True):
     if NO_SQL:
@@ -542,12 +608,13 @@ class Player:
         self.team_wins = 0 #refers to games (lineups), NOT matches
         self.team_losses = 0
 
-        self.xWAR = 0
         self.xWAR_breakdown = ""
         self.breakout = False
 
         self.trait_tag = trait_tag #Can equal $l, U-, R#, C%, I*, Pp!, or X+ as of 11/09
         self.status = {"Stun" : [0,None], "Toxin" : [0,0,None], "Bloodlust" : 0, "Armor Lock" : 0}
+
+        self.xWAR = self.get_xWAR()
 
     def __str__(self):
         if self.deaths != 0:
@@ -820,8 +887,22 @@ class Player:
                     self.trait_multiplier[1] += 1
 
     def get_xWAR(self,averages=None,set_stats=None,deviations=None):
+        #THIS FUNCTION SHOULD ONLY BE USED UPON PLAYER INITIALIZATION AND PLAYER CHANGES
         self.xWAR = 0
+        predicted_winrate = bst.predict(xwar_stats_df(self, datetime.now().strftime("%m-%d_%H:%M"), season_count=0, for_model=True))
+        self.xWAR = round(((float(predicted_winrate) - 50) * 100), 4)
+        #write_to_file(filename="xWAR_tests", words=str(self.xWAR), mode='a')
+        return self.xWAR
 
+        #base_features = ["Power", "Critical %", "Critical X", "Health", "Spawn Time", "DPS",
+                 #"Trait_$l","Trait_C%","Trait_I*","Trait_Pp",r"Trait_R#","Trait_U-","Trait_X+",
+                 #"Trait_Hn","Trait_Tx",r"Trait_Fl","Trait_Sp","Trait_V.", "Mitigated %",
+                 #"Defense %", "Defense Absolute"]
+        #above is the order in which the model has the features saved
+
+
+
+    def old_get_xWAR(self,averages=None,set_stats=None,deviations=None):
         # Updated coefficients from Random Forest model
         xWAR_coefficients = {
             'Power': 100,
@@ -928,7 +1009,7 @@ class Player:
         self.xWAR = round(self.xWAR, 2) + trait_bonus[self.trait_tag]
         return self.xWAR
 
-    def old_get_xWAR(self):
+    def older_get_xWAR(self):
         self.xWAR = 0
         self.xWAR_breakdown = ""
 
