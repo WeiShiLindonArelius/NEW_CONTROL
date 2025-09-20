@@ -379,7 +379,7 @@ def ordinal_string(n: int) -> str:
     return f"{n}{suffix}"
 
 def main():
-    jackson_playing = False
+    from switches import jackson_playing
 
     import warnings
     warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -683,6 +683,9 @@ def main():
 
         for team in my_teams:
             choose_perks(team)
+        if jackson_playing:
+            for team in jackson_teams:
+                choose_perks(team)
 
         season_count += 1
 

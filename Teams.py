@@ -356,7 +356,7 @@ class Team:
             self.players = [s_tier(season_count=season_count,fixed='I*'),
                             a_tier(round(uniform(-0.01,2.99),2), season_count=season_count, fixed=choice(['Pp','Fl','Pp','Fl','Tx'])),
                             b_tier(round(uniform(-1,(2.515 if choice([True, False, False]) else 2)),2), season_count=season_count, fixed=choice(['C%','Sp','C%','Sp','Tx'])),
-                            (b_tier(round(uniform(-0.02, 3.59),2), season_count=season_count,fixed=choice(['X+','V.','X+','V.','Tx'])) if choice([True, True, False]) else a_tier(round(uniform(1, 2.59),2),season_count=season_count)),
+                            (b_tier(round(uniform(-0.02, 3.59),2), season_count=season_count,fixed=choice(['X+','V.','X+','V.','Tx'])) if choice([True, False, False]) else a_tier(round(uniform(1, 2.59),2),season_count=season_count)),
                             (c_tier(round(uniform(-1.01,6.99),2), season_count=season_count) if choice([True, True, False]) else s_tier(round(uniform(0.45,0.99),2), season_count=season_count, fixed=choice(['R#','Tx']))),
                             (c_tier(round(uniform(-1.81,6.59),2), season_count=season_count) if choice([True, False, False]) else b_tier(round(uniform(-0.89,2.99),2), season_count=season_count, fixed=choice(['U-','Hn'])))]
 
@@ -540,40 +540,18 @@ class Team:
             h.write('--------------\n\n')
 
     def print_accolades(self):
-        undead_count = 0
-        slasher_count = 0
-        reflector_count = 0
-        clutch_count = 0
-        inc_count = 0
-        pp_count = 0
-        exploder_count = 0
-        for player in self.players:
-            if player.trait_tag == 'U-':
-                undead_count += 1
-            elif player.trait_tag == '$l':
-                slasher_count += 1
-            elif player.trait_tag == 'R#':
-                reflector_count += 1
-            elif player.trait_tag == 'C%':
-                clutch_count += 1
-            elif player.trait_tag == 'I*':
-                inc_count += 1
-            elif player.trait_tag == 'Pp':
-                pp_count += 1
-            elif player.trait_tag == 'X+':
-                exploder_count += 1
         self.accolades['Slashers'] = len([p for p in self.players if p.trait_tag == '$l'])
-        self.accolades['Undead'] = len([p for p in self.players if p.trait_tag == '$l'])
-        self.accolades['Reflectors'] = len([p for p in self.players if p.trait_tag == '$l'])
-        self.accolades['Clutch Players'] = len([p for p in self.players if p.trait_tag == '$l'])
-        self.accolades['Inconsistent Players'] = len([p for p in self.players if p.trait_tag == '$l'])
-        self.accolades['Playoff Performers'] = len([p for p in self.players if p.trait_tag == '$l'])
-        self.accolades['Exploders'] = len([p for p in self.players if p.trait_tag == '$l'])
-        self.accolades['Splitters'] = len([p for p in self.players if p.trait_tag == '$l'])
-        self.accolades['Flashers'] = len([p for p in self.players if p.trait_tag == '$l'])
-        self.accolades['Toxic Players'] = len([p for p in self.players if p.trait_tag == '$l'])
-        self.accolades['Vampires'] = len([p for p in self.players if p.trait_tag == '$l'])
-        self.accolades['Healers'] = len([p for p in self.players if p.trait_tag == '$l'])
+        self.accolades['Undead'] = len([p for p in self.players if p.trait_tag == 'U-'])
+        self.accolades['Reflectors'] = len([p for p in self.players if p.trait_tag == 'R#'])
+        self.accolades['Clutch Players'] = len([p for p in self.players if p.trait_tag == 'C%'])
+        self.accolades['Inconsistent Players'] = len([p for p in self.players if p.trait_tag == 'I*'])
+        self.accolades['Playoff Performers'] = len([p for p in self.players if p.trait_tag == 'Pp'])
+        self.accolades['Exploders'] = len([p for p in self.players if p.trait_tag == 'X+'])
+        self.accolades['Splitters'] = len([p for p in self.players if p.trait_tag == 'Sp'])
+        self.accolades['Flashers'] = len([p for p in self.players if p.trait_tag == 'Fl'])
+        self.accolades['Toxic Players'] = len([p for p in self.players if p.trait_tag == 'Tx'])
+        self.accolades['Vampires'] = len([p for p in self.players if p.trait_tag == 'V.'])
+        self.accolades['Healers'] = len([p for p in self.players if p.trait_tag == 'Hn'])
 
         if self.mine:
             with open('my_teams', 'a') as h:
@@ -730,7 +708,7 @@ def increment_trait(player, factor):
     elif player.trait_tag == 'Tx':
         player.trait_multiplier[1][0] += math.ceil(factor/3) #1 or 2
         print(
-            f"{player.name}'s Toxin damage increased by {math.ceil(factor/3):.4f} to {player.trait_multiplier[1][1]}!")
+            f"{player.name}'s Toxin damage increased by {math.ceil(factor/3):.4f} to {player.trait_multiplier[1][0]}!")
     elif player.trait_tag == 'Hn':
         player.trait_multiplier[0] -= 1
         player.trait_multiplier[1] += 6 * (math.ceil(factor/3)) #6 or 12
@@ -854,7 +832,7 @@ def choose_perks(team):
             slot_choice = input(
                 f"You've rolled for an EPIC perk! Press {option_str}\n")
             if slot_choice in ['A', 'a']:
-                attr_choice = input("What attribute would you like to amplify?\n")
+                attr_choice = input("What attribute would you like to amplify? (Damage, Power, Critical %, Critical X, Health, or Defense %)\n")
                 if attr_choice not in ["Damage", "Power", "Critical %", "Critical X", "Health", "Defense %"]:
                     attr_choice = choice(["Damage", "Power", "Critical %", "Critical X", "Health", "Defense %"])
                 for pl in team.players:
@@ -872,6 +850,7 @@ def choose_perks(team):
                         pl.trait_multiplier = mult
                         print(f"{pl.name} given {tag} with a mult of {mult}!")
                         pl.name = f"{tag}{pl.name}"
+                        trait_given = True
                 if not trait_given:
                     print("All players have traits.")
                     pl = choice(team.players)

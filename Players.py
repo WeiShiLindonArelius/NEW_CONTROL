@@ -12,6 +12,7 @@ from datetime import datetime
 NO_SQL = True
 
 bst = lgb.Booster(model_file="player_model.bin")
+bst.save_model("player_model.bin")
 
 def xwar_stats_df(player, dt, season_count, for_model=False):
     # averages and std devs
