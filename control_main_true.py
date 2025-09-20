@@ -747,7 +747,7 @@ def main():
         sort_all_players([uni_teams, dw_teams, sc_teams, ds_teams, wof_teams, iw_teams, cl_teams, hc_teams, sh_teams], manual=False)
 
         with open("my_rosters", 'w') as file:
-            file.write(f"!!!!!!_SEASON 4_!!!!!!\n")
+            file.write(f"!!!!!!_SEASON {season_count}_!!!!!!\n")
         for league in [dw_teams, sc_teams, ds_teams, wof_teams, iw_teams, cl_teams, hc_teams, sh_teams]:
             season_wipe(league)
             for team in league:

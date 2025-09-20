@@ -416,7 +416,8 @@ class Team:
         self.accolades = {'Regional-Playoffs' : 0, 'Regional-Champ' : 0, 'Last-Stand' : 0, 'Pre-Qualifying' : 0,
                           'Universal-Qualifying' : 0, 'Universal-League' : 0, 'Universal-Playoffs' : 0, 'Uni-Playoff-Wins' : 0, 'Universal-Champ' : 0
                           , 'Slashers' : 0, 'Undead' : 0, 'Reflectors' : 0
-                          , 'Clutch Players' : 0, 'Inconsistent Players' : 0, 'Playoff Performers' : 0, 'Exploders' : 0}
+                          , 'Clutch Players' : 0, 'Inconsistent Players' : 0, 'Playoff Performers' : 0, 'Exploders' : 0,
+                          'Splitters' : 0, 'Flashers' : 0, 'Toxic Players' : 0, 'Vampires' : 0, 'Healers' : 0}
         #self.generate_player_names()
 
         #0 means no second round pick, 1 means group 1 (missed regional playoffs) and 2 means group 2 (came from region
@@ -561,13 +562,18 @@ class Team:
                 pp_count += 1
             elif player.trait_tag == 'X+':
                 exploder_count += 1
-        self.accolades['Slashers'] = slasher_count
-        self.accolades['Undead'] = undead_count
-        self.accolades['Reflectors'] = reflector_count
-        self.accolades['Clutch Players'] = clutch_count
-        self.accolades['Inconsistent Players'] = inc_count
-        self.accolades['Playoff Performers'] = pp_count
-        self.accolades['Exploders'] = exploder_count
+        self.accolades['Slashers'] = len([p for p in self.players if p.trait_tag == '$l'])
+        self.accolades['Undead'] = len([p for p in self.players if p.trait_tag == '$l'])
+        self.accolades['Reflectors'] = len([p for p in self.players if p.trait_tag == '$l'])
+        self.accolades['Clutch Players'] = len([p for p in self.players if p.trait_tag == '$l'])
+        self.accolades['Inconsistent Players'] = len([p for p in self.players if p.trait_tag == '$l'])
+        self.accolades['Playoff Performers'] = len([p for p in self.players if p.trait_tag == '$l'])
+        self.accolades['Exploders'] = len([p for p in self.players if p.trait_tag == '$l'])
+        self.accolades['Splitters'] = len([p for p in self.players if p.trait_tag == '$l'])
+        self.accolades['Flashers'] = len([p for p in self.players if p.trait_tag == '$l'])
+        self.accolades['Toxic Players'] = len([p for p in self.players if p.trait_tag == '$l'])
+        self.accolades['Vampires'] = len([p for p in self.players if p.trait_tag == '$l'])
+        self.accolades['Healers'] = len([p for p in self.players if p.trait_tag == '$l'])
 
         if self.mine:
             with open('my_teams', 'a') as h:
@@ -622,7 +628,7 @@ class Team:
     def print_roster(self,finale=False,first=False): #first is used for when it prints all of my team lineups to the terminal in blue
         if self.mine:
             if first:
-                with open('my_rosters', 'a', buffering=1) as f:
+                with open('my_rosters', 'a') as f:
                     f.write(f"{self.name.upper()} ROSTER\n\n")
                     i = 0
                     for player in self.players:
@@ -722,9 +728,9 @@ def increment_trait(player, factor):
         print(
             f"{player.name}'s {player.trait_tag} mult increased by {factor / 320:.6f} to {player.trait_multiplier:.4f}!")
     elif player.trait_tag == 'Tx':
-        player.trait_multiplier[1][1] += math.ceil(factor/3) #1 or 2
+        player.trait_multiplier[1][0] += math.ceil(factor/3) #1 or 2
         print(
-            f"{player.name}'s Toxin time increased by {math.ceil(factor/3):.4f} to {player.trait_multiplier[1][1]}!")
+            f"{player.name}'s Toxin damage increased by {math.ceil(factor/3):.4f} to {player.trait_multiplier[1][1]}!")
     elif player.trait_tag == 'Hn':
         player.trait_multiplier[0] -= 1
         player.trait_multiplier[1] += 6 * (math.ceil(factor/3)) #6 or 12
@@ -760,7 +766,7 @@ perk_option_strings = {
               "'I' to increment all player trait mults and roll for traits for non-trait players", "'B' to ensure two (2) players will breakout next season",
               "'C' to pick a new captain from five (5) options"],
 
-    "Legendary" : ["'C' to gain TWELVE (12) random common perks", "'I' to increment traits for all players with a factor of 4, 5, or 6"]
+    "Legendary" : ["'C' to gain FIFTEEN (15) random common perks", "'I' to increment traits for all players with a factor of 5 or 6"]
 
 
 }
@@ -809,6 +815,7 @@ def choose_perks(team):
                     team.captain.max_health += 3
                     print(f"Captain health increased by 3 to {team.captain.max_health}")
             elif slot_choice in ['T', 't']:
+                trait_given = False
                 for pl in team.players:
                     if pl.trait_tag == "None":
                         tag, mult = additional_trait_roll(tier=pl.tier,fixed='NotNone')
@@ -816,6 +823,11 @@ def choose_perks(team):
                         pl.trait_multiplier = mult
                         print(f"{pl.name} given {tag} with a mult of {mult}!")
                         pl.name = f"{tag}{pl.name}"
+                        trait_given = True
+                if not trait_given:
+                    print("All players have traits.")
+                    for i in [0, 2, 4]:
+                        increment_trait(team.players[i], factor=choice([1, 2]))
             elif slot_choice in ['B', 'b']:
                 breakout_player = choice(team.players)
                 breakout_player.breakout = True
@@ -823,10 +835,11 @@ def choose_perks(team):
             elif slot_choice in ['P', 'p']:
                 for pl in team.players:
                     pl.power += 1
+                print("All players Power +1")
 
             else:
                 for i in [1,3,5]:
-                    increment_trait(team.players[i], factor=choice([1,2]))
+                    increment_trait(team.players[i], factor=choice([1,2,3]))
         elif rarity_roll <= 0.925: #EPIC (15%)
             available_epic = list(range(len(perk_option_strings["Epic"])))
             for i in range(3):
@@ -835,7 +848,7 @@ def choose_perks(team):
                 if i == 0:
                     option_str += ", "
                 if i == 1:
-                    option_str += ", or "
+                    option_str += ", or\n"
                 available_epic.remove(available_epic_index)
 
             slot_choice = input(
@@ -849,7 +862,9 @@ def choose_perks(team):
                             (getattr(pl, translated_stats[attr_choice]) + epic_increments[attr_choice]))
                     pl.power += 1 #power can be incremented twice to give +2 to all players
                 print(f"All players {attr_choice} +{epic_increments[attr_choice]}")
+                print("All players Power +1")
             elif slot_choice in ['T', 't']:
+                trait_given = False
                 for pl in team.players:
                     if pl.trait_tag == "None":
                         tag, mult = additional_trait_roll(tier=pl.tier, fixed=team.team_coach.trait_effect[0])
@@ -857,6 +872,16 @@ def choose_perks(team):
                         pl.trait_multiplier = mult
                         print(f"{pl.name} given {tag} with a mult of {mult}!")
                         pl.name = f"{tag}{pl.name}"
+                if not trait_given:
+                    print("All players have traits.")
+                    pl = choice(team.players)
+                    tag, mult = additional_trait_roll(tier=pl.tier, fixed=team.team_coach.trait_effect[0])
+                    pl.trait_tag = tag
+                    pl.trait_multiplier = mult
+                    print(f"{pl.name} randomly chosen and given {tag} with a mult of {mult}!")
+                    pl.name = f"{tag}{pl.name}"
+                    for i in range(6):
+                        increment_trait(team.players[i], factor=choice([1, 2, 2, 3]))
             elif slot_choice in ['C', 'c']:
                 new_cap_1 = Captain()
                 new_cap_2 = Captain()
@@ -890,7 +915,7 @@ def choose_perks(team):
 
             else:
                 for i in range(6):
-                    increment_trait(team.players[i], factor=choice([1,2,2,3]))
+                    increment_trait(team.players[i], factor=choice([1,2,2,2,3,3,4]))
         else: #LEGENDARY (7.5%)
             available_legendary = list(range(len(perk_option_strings["Legendary"])))
             for i in range(2):
@@ -898,13 +923,11 @@ def choose_perks(team):
                 option_str += perk_option_strings["Legendary"][available_legendary_index]
                 if i == 0:
                     option_str += ", "
-                if i == 1:
-                    option_str += ", or "
                 available_legendary.remove(available_legendary_index)
             slot_choice = input(
                 f"You've rolled for an LEGENDARY perk! Press {option_str}\n")
             if slot_choice in ['C', 'c']:
-                for _ in range(10):
+                for _ in range(15):
                     slot_amp = randint(0, 5)
                     attr_amp = choice(["Damage", "Power", "Critical %", "Critical X", "Health", "Defense %"])
                     setattr(team.players[slot_amp], translated_stats[attr_amp],
@@ -912,7 +935,7 @@ def choose_perks(team):
                     print(f"Slot {slot_amp} ({team.players[slot_amp].name}) {attr_amp} +{common_increments[attr_amp]}")
             else:
                 for i in range(6):
-                    increment_trait(team.players[i], factor=choice([4,5,6]))
+                    increment_trait(team.players[i], factor=choice([5,6]))
 
 
 
