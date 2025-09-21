@@ -1339,6 +1339,57 @@ def player_changes(teams, season_count=-1):
                 file.write(f"Average {key} Increment: {avg_increment[key]:.4f} per player ({increment_count[key]} total players affected).\n")
             file.write('\n')
 
+def single_elim_8(t, r1_thresh=250, r2_thresh=300, r3_thresh=400, final_thresh=400, is_relegation=False, upset_list = None, upset_count = None, region = 'Universal', season_count=-1):
+
+
+    m1, m2, m3 = 70, 75, 90
+
+    sk1, sk2, sk3 = [100,85], [125, 100], [140,110]
+    # skunk thresh and margin
+
+    one, two, three, four, five, six, seven, eight = t[0], t[1], t[2], t[3], t[4], t[5], t[6], t[7]
+
+    one.seed, two.seed, three.seed, four.seed, five.seed, six.seed, seven.seed, eight.seed = 1, 2, 3, 4, 5, 6, 7, 8
+    print(Fore.RED + "UNIVERSAL PLAYOFFS" + Fore.RESET)
+
+    print(Fore.GREEN + f"QUARTERFINALS (to {r1_thresh} / by {m1})" + Fore.RESET)
+    context = f"S{season_count} Universal Playoffs, Quarterfinals"
+    w1, l1 = best_of(one, eight, r1_thresh, 10, True, m1, test_output=True, is_uni=not is_relegation,
+                     upset_list=upset_list, upset_count=upset_count, context=context, skunk=sk1)
+    w2, l2 = best_of(four, five, r1_thresh, 10, True, m1, test_output=True, is_uni=not is_relegation,
+                     upset_list=upset_list, upset_count=upset_count, context=context, skunk=sk1)
+    w3, l3 = best_of(two, seven, r1_thresh, 10, True, m1, test_output=True, is_uni=not is_relegation,
+                     upset_list=upset_list, upset_count=upset_count, context=context, skunk=sk1)
+    w4, l4 = best_of(three, six, r1_thresh, 10, True, m1, test_output=True, is_uni=not is_relegation,
+                     upset_list=upset_list, upset_count=upset_count, context=context, skunk=sk1)
+    out1 = sorted([l1, l2, l3, l4], key=lambda x: x.seed)
+
+    print(Fore.GREEN + f"SEMIFINALS (to {r2_thresh} / by {m2})" + Fore.RESET)
+    context = f"S{season_count} Universal Playoffs, Semifinals"
+
+    r2_actual = [w1, w2, w3, w4]
+    r2_seeded = r2_actual      #sorted([w1, w2, w3, w4, w5, w6, w7, w8], key=lambda x: x.seed) to sort by seed
+
+    w9, l9 = best_of(r2_seeded[0], r2_seeded[1], r2_thresh, 11, True, m2, test_output=True, is_uni=not is_relegation,
+                       upset_list=upset_list, upset_count=upset_count, context=context, skunk=sk2)
+    w10, l10 = best_of(r2_seeded[2], r2_seeded[3], r2_thresh, 11, True, m2, test_output=True, is_uni=not is_relegation,
+                       upset_list=upset_list, upset_count=upset_count, context=context, skunk=sk2)
+    out2 = sorted([l9, l10], key=lambda x: x.seed)
+
+    print(Fore.GREEN + f"FINALS (to {r3_thresh} / by {m3})" + Fore.RESET)
+    context = f"S{season_count} Universal Playoffs, Finals"
+
+    r3_actual = [w9, w10]
+    r3_seeded = r3_actual  #sorted([w9, w10, w11, w12], key=lambda x: x.seed) to re-seed
+
+    champ, outFinal = best_of(r3_seeded[0], r3_seeded[1], r3_thresh, 11, True, m3, test_output=True, is_uni=not is_relegation,
+                     upset_list=upset_list, upset_count=upset_count, context=context, skunk=sk3)
+
+    return champ, outFinal, out2[0], out2[1], out1[0], out1[1], out1[2], out1[3]
+
+
+
+
 
 def single_elim_16(t, r1_thresh=200, r2_thresh=250, r3_thresh=300, final_thresh=400, is_relegation=False, upset_list = None, upset_count = None, region = 'Universal', season_count=-1):
 
@@ -1798,7 +1849,7 @@ def league_season(TEAMS,use_saved=False,season_count=-1,final_reversed=True,regi
     if use_saved:
         TEAMS = load_pkl()
     if len(TEAMS) >= 30:
-        post_range = 16
+        post_range = 8
         chain_range = 8
     elif len(TEAMS) == 26:
         post_range = 12
@@ -1822,7 +1873,8 @@ def league_season(TEAMS,use_saved=False,season_count=-1,final_reversed=True,regi
             postseason, relegation_chain = round_robin(TEAMS, r=5, qualify_range=post_range, alt_qualify_range=chain_range,franchise_mode=True,
                                                        cyan_seeds=[c for c in range(16)],
                                                        yellow_seeds=[y for y in range(16,24)],
-                                                       red_seeds=[r for r in range(24,len(TEAMS))])
+                                                       red_seeds=[r for r in range(24,len(TEAMS))],
+                                                       is_universal=True)
         else: #season 0 universal league
             postseason = round_robin(TEAMS, 1, qualify_range=post_range,franchise_mode=True,
                                                        cyan_seeds=[c for c in range(12)],
@@ -1840,7 +1892,7 @@ def league_season(TEAMS,use_saved=False,season_count=-1,final_reversed=True,regi
             if chain_range:
                 if team in relegation_chain:
                     team.history[season_count] += f" {ordinal_string(team.seed)} in Universal League -> Relegation Match."
-                else:
+                elif team.seed >= 17:
                     team.history[season_count] += f" {ordinal_string(team.seed)} in Universal League -> S_{season_count+1} Universal Qualifying."
                     missed_playoffs.append(team)
             else:
@@ -1925,8 +1977,19 @@ def league_season(TEAMS,use_saved=False,season_count=-1,final_reversed=True,regi
         missed_playoffs = upi_winners + upi_losers + missed_playoffs
 
         playoff_one = list(postseason)
-        champ, second, third, fourth, fifth, sixth, seventh, eighth, ninth, tenth, eleventh, twelfth, thirteenth, fourteenth, fifteenth, sixteenth = single_elim_16(postseason,upset_list=upset_list,upset_count=upset_count,region=region, season_count=season_count)
-        playoff_standings = [champ, second, third, fourth, fifth, sixth, seventh, eighth, ninth, tenth, eleventh, twelfth, thirteenth, fourteenth, fifteenth, sixteenth]
+
+        uni_middle = [] #after change to 8-team playoff, this is ranks 9-16
+
+        for team in sorted(TEAMS, key=lambda x : x.seed):
+            if team not in playoff_one and team not in missed_playoffs:
+                uni_middle.append(team)
+                team.history[
+                    season_count] += f" {ordinal_string(team.seed)} in Universal League (missed playoffs) -> S_{season_count + 1} Universal League."
+
+
+        (champ, second, third, fourth, fifth, sixth, seventh, eighth) = single_elim_8(postseason,upset_list=upset_list,upset_count=upset_count,region=region, season_count=season_count)
+        playoff_standings = [champ, second, third, fourth, fifth, sixth, seventh, eighth]
+        ninth, tenth, eleventh, twelfth, thirteenth, fourteenth, fifteenth, sixteenth = uni_middle
         for team in playoff_one:
             team.accolades['Universal-Playoffs'] += 1
         champ.accolades['Universal-Champ'] += 1
@@ -1934,7 +1997,7 @@ def league_season(TEAMS,use_saved=False,season_count=-1,final_reversed=True,regi
 
 
 
-    playoff_standings_alt = [second, third, fourth, fifth, sixth, seventh, eighth, ninth, tenth, eleventh, twelfth] if post_range in [10,12] else [second, third, fourth, fifth, sixth, seventh, eighth, ninth, tenth, eleventh, twelfth, thirteenth, fourteenth, fifteenth, sixteenth]
+    playoff_standings_alt = [second, third, fourth, fifth, sixth, seventh, eighth, ninth, tenth, eleventh, twelfth] if post_range in [10,12] else [second, third, fourth, fifth, sixth, seventh, eighth]
     place = 1
     for team in playoff_standings_alt:
         place+=1
@@ -1954,7 +2017,7 @@ def league_season(TEAMS,use_saved=False,season_count=-1,final_reversed=True,regi
         sleep(3)
 
 
-    final_standings = playoff_standings + missed_playoffs
+    final_standings = playoff_standings + missed_playoffs if (region != "Universal" or season_count == 0) else playoff_standings + uni_middle + missed_playoffs
 
     if region!="Universal":
         for i in range(11,22):

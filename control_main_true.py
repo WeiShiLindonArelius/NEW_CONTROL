@@ -842,7 +842,7 @@ def main():
         for key in last_stand_groups.keys():
             print(Fore.GREEN + f"LAST STAND, GROUP {ls_group_names[index]}: " + Fore.RESET, end='')
             index+=1
-            temp_standings = round_robin(last_stand_groups[key], 40, 4, print_region_seed=True,cyan_seeds=[0,1],
+            temp_standings = round_robin(last_stand_groups[key], 30, 4, print_region_seed=True,cyan_seeds=[0,1],
                                                        red_seeds=[2,3])
 
             temp_standings[0].history[season_count] += f" 1st in Last Stand Group {key} -> Pre-Qualifying Group."
@@ -961,28 +961,28 @@ def main():
 
 
         print(Fore.GREEN + "PRE-QUALIFYING, GROUP A: " + Fore.RESET, end='')
-        group_a_standings = round_robin(group_a, r=20, qualify_range=len(group_a), print_region_seed=True, cyan_seeds=[0,1,2], red_seeds=[3,4])
+        group_a_standings = round_robin(group_a, r=15, qualify_range=len(group_a), print_region_seed=True, cyan_seeds=[0,1,2], red_seeds=[3,4])
         group_a_champ, group_a_runner_up, group_a_third = group_a_standings[:3]
         print(Fore.GREEN + "PRE-QUALIFYING, GROUP B: " + Fore.RESET, end='')
-        group_b_standings = round_robin(group_b, r=20, qualify_range=len(group_a), print_region_seed=True, cyan_seeds=[0,1,2], red_seeds=[3,4])
+        group_b_standings = round_robin(group_b, r=15, qualify_range=len(group_a), print_region_seed=True, cyan_seeds=[0,1,2], red_seeds=[3,4])
         group_b_champ, group_b_runner_up, group_b_third = group_b_standings[:3]
         print(Fore.GREEN + "PRE-QUALIFYING, GROUP C: " + Fore.RESET, end='')
-        group_c_standings = round_robin(group_c, r=20, qualify_range=len(group_a), print_region_seed=True, cyan_seeds=[0,1,2], red_seeds=[3,4])
+        group_c_standings = round_robin(group_c, r=15, qualify_range=len(group_a), print_region_seed=True, cyan_seeds=[0,1,2], red_seeds=[3,4])
         group_c_champ, group_c_runner_up, group_c_third = group_c_standings[:3]
         print(Fore.GREEN + "PRE-QUALIFYING, GROUP D: " + Fore.RESET, end='')
-        group_d_standings = round_robin(group_d, r=20, qualify_range=len(group_a), print_region_seed=True, cyan_seeds=[0,1,2], red_seeds=[3,4])
+        group_d_standings = round_robin(group_d, r=15, qualify_range=len(group_a), print_region_seed=True, cyan_seeds=[0,1,2], red_seeds=[3,4])
         group_d_champ, group_d_runner_up, group_d_third = group_d_standings[:3]
         print(Fore.GREEN + "PRE-QUALIFYING, GROUP E: " + Fore.RESET, end='')
-        group_e_standings = round_robin(group_e, r=20, qualify_range=len(group_a), print_region_seed=True, cyan_seeds=[0,1,2], red_seeds=[3,4])
+        group_e_standings = round_robin(group_e, r=15, qualify_range=len(group_a), print_region_seed=True, cyan_seeds=[0,1,2], red_seeds=[3,4])
         group_e_champ, group_e_runner_up, group_e_third = group_e_standings[:3]
         print(Fore.GREEN + "PRE-QUALIFYING, GROUP F: " + Fore.RESET, end='')
-        group_f_standings = round_robin(group_f, r=20, qualify_range=len(group_a), print_region_seed=True, cyan_seeds=[0,1,2], red_seeds=[3,4])
+        group_f_standings = round_robin(group_f, r=15, qualify_range=len(group_a), print_region_seed=True, cyan_seeds=[0,1,2], red_seeds=[3,4])
         group_f_champ, group_f_runner_up, group_f_third = group_f_standings[:3]
         print(Fore.GREEN + "PRE-QUALIFYING, GROUP G: " + Fore.RESET, end='')
-        group_g_standings = round_robin(group_g, r=20, qualify_range=len(group_a), print_region_seed=True, cyan_seeds=[0,1,2], red_seeds=[3,4])
+        group_g_standings = round_robin(group_g, r=15, qualify_range=len(group_a), print_region_seed=True, cyan_seeds=[0,1,2], red_seeds=[3,4])
         group_g_champ, group_g_runner_up, group_g_third = group_g_standings[:3]
         print(Fore.GREEN + "PRE-QUALIFYING, GROUP H: " + Fore.RESET, end='')
-        group_h_standings = round_robin(group_h, r=20, qualify_range=len(group_a), print_region_seed=True, cyan_seeds=[0,1,2], red_seeds=[3,4])
+        group_h_standings = round_robin(group_h, r=15, qualify_range=len(group_a), print_region_seed=True, cyan_seeds=[0,1,2], red_seeds=[3,4])
         group_h_champ, group_h_runner_up, group_h_third = group_h_standings[:3]
 
         i = 0
@@ -1064,9 +1064,9 @@ def main():
             season_wipe(group)
 
         print(Fore.GREEN + "GROUP 1 QUALIFYING ROUND, " + Fore.RESET, end='')
-        g1_pre_advance = round_robin(uni_qualif_g1, 8, len(uni_qualif_g1), franchise_mode=True, cyan_seeds=[0,1,2,3,4,5], yellow_seeds=[6,7,8,9], red_seeds=[r for r in range(10,len(uni_qualif_g1))])
+        g1_pre_advance = round_robin(uni_qualif_g1, 6, len(uni_qualif_g1), franchise_mode=True, cyan_seeds=[0,1,2,3,4,5], yellow_seeds=[6,7,8,9], red_seeds=[r for r in range(10,len(uni_qualif_g1))])
         print(Fore.GREEN + "GROUP 2 QUALIFYING ROUND, " + Fore.RESET, end='')
-        g2_pre_advance = round_robin(uni_qualif_g2, 8, len(uni_qualif_g2), franchise_mode=True, cyan_seeds=[0,1,2,3,4,5], yellow_seeds=[6,7,8,9], red_seeds=[r for r in range(10,len(uni_qualif_g2))])
+        g2_pre_advance = round_robin(uni_qualif_g2, 6, len(uni_qualif_g2), franchise_mode=True, cyan_seeds=[0,1,2,3,4,5], yellow_seeds=[6,7,8,9], red_seeds=[r for r in range(10,len(uni_qualif_g2))])
         uni_teams.reverse()
         g1_advance = [None for _ in range(24)]
         g2_advance = [None for _ in range(24)]
@@ -1531,7 +1531,7 @@ def main():
             above_cap = xwar_array[xwar_array > cap]
             below_cap = xwar_array[xwar_array <= cap]
             avg_diff_below_cap = below_cap.mean() - cap
-            avg_diff_above_cap = above_cap.mean() - cap
+            avg_diff_above_cap = above_cap.mean() - cap if len(avg_diff_above_cap) > 0 else 0
             with open('history', 'w') as history:
                 history.write(f"Average Team xWAR: {xwar_array.mean()}, xWAR Cap: {cap}\n")
             cap_mode = 'a' if season_count > 1 else 'w'

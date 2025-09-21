@@ -109,7 +109,8 @@ def alter_lineup(team):
 
     team.lineups = generate_lineups_six_to_four(team.players, team.team_coach)
 
-def round_robin(TEAMS,r,qualify_range,amp=4,alt_qualify_range = None, is_test=False,franchise_mode=False,print_region_seed=False,cyan_seeds=None, yellow_seeds=None, red_seeds=None):
+def round_robin(TEAMS,r,qualify_range,amp=4,alt_qualify_range = None, is_test=False,franchise_mode=False,
+                print_region_seed=False,cyan_seeds=None, yellow_seeds=None, red_seeds=None, is_universal=False):
 
     for team in TEAMS:
         team.previous_seed = -1
@@ -186,9 +187,14 @@ def round_robin(TEAMS,r,qualify_range,amp=4,alt_qualify_range = None, is_test=Fa
             bubba = TEAMS[q]
             bebop.append(bubba)
         if alt_qualify_range:
-            for q in range(qualify_range, qualify_range+alt_qualify_range):
-                bubba2 = TEAMS[q]
-                bebop2.append(bubba2)
+            if is_universal:
+                for q in range(16,24):
+                    bubba2 = TEAMS[q]
+                    bebop2.append(bubba2)
+            else:
+                for q in range(qualify_range, qualify_range+alt_qualify_range):
+                    bubba2 = TEAMS[q]
+                    bebop2.append(bubba2)
             return bebop, bebop2
         else:
             return bebop
