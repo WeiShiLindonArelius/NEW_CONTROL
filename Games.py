@@ -199,7 +199,7 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
         apply_traits_before_lineup(team1_lineup, team2_lineup)
 
         TESSERACT = 0
-        length = 80
+        length = 72
         #length *= amp
         length += 1
 

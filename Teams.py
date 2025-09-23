@@ -6,6 +6,7 @@ from colorama import Fore, Back, Style
 from numpy import mean
 from stat_functions import QUERY
 from lists import player_names
+from Players import remove_tag_from_name
 
 from switches import pick_perks
 
@@ -733,7 +734,7 @@ def increment_trait(player, factor):
             player.trait_tag = tag
             player.trait_multiplier = mult
             print(f"{player.name} given {tag} with a mult of {mult}!")
-            player.name = f"{tag}{player.name}"
+            player.name = f"{tag}{remove_tag_from_name(player.name)}"
 
 perk_option_strings = {
     "Rare" : ["'C' to amp the captain by an attribute of choice", "'T' to give one (1) random player a random trait",
@@ -800,7 +801,7 @@ def choose_perks(team):
                         pl.trait_tag = tag
                         pl.trait_multiplier = mult
                         print(f"{pl.name} given {tag} with a mult of {mult}!")
-                        pl.name = f"{tag}{pl.name}"
+                        pl.name = f"{tag}{remove_tag_from_name(pl.name)}"
                         trait_given = True
                 if not trait_given:
                     print("All players have traits.")
@@ -849,7 +850,7 @@ def choose_perks(team):
                         pl.trait_tag = tag
                         pl.trait_multiplier = mult
                         print(f"{pl.name} given {tag} with a mult of {mult}!")
-                        pl.name = f"{tag}{pl.name}"
+                        pl.name = f"{tag}{remove_tag_from_name(pl.name)}"
                         trait_given = True
                 if not trait_given:
                     print("All players have traits.")
@@ -858,7 +859,7 @@ def choose_perks(team):
                     pl.trait_tag = tag
                     pl.trait_multiplier = mult
                     print(f"{pl.name} randomly chosen and given {tag} with a mult of {mult}!")
-                    pl.name = f"{tag}{pl.name}"
+                    pl.name = f"{tag}{remove_tag_from_name(pl.name)}"
                     for i in range(6):
                         increment_trait(team.players[i], factor=choice([1, 2, 2, 3]))
             elif slot_choice in ['C', 'c']:

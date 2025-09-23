@@ -1881,7 +1881,7 @@ def league_season(TEAMS,use_saved=False,season_count=-1,final_reversed=True,regi
                                                        red_seeds=[r for r in range(10,len(TEAMS))])
             relegation_chain = None
     else: #regional league
-        postseason = round_robin(TEAMS, 1.5, qualify_range=post_range,franchise_mode=True,
+        postseason = round_robin(TEAMS, 1, qualify_range=post_range,franchise_mode=True,
                                                        cyan_seeds=[c for c in range(12)],
                                                        red_seeds=[r for r in range(12,len(TEAMS))])
         relegation_chain = None

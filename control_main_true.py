@@ -1531,7 +1531,7 @@ def main():
             above_cap = xwar_array[xwar_array > cap]
             below_cap = xwar_array[xwar_array <= cap]
             avg_diff_below_cap = below_cap.mean() - cap
-            avg_diff_above_cap = above_cap.mean() - cap if len(avg_diff_above_cap) > 0 else 0
+            avg_diff_above_cap = above_cap.mean() - cap if len((list(above_cap))) > 0 else 0
             with open('history', 'w') as history:
                 history.write(f"Average Team xWAR: {xwar_array.mean()}, xWAR Cap: {cap}\n")
             cap_mode = 'a' if season_count > 1 else 'w'

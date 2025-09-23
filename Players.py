@@ -14,6 +14,13 @@ NO_SQL = True
 bst = lgb.Booster(model_file="player_model.bin")
 bst.save_model("player_model.bin")
 
+def remove_tag_from_name(s:str):
+    targets = ["$l", "R#", "C%", "I*", "Tx", "Hn", "Sp", "Fl", "Pp", "U-", "X+", "V"]
+    out = s
+    for t in targets:
+        out = out.replace(t, "")
+    return out
+
 def xwar_stats_df(player, dt, season_count, for_model=False):
     # averages and std devs
     avg_stats = {
