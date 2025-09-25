@@ -736,8 +736,8 @@ class Player:
             capt_crit_increment = 1
 
         if crit_roll <= self.insta_kill_pct or (crit_roll <= self.crit_pct and self.tier == '$l'):
-            #insta_kill is the slasher variable for crit_pct, and every time they crit, they deal the max health of the defender
-            damage = defender.max_health * choice([2.8,2.9,3,3,3,3.1,3.2])
+            #insta_kill is the slasher variable for crit_pct, and every time they crit, they deal the max health of the defender * a value around 3.25
+            damage = defender.max_health * choice([2.95, 3, 3.05, 3.1, 3.15, 3.2, 3.25, 3.25, 3.25, 3.3, 3.35, 3.4, 3.45, 3.5, 3.55])
             crit=True
             if self.crit_data:
                 self.crit_data['Hit'] += 1

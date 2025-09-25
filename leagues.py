@@ -27,9 +27,7 @@ def timed_input(prompt): #False = do nothing with coach decisions, True = manual
         return "O"
 
 
-caps = [2800, 2900, 3200, 3425, 3650, 3800] + ([3800] * 50) #these are hundreds of times higher than I expect xWAR to be
-                                                            #after the changes, so I will edit them after I get a better idea
-                                                            #of what xWAR looks like for teams now
+caps = [2700, 2850, 3100, 3250, 3500, 3600] + ([3600] * 50)
 
 def closest_multiple_of_6(n):
     lower_multiple = (n // 6) * 6
@@ -717,9 +715,12 @@ def player_changes(teams, season_count=-1):
         total_xWAR_increment = 0
         total_xWAR_increment_count = 0
 
-        total_increment = {'Attack Damage' : 0, 'Health' : 0, 'Critical %' : 0, 'Critical X' : 0, 'Team xWAR' : 0}
-        increment_count = {'Attack Damage' : 0, 'Health' : 0, 'Critical %' : 0, 'Critical X' : 0, 'Team xWAR' : 0}
-        avg_increment = {'Attack Damage' : 0, 'Health' : 0, 'Critical %' : 0, 'Critical X' : 0, 'Team xWAR' : 0}
+        total_increment = {'Attack Damage' : 0, 'Health' : 0, 'Critical %' : 0, 'Critical X' : 0, 'Mitigated %' : 0, "Defense %" : 0, "Defense Absolute" : 0,
+                           "Power" : 0, "Spawn Time" : 0, "Attack Speed" : 0, 'Team xWAR' : 0}
+        increment_count = {'Attack Damage' : 0, 'Health' : 0, 'Critical %' : 0, 'Critical X' : 0, 'Mitigated %' : 0, "Defense %" : 0, "Defense Absolute" : 0,
+                           "Power" : 0, "Spawn Time" : 0, "Attack Speed" : 0, 'Team xWAR' : 0}
+        avg_increment = {'Attack Damage' : 0, 'Health' : 0, 'Critical %' : 0, 'Critical X' : 0, 'Mitigated %' : 0, "Defense %" : 0, "Defense Absolute" : 0,
+                         "Power" : 0, "Spawn Time" : 0, "Attack Speed" : 0, 'Team xWAR' : 0}
 
 
         seed(generate_seed())
@@ -728,16 +729,16 @@ def player_changes(teams, season_count=-1):
             list_of_100 = [num for num in range(100)]
 
             if pl.power > 62:
-                pl.power = 61
+                pl.power = 62
                 if mine:
                     with open('off_season_report', 'a') as fle:
-                        fle.write(f"{pl.name} power leveled out to 61.\n")
-            if pl.atk_spd < 4:
-                pl.atk_spd = 4
+                        fle.write(f"{pl.name} power leveled out to 62.\n")
+            if pl.atk_spd < 5:
+                pl.atk_spd = 5
                 if mine:
                     with open('off_season_report', 'a') as fle:
-                        fle.write(f"{pl.name} attack speed leveled out to 4.\n")
-            if pl.atk_spd > 10:
+                        fle.write(f"{pl.name} attack speed leveled out to 5.\n")
+            elif pl.atk_spd > 10:
                 pl.atk_spd = 10
                 if mine:
                     with open('off_season_report', 'a') as fle:
@@ -747,7 +748,7 @@ def player_changes(teams, season_count=-1):
                 if mine:
                     with open('off_season_report', 'a') as fle:
                         fle.write(f"{pl.name} attack damage leveled out to {str(70 if pl.trait_tag != '$l' else 89)}.\n")
-            if pl.atk_dmg < 40:
+            elif pl.atk_dmg < 40:
                 pl.atk_dmg = 40
                 if mine:
                     with open('off_season_report', 'a') as fle:
@@ -768,7 +769,7 @@ def player_changes(teams, season_count=-1):
                 if mine:
                     with open('off_season_report', 'a') as fle:
                         fle.write(f"{pl.name} crit-x leveled out to {pl.crit_x}.\n")
-            if pl.crit_x <= 5.00:
+            elif pl.crit_x <= 5.00:
                 pl.crit_x = choice([5.5,6.5,7.5])
                 if mine:
                     with open('off_season_report', 'a') as fle:
@@ -781,13 +782,53 @@ def player_changes(teams, season_count=-1):
                 if mine:
                     with open('off_season_report', 'a') as fle:
                         fle.write(f"{pl.name} crit-pct leveled out to {pl.crit_pct}.\n")
-            if pl.crit_pct <= 0.025:
+            elif pl.crit_pct <= 0.025:
                 pl.crit_pct = 0.045
                 if pl.tier == '$l':
                     pl.insta_kill_pct = pl.crit_pct
                 if mine:
                     with open('off_season_report', 'a') as fle:
                         fle.write(f"{pl.name} crit-pct leveled out to {pl.crit_pct}.\n")
+            if pl.spawn_time < 6:
+                pl.spawn_time = 6
+                if mine:
+                    with open('off_season_report', 'a') as fle:
+                        fle.write(f"{pl.name} spawn time leveled out to 6.\n")
+            elif pl.spawn_time > 9:
+                pl.spawn_time = 9
+                if mine:
+                    with open('off_season_report', 'a') as fle:
+                        fle.write(f"{pl.name} spawn time leveled out to 9.\n")
+            if pl.defense_abs > 7:
+                pl.defense_abs = 7
+                if mine:
+                    with open('off_season_report', 'a') as fle:
+                        fle.write(f"{pl.name} defense absolute leveled out to 7.\n")
+            elif pl.defense_abs < 2:
+                pl.defense_abs = 2
+                if mine:
+                    with open('off_season_report', 'a') as fle:
+                        fle.write(f"{pl.name} defense absolute leveled out to 2.\n")
+            if pl.mit_pct > 0.1:
+                pl.mit_pct = 0.099
+                if mine:
+                    with open('off_season_report', 'a') as fle:
+                        fle.write(f"{pl.name} mitigate % leveled out to 0.099.\n")
+            elif pl.mit_pct < 0.02:
+                pl.mit_pct = 0.02
+                if mine:
+                    with open('off_season_report', 'a') as fle:
+                        fle.write(f"{pl.name} mitigate % leveled out to 0.02.\n")
+            if pl.defense_pct > 0.09:
+                pl.defense_pct = 0.09
+                if mine:
+                    with open('off_season_report', 'a') as fle:
+                        fle.write(f"{pl.name} defense % leveled out to 0.09.\n")
+            elif pl.defense_pct < 0.02:
+                pl.defense_pct = 0.02
+                if mine:
+                    with open('off_season_report', 'a') as fle:
+                        fle.write(f"{pl.name} defense % leveled out to 0.02.\n")
 
         for team in teams:
             mine = False
@@ -798,6 +839,9 @@ def player_changes(teams, season_count=-1):
 
             for player in team.players:
 
+                pl_old_xWAR = player.xWAR
+                old_team_xWAR += pl_old_xWAR
+
                 breakout_coin = randint(1,250)
                 if player.breakout:
                     x_factor = choice([0.25, 0.3, 0.35, 0.4, 0.45, 0.5])
@@ -807,7 +851,7 @@ def player_changes(teams, season_count=-1):
                     team.history[season_count] += f"\n\tLOTTERY: {player.name} will have a breakout season!\n"
                 elif breakout_coin in range((250-player.age), 250) and player.age <= 3:
                     x_factor = choice([0.075,0.075,0.1,0.125,0.15])
-                elif breakout_coin in [18,118,218] or breakout_coin in range(1,player.age) or (player.age >= 9 and choice([True,False,False])):
+                elif breakout_coin in [18,118,218] or breakout_coin in range(1,player.age) or (player.age >= 5 and choice([True,False])) or player.age >= 8:
                     x_factor = choice([round(-0.045*player.age,2), round(-0.05*player.age, 2), round(-0.055*player.age, 2), -0.2, -0.25, -0.3, -0.35, -0.4, -0.45, -0.5])
                     team.history[season_count] += f"\n\tWASHED: {player.name} will significantly decline this season.\n"
                 elif breakout_coin % 15 == 0:
@@ -836,22 +880,22 @@ def player_changes(teams, season_count=-1):
                                'C' : choice([-0.005, -0.0025, 0, 0.0025, 0.005, 0.0075, 0.01, 0.0125]),
                                '$l' : choice([0, 0.005, 0.005, 0.01, 0.01, 0.015, 0.02])}
                 trait_factor = { 'C%' : choice([-0.03, -0.025, -0.02, -0.015, -0.01, -0.005, 0, 0.005]),
-                                 'I*': choice([-0.015, -0.01, -0.005, 0, 0.005, 0.01, 0.015]),
+                                 'I*': choice([-0.015, -0.015, -0.01, -0.01, -0.005, -0.005, 0, 0.02]),
                                  'Pp': choice([-0.025, -0.025, -0.02, -0.2, -0.01, -0.01, 0, 0.025]),
-                                 'R#': choice([-0.03, -0.0275, -0.025, -0.0225, -0.02, -0.0175, -0.015, -0.0125, -0.01, -0.0075, -0.005, -0.0025, 0, 0.0025, 0.005]),
-                                 'X+': choice([-0.04, -0.035, -0.025, -0.015]),
-                                 'U-' : choice([-0.03, -0.0275, -0.025, -0.0225, -0.02, -0.0175, -0.015, -0.0125, -0.01, -0.0075, -0.005, -0.0025, 0, 0.0025, 0.005]),
+                                 'R#': choice([-0.03, -0.0275, -0.025, -0.0225, -0.02, -0.0175, -0.015, -0.0125, -0.01, -0.0075, -0.005, -0.0025]),
+                                 'X+': choice([-0.02, -0.01, -0.005, 0, 0.005, 0.0075, 0.01]),
+                                 'U-' : choice([-0.0125, -0.01, -0.0075, -0.005, -0.0025, 0, 0.0025, 0.005]),
                                  '$l': choice([0, 0.005, 0.005, 0.01, 0.01, 0.015, 0.02]), #because crit multipliers naturally go up over time and slasher crit x stays the same, they need to be compensated
                                  'Sp' : choice([-0.01, -0.005, 0, 0.01]),
                                  'V.' : choice([-0.01, -0.005, 0, 0.01]),
-                                 'Hn' : choice([-0.01, -0.005, 0, 0.01]),
-                                 'Tx' : choice([-0.01, -0.005, 0, 0.01]),
-                                 'Fl' : choice([-0.01, -0.005, 0, 0.01]),
+                                 'Hn' : choice([-0.015, -0.0125, -0.01, -0.0075]),
+                                 'Tx' : choice([-0.01, -0.005, 0, 0.01, 0.015]),
+                                 'Fl' : choice([-0.05, -0.04, -0.03]), #by far the best trait in the game
                                  "None" : 0
                 }
                 #used for balancing purposes
-                random_factor = choice([-0.02, -0.019, -0.018, -0.017, -0.016, -0.015, -0.014, -0.013, -0.012, -0.011, -0.01, 0, 0.01])
-                random_factor *= choice([0.25,0.5,1,1,1,1,2,2,3])
+                random_factor = choice([-0.015, -0.014, -0.013, -0.012, -0.011, -0.01, -0.0075, -0.005])
+                random_factor *= choice([0.5,1,1,1,1,2,2])
 
                 if player.tier not in tier_factor.keys():
                     tier_factor[player.tier] = 0
@@ -859,10 +903,6 @@ def player_changes(teams, season_count=-1):
                 factor = age_factor[player.age] + t_factor + x_factor
                 if factor == 1:
                     factor = choice([0.99, 1.01])
-
-                chance_for_extra_trait = abs(1 - factor)
-                extra_trait_roll = uniform(0, 1)
-
 
                 total_factor += factor
                 factor_count += 1
@@ -873,431 +913,184 @@ def player_changes(teams, season_count=-1):
                         file.write(f"Factor: {factor:.6f}\n\tAge Factor: {age_factor[player.age]}\n\tT_Factor: {t_factor:.6f}"
                                    f"\n\t\tTrait Factor: {trait_factor[player.trait_tag]}\n\t\tTier Factor: {tier_factor[player.tier]}\n\t\tRandom Factor: {random_factor}\n\tX_Factor: {x_factor}\n")
 
-                power_coin = mean([uniform(1, 1.35), uniform(1,1.35)])
-                if player.age >= 10:
-                    player.power -= 1
 
-                if factor > power_coin:
-                    p2_coin = choice([0, -1, -1, -1, -1, -2])
-                    player.power += p2_coin
-                    if mine and p2_coin != 0:
-                        coin_sign = "+" if p2_coin > 0 else ""
-                        with open('off_season_report', 'a') as file:
-                            file.write(f"Power: {coin_sign}{p2_coin}\n")
+
+                attributes = ["Attack Damage", "Critical %", "Mitigate %", "Critical X", "Defense %", "Defense Absolute", "Health",
+                              "Power", "Attack Speed", "Spawn Time"] #these are all the attributes that can be amped
+                #this list intentionally excludes Attack Speed, Power and Spawn Time
+
+                to_amp =  []
+                amp_one = choice(attributes)
+                to_amp.append(amp_one)
+                attributes.remove(amp_one)
+                amp_two = choice(attributes)
+                to_amp.append(amp_two)
+                attributes.remove(amp_two)
+                if choice([True,False]):
+                    to_amp.append(choice(attributes))
+
+                for attribute in to_amp:
+                    if attribute == "Attack Damage":
+                        old_atk_dmg = player.atk_dmg
+
+                        player.atk_dmg = round(player.atk_dmg * half_to_one(factor))
+
+                        total_increment['Attack Damage'] += round((player.atk_dmg - old_atk_dmg), 2)
+                        increment_count['Attack Damage'] += 1
+
+                        if mine:
+                            atk_dmg_sign = "+" if old_atk_dmg < player.atk_dmg else ""
+                            with open('off_season_report', 'a') as file:
+                                file.write(f"Attack Damage: {atk_dmg_sign}{player.atk_dmg - old_atk_dmg :.5f}\n")
+                    elif attribute == "Critical %":
+                        old_crit_pct = player.crit_pct
+
+                        player.crit_pct = round(player.crit_pct * x_over_one(factor, choice([2, 2, 3])), 4)
+
+                        total_increment['Critical %'] += round((player.crit_pct - old_crit_pct), 2)
+                        increment_count['Critical %'] += 1
+
+                        if mine:
+                            crit_pct_sign = "+" if old_crit_pct < player.crit_pct else ""
+                            with open('off_season_report', 'a') as file:
+                                file.write(f"Critical %: {crit_pct_sign}{player.crit_pct - old_crit_pct :.5f}\n")
+                    elif attribute == "Mitigate %":
+                        old_mit_pct = player.mit_pct
+
+                        player.mit_pct = round((player.mit_pct * factor), 4)
+
+                        total_increment['Mitigated %'] += round((player.mit_pct - old_mit_pct), 2)
+                        increment_count['Mitigated %'] += 1
+
+                        if mine:
+                            mit_pct_sign = "+" if old_mit_pct < player.mit_pct else ""
+                            with open('off_season_report', 'a') as file:
+                                file.write(f"Mitigated %: {mit_pct_sign}{player.mit_pct - old_mit_pct :.5f}\n")
+                    elif attribute == "Defense %":
+                        old_defense_pct = player.defense_pct
+
+                        player.defense_pct = round((player.defense_pct * factor), 4)
+
+                        total_increment['Defense %'] += round((player.defense_pct - old_defense_pct), 2)
+                        increment_count['Defense %'] += 1
+
+                        if mine:
+                            defense_pct_sign = "+" if old_defense_pct < player.defense_pct else ""
+                            with open('off_season_report', 'a') as file:
+                                file.write(f"Defense %: {defense_pct_sign}{player.defense_pct - old_defense_pct :.5f}\n")
+                    elif attribute == "Critical X":
+                        old_crit_x = player.crit_x
+
+                        player.crit_x = round(player.crit_x * factor, 3)
+
+                        total_increment['Critical X'] += round((player.crit_x - old_crit_x), 3)
+                        increment_count['Critical X'] += 1
+
+                        if mine:
+                            crit_x_sign = "+" if old_crit_x < player.crit_x else ""
+                            with open('off_season_report', 'a') as file:
+                                file.write(f"Critical X: {crit_x_sign}{player.crit_x - old_crit_x :.5f}\n")
+                    elif attribute == "Health":
+                        old_max_health = player.max_health
+
+                        player.max_health = round(player.max_health * factor, 2) if factor < 1.2 else round(
+                            player.max_health * 1.2, 2)
+
+                        total_increment['Health'] += round((player.max_health - old_max_health), 3)
+                        increment_count['Health'] += 1
+
+                        if mine:
+                            max_health_sign = "+" if old_max_health < player.max_health else ""
+                            with open('off_season_report', 'a') as file:
+                                file.write(f"Max Health: {max_health_sign}{player.max_health - old_max_health :.5f}\n")
+                    elif attribute == "Defense Absolute":
+                        old_defense_abs = player.defense_abs
+
+                        defense_abs_roll = uniform(0,1)
+                        if defense_abs_roll >= (factor - 0.4):
+                            if factor > 1: #if the factor is below 1, there should be no chance of improvement
+                                player.defense_abs += 1
+                        else:
+                            if factor < 1: #if the factor is above 1, there should be no chance of decline
+                                player.defense_abs -= 1
+
+                        total_increment['Defense Absolute'] += round((player.defense_abs - old_defense_abs), 3)
+                        increment_count['Defense Absolute'] += 1
+
+                        if mine:
+                            defense_abs_sign = "+" if old_defense_abs < player.defense_abs else ""
+                            with open('off_season_report', 'a') as file:
+                                file.write(f"Defense Absolute: {defense_abs_sign}{player.defense_abs - old_defense_abs :.5f}\n")
+                    elif attribute == "Power":
+                        old_power = player.power
+
+                        power_roll = uniform(0, 1)
+                        if power_roll >= (factor - 0.5):
+                            if factor > 1:
+                                player.power += 1
+                        else:
+                            if factor < 1:
+                                player.power -= 1
+
+                        total_increment['Power'] += round((player.power - old_power), 3)
+                        increment_count['Power'] += 1
+
+                        if mine:
+                            power_sign = "+" if old_power < player.power else ""
+                            with open('off_season_report', 'a') as file:
+                                file.write(
+                                    f"Power: {power_sign}{player.power - old_power :.5f}\n")
+                    elif attribute == "Attack Speed":
+                        old_atk_spd = player.atk_spd
+
+                        atk_spd_roll = uniform(0, 1)
+                        if atk_spd_roll >= (factor - 0.6):
+                            if factor > 1:
+                                player.atk_spd -= 1
+                        else:
+                            if factor < 1:
+                                player.atk_spd += 1
+
+                        total_increment['Attack Speed'] += round((player.atk_spd - old_atk_spd), 3)
+                        increment_count['Attack Speed'] += 1
+
+                        if mine:
+                            atk_spd_sign = "+" if old_atk_spd < player.atk_spd else ""
+                            with open('off_season_report', 'a') as file:
+                                file.write(
+                                    f"Attack Speed: {atk_spd_sign}{player.atk_spd - old_atk_spd :.5f}\n")
+                    elif attribute == "Spawn Time":
+                        old_spawn_time = player.spawn_time
+
+                        spawn_time_roll = uniform(0, 1)
+                        if spawn_time_roll >= (factor - 0.5):
+                            player.spawn_time -= 1
+                        else:
+                            player.spawn_time += 1
+
+                        total_increment['Spawn Time'] += round((player.spawn_time - old_spawn_time), 3)
+                        increment_count['Spawn Time'] += 1
+
+                        if mine:
+                            spawn_time_sign = "+" if old_spawn_time < player.spawn_time else ""
+                            with open('off_season_report', 'a') as file:
+                                file.write(
+                                    f"Spawn Time: {spawn_time_sign}{player.spawn_time - old_spawn_time :.5f}\n")
+
+
+                pl_new_xWAR = player.get_xWAR()
+                player.xWAR = pl_new_xWAR
+                new_team_xWAR += player.xWAR
+
+                if pl_new_xWAR > pl_old_xWAR:
+                    better_count['Player'] += 1
+                elif pl_new_xWAR == pl_old_xWAR:
+                    neutral_count['Player'] += 1
                 else:
-                    p2_coin = choice([-1, 0, 1, 1, 1])
-                    player.power += p2_coin
-                    if mine and p2_coin != 0:
-                        coin_sign = "+" if p2_coin > 0 else ""
-                        with open('off_season_report', 'a') as file:
-                            file.write(f"Power: {coin_sign}{p2_coin}\n")
+                    worse_count['Player'] += 1
 
-                coins = [choice([True, False]), choice([True,False])]
-                if player.tier == '$l':
-                    coins[0] = False
-                    coins[1] = True
-
-                if coins[0] and coins[1]:
-                    #Heads and Heads: Attack Damage, Health, and Defense Absolute
-                    pl_old_xWAR = player.xWAR
-                    old_team_xWAR += pl_old_xWAR
-
-                    old_atk_dmg = player.atk_dmg
-                    old_max_health = player.max_health
-                    #old_defense_abs = player.defense_abs
-
-                    player.atk_dmg = round(player.atk_dmg * half_to_one(factor))
-                    player.max_health = round(player.max_health * factor, 2) if factor < 1.2 else round(player.max_health * 1.2, 2)
-
-                    total_increment['Attack Damage'] += round((player.atk_dmg - old_atk_dmg),2)
-                    total_increment['Health'] += round((player.max_health - old_max_health), 3)
-                    increment_count['Attack Damage'] += 1
-                    increment_count['Health'] += 1
-
-                    pl_new_xWAR = player.get_xWAR()
-                    player.xWAR = pl_new_xWAR
-                    new_team_xWAR += player.xWAR
-
-                    total_xWAR_increment += (pl_new_xWAR - pl_old_xWAR)
-                    total_xWAR_increment_count += 1
-
-                    if pl_new_xWAR > pl_old_xWAR:
-                        better_count['Player'] += 1
-                    elif pl_old_xWAR > pl_new_xWAR:
-                        worse_count['Player'] += 1
-                    else:
-                        neutral_count['Player'] += 1
-
-                    if mine:
-                        atk_dmg_sign = "+" if old_atk_dmg < player.atk_dmg else ""
-                        max_health_sign = "+" if old_max_health < player.max_health else ""
-                        with open('off_season_report', 'a') as file:
-                            file.write(f"Attack Damage: {atk_dmg_sign}{player.atk_dmg - old_atk_dmg :.5f}\n"
-                                       f"Max Health: {max_health_sign}{player.max_health - old_max_health :.5f}\n")
-                    if extra_trait_roll >= chance_for_extra_trait:
-                        ex_coin1 = choice([True,False])
-                        if ex_coin1: #Critical-X
-                            pl_old_xWAR = player.xWAR
-                            old_team_xWAR += pl_old_xWAR
-
-                            old_crit_x = player.crit_x
-
-                            player.crit_x = round(player.crit_x * factor, 3)
-
-                            total_increment['Critical X'] += round((player.crit_x - old_crit_x), 3)
-                            increment_count['Critical X'] += 1
-
-                            pl_new_xWAR = player.get_xWAR()
-                            player.xWAR = pl_new_xWAR
-                            new_team_xWAR += player.xWAR
-
-                            total_xWAR_increment += (pl_new_xWAR - pl_old_xWAR)
-                            total_xWAR_increment_count += 1
-
-                            if pl_new_xWAR > pl_old_xWAR:
-                                better_count['Player'] += 1
-                            elif pl_old_xWAR > pl_new_xWAR:
-                                worse_count['Player'] += 1
-                            else:
-                                neutral_count['Player'] += 1
-
-                            if mine:
-                                crit_x_sign = "+" if old_crit_x < player.crit_x else ""
-                                with open('off_season_report', 'a') as file:
-                                    file.write(f"Critical X: {crit_x_sign}{player.crit_x - old_crit_x :.5f}\n")
-                        else: #Critical Percentage
-                            pl_old_xWAR = player.xWAR
-                            old_team_xWAR += pl_old_xWAR
-
-                            old_crit_pct = player.crit_pct
-
-                            player.crit_pct = round(player.crit_pct * x_over_one(factor, choice([2, 2, 3])), 4)
-
-                            total_increment['Critical %'] += round((player.crit_pct - old_crit_pct), 2)
-                            increment_count['Critical %'] += 1
-
-                            pl_new_xWAR = player.get_xWAR()
-                            player.xWAR = pl_new_xWAR
-                            new_team_xWAR += player.xWAR
-
-                            total_xWAR_increment += (pl_new_xWAR - pl_old_xWAR)
-                            total_xWAR_increment_count += 1
-
-                            if pl_new_xWAR > pl_old_xWAR:
-                                better_count['Player'] += 1
-                            elif pl_old_xWAR > pl_new_xWAR:
-                                worse_count['Player'] += 1
-                            else:
-                                neutral_count['Player'] += 1
-
-                            if mine:
-                                crit_pct_sign = "+" if old_crit_pct < player.crit_pct else ""
-                                with open('off_season_report', 'a') as file:
-                                    file.write(f"Critical %: {crit_pct_sign}{player.crit_pct - old_crit_pct :.5f}\n")
-
-
-
-
-                elif coins[0] and not coins[1]:
-                    #Heads and Tails, Attack Damage and Critical Multiplier
-                    pl_old_xWAR = player.xWAR
-                    old_team_xWAR += pl_old_xWAR
-
-                    old_atk_dmg = player.atk_dmg
-                    old_crit_x = player.crit_x
-
-                    player.atk_dmg = round(player.atk_dmg * half_to_one(factor))
-                    player.crit_x = round(player.crit_x*factor, 3)
-
-                    total_increment['Attack Damage'] += round((player.atk_dmg - old_atk_dmg),2)
-                    total_increment['Critical X'] += round((player.crit_x - old_crit_x), 3)
-                    increment_count['Attack Damage'] += 1
-                    increment_count['Critical X'] += 1
-
-                    pl_new_xWAR = player.get_xWAR()
-                    player.xWAR = pl_new_xWAR
-                    new_team_xWAR += player.xWAR
-
-                    total_xWAR_increment += (pl_new_xWAR - pl_old_xWAR)
-                    total_xWAR_increment_count += 1
-
-                    if pl_new_xWAR > pl_old_xWAR:
-                        better_count['Player'] += 1
-                    elif pl_old_xWAR > pl_new_xWAR:
-                        worse_count['Player'] += 1
-                    else:
-                        neutral_count['Player'] += 1
-
-                    if mine:
-                        atk_dmg_sign = "+" if old_atk_dmg < player.atk_dmg else ""
-                        crit_x_sign = "+" if old_crit_x < player.crit_x else ""
-                        with open('off_season_report', 'a') as file:
-                            file.write(f"Attack Damage: {atk_dmg_sign}{player.atk_dmg - old_atk_dmg :.5f}\n"
-                                       f"Critical X: {crit_x_sign}{player.crit_x - old_crit_x :.5f}\n")
-                    if extra_trait_roll >= chance_for_extra_trait:
-                        ex_coin2 = choice([True,False])
-                        if ex_coin2: #Health
-                            pl_old_xWAR = player.xWAR
-                            old_team_xWAR += pl_old_xWAR
-
-                            old_max_health = player.max_health
-
-                            player.max_health = round(player.max_health * factor, 2) if factor < 1.2 else round(player.max_health * 1.2, 2)
-
-                            total_increment['Health'] += round((player.max_health - old_max_health), 3)
-                            increment_count['Health'] += 1
-
-                            pl_new_xWAR = player.get_xWAR()
-                            player.xWAR = pl_new_xWAR
-                            new_team_xWAR += player.xWAR
-
-                            total_xWAR_increment += (pl_new_xWAR - pl_old_xWAR)
-                            total_xWAR_increment_count += 1
-
-                            if pl_new_xWAR > pl_old_xWAR:
-                                better_count['Player'] += 1
-                            elif pl_old_xWAR > pl_new_xWAR:
-                                worse_count['Player'] += 1
-                            else:
-                                neutral_count['Player'] += 1
-
-                            if mine:
-                                max_health_sign = "+" if old_max_health < player.max_health else ""
-                                with open('off_season_report', 'a') as file:
-                                    file.write(f"Max Health: {max_health_sign}{player.max_health - old_max_health :.5f}\n")
-
-                        else: #Critical Percentage
-                            pl_old_xWAR = player.xWAR
-                            old_team_xWAR += pl_old_xWAR
-
-                            old_crit_pct = player.crit_pct
-
-                            player.crit_pct = round(player.crit_pct * x_over_one(factor, choice([2, 2, 3])), 4)
-
-                            total_increment['Critical %'] += round((player.crit_pct - old_crit_pct), 2)
-                            increment_count['Critical %'] += 1
-
-                            pl_new_xWAR = player.get_xWAR()
-                            player.xWAR = pl_new_xWAR
-                            new_team_xWAR += player.xWAR
-
-                            total_xWAR_increment += (pl_new_xWAR - pl_old_xWAR)
-                            total_xWAR_increment_count += 1
-
-                            if pl_new_xWAR > pl_old_xWAR:
-                                better_count['Player'] += 1
-                            elif pl_old_xWAR > pl_new_xWAR:
-                                worse_count['Player'] += 1
-                            else:
-                                neutral_count['Player'] += 1
-
-                            if mine:
-                                crit_pct_sign = "+" if old_crit_pct < player.crit_pct else ""
-                                with open('off_season_report', 'a') as file:
-                                    file.write(f"Critical %: {crit_pct_sign}{player.crit_pct - old_crit_pct :.5f}\n")
-
-                elif not coins[0] and coins[1]:
-                    #Tails and Heads, Critical Percentage and Health
-                    pl_old_xWAR = player.xWAR
-                    old_team_xWAR += pl_old_xWAR
-
-                    old_crit_pct = player.crit_pct
-                    old_max_health = player.max_health
-
-                    player.crit_pct = round(player.crit_pct * x_over_one(factor,choice([2,2,3])), 4)
-                    player.max_health = round(player.max_health * factor, 2) if factor < 1.2 else round(player.max_health * 1.2, 2)
-
-                    total_increment['Critical %'] += round((player.crit_pct - old_crit_pct), 2)
-                    total_increment['Health'] += round((player.max_health - old_max_health), 3)
-                    increment_count['Critical %'] += 1
-                    increment_count['Health'] += 1
-
-                    pl_new_xWAR = player.get_xWAR()
-                    player.xWAR = pl_new_xWAR
-                    new_team_xWAR += player.xWAR
-
-                    total_xWAR_increment += (pl_new_xWAR - pl_old_xWAR)
-                    total_xWAR_increment_count += 1
-
-                    if pl_new_xWAR > pl_old_xWAR:
-                        better_count['Player'] += 1
-                    elif pl_old_xWAR > pl_new_xWAR:
-                        worse_count['Player'] += 1
-                    else:
-                        neutral_count['Player'] += 1
-
-                    if mine:
-                        crit_pct_sign = "+" if old_crit_pct < player.crit_pct else ""
-                        max_health_sign = "+" if old_max_health < player.max_health else ""
-                        with open('off_season_report', 'a') as file:
-                            file.write(f"Critical %: {crit_pct_sign}{player.crit_pct - old_crit_pct :.5f}\n"
-                                       f"Max Health: {max_health_sign}{player.max_health - old_max_health :.5f}\n")
-
-                    if extra_trait_roll >= chance_for_extra_trait:
-                        ex_coin3 = choice([True,False])
-                        if ex_coin3: #Attack Damage
-                            pl_old_xWAR = player.xWAR
-                            old_team_xWAR += pl_old_xWAR
-
-                            old_atk_dmg = player.atk_dmg
-
-                            player.atk_dmg = round(player.atk_dmg * half_to_one(factor))
-
-                            total_increment['Attack Damage'] += round((player.atk_dmg - old_atk_dmg), 2)
-                            increment_count['Attack Damage'] += 1
-
-                            pl_new_xWAR = player.get_xWAR()
-                            player.xWAR = pl_new_xWAR
-                            new_team_xWAR += player.xWAR
-
-                            total_xWAR_increment += (pl_new_xWAR - pl_old_xWAR)
-                            total_xWAR_increment_count += 1
-
-                            if pl_new_xWAR > pl_old_xWAR:
-                                better_count['Player'] += 1
-                            elif pl_old_xWAR > pl_new_xWAR:
-                                worse_count['Player'] += 1
-                            else:
-                                neutral_count['Player'] += 1
-
-                            if mine:
-                                atk_dmg_sign = "+" if old_atk_dmg < player.atk_dmg else ""
-                                with open('off_season_report', 'a') as file:
-                                    file.write(f"Attack Damage: {atk_dmg_sign}{player.atk_dmg - old_atk_dmg :.5f}\n")
-                        else: #Critical X
-                            pl_old_xWAR = player.xWAR
-                            old_team_xWAR += pl_old_xWAR
-
-                            old_crit_x = player.crit_x
-
-                            player.crit_x = round(player.crit_x * factor, 3)
-
-                            total_increment['Critical X'] += round((player.crit_x - old_crit_x), 3)
-                            increment_count['Critical X'] += 1
-
-                            pl_new_xWAR = player.get_xWAR()
-                            player.xWAR = pl_new_xWAR
-                            new_team_xWAR += player.xWAR
-
-                            total_xWAR_increment += (pl_new_xWAR - pl_old_xWAR)
-                            total_xWAR_increment_count += 1
-
-                            if pl_new_xWAR > pl_old_xWAR:
-                                better_count['Player'] += 1
-                            elif pl_old_xWAR > pl_new_xWAR:
-                                worse_count['Player'] += 1
-                            else:
-                                neutral_count['Player'] += 1
-
-                            if mine:
-                                crit_x_sign = "+" if old_crit_x < player.crit_x else ""
-                                with open('off_season_report', 'a') as file:
-                                    file.write(f"Critical X: {crit_x_sign}{player.crit_x - old_crit_x :.5f}\n")
-
-
-                else:
-                    #Tails and Tails, Critical Percentage and Critical Multiplier
-                    pl_old_xWAR = player.xWAR
-                    old_team_xWAR += pl_old_xWAR
-
-                    old_crit_pct = player.crit_pct
-                    old_crit_x = player.crit_x
-
-                    player.crit_pct = round(player.crit_pct * x_over_one(factor,choice([2,2,3])), 4)
-                    player.crit_x = round(player.crit_x*factor, 3)
-
-                    total_increment['Critical %'] += round((player.crit_pct - old_crit_pct), 2)
-                    total_increment['Critical X'] += round((player.max_health - old_crit_x), 3)
-                    increment_count['Critical %'] += 1
-                    increment_count['Critical X'] += 1
-
-                    pl_new_xWAR = player.get_xWAR()
-                    player.xWAR = pl_new_xWAR
-                    new_team_xWAR += player.xWAR
-
-                    total_xWAR_increment += (pl_new_xWAR - pl_old_xWAR)
-                    total_xWAR_increment_count += 1
-
-                    if pl_new_xWAR > pl_old_xWAR:
-                        better_count['Player'] += 1
-                    elif pl_old_xWAR > pl_new_xWAR:
-                        worse_count['Player'] += 1
-                    else:
-                        neutral_count['Player'] += 1
-
-                    if mine:
-                        crit_pct_sign = "+" if old_crit_pct < player.crit_pct else ""
-                        crit_x_sign = "+" if old_crit_x < player.crit_x else ""
-                        with open('off_season_report', 'a') as file:
-                            file.write(f"Critical %: {crit_pct_sign}{player.crit_pct - old_crit_pct :.5f}\n"
-                                       f"Critical X: {crit_x_sign}{player.crit_x - old_crit_x :.5f}\n")
-
-                    if extra_trait_roll >= chance_for_extra_trait:
-                        ex_coin4 = choice([True,False])
-                        if ex_coin4: #Attack Damage
-                            pl_old_xWAR = player.xWAR
-                            old_team_xWAR += pl_old_xWAR
-
-                            old_atk_dmg = player.atk_dmg
-
-                            player.atk_dmg = round(player.atk_dmg * half_to_one(factor))
-
-                            total_increment['Attack Damage'] += round((player.atk_dmg - old_atk_dmg), 2)
-                            increment_count['Attack Damage'] += 1
-
-                            pl_new_xWAR = player.get_xWAR()
-                            player.xWAR = pl_new_xWAR
-                            new_team_xWAR += player.xWAR
-
-                            total_xWAR_increment += (pl_new_xWAR - pl_old_xWAR)
-                            total_xWAR_increment_count += 1
-
-                            if pl_new_xWAR > pl_old_xWAR:
-                                better_count['Player'] += 1
-                            elif pl_old_xWAR > pl_new_xWAR:
-                                worse_count['Player'] += 1
-                            else:
-                                neutral_count['Player'] += 1
-
-                            if mine:
-                                atk_dmg_sign = "+" if old_atk_dmg < player.atk_dmg else ""
-                                with open('off_season_report', 'a') as file:
-                                    file.write(f"Attack Damage: {atk_dmg_sign}{player.atk_dmg - old_atk_dmg :.5f}\n")
-                        else: #Health
-                            pl_old_xWAR = player.xWAR
-                            old_team_xWAR += pl_old_xWAR
-
-                            old_max_health = player.max_health
-
-                            player.max_health = round(player.max_health * factor, 2) if factor < 1.2 else round(player.max_health * 1.2, 2)
-
-                            total_increment['Health'] += round((player.max_health - old_max_health), 3)
-                            increment_count['Health'] += 1
-
-                            pl_new_xWAR = player.get_xWAR()
-                            player.xWAR = pl_new_xWAR
-                            new_team_xWAR += player.xWAR
-
-                            total_xWAR_increment += (pl_new_xWAR - pl_old_xWAR)
-                            total_xWAR_increment_count += 1
-
-                            if pl_new_xWAR > pl_old_xWAR:
-                                better_count['Player'] += 1
-                            elif pl_old_xWAR > pl_new_xWAR:
-                                worse_count['Player'] += 1
-                            else:
-                                neutral_count['Player'] += 1
-
-                            if mine:
-                                max_health_sign = "+" if old_max_health < player.max_health else ""
-                                with open('off_season_report', 'a') as file:
-                                    file.write(
-                                        f"Max Health: {max_health_sign}{player.max_health - old_max_health :.5f}\n")
-
-
-
-
-
+                total_xWAR_increment += (pl_new_xWAR - pl_old_xWAR)
+                total_xWAR_increment_count += 1
 
                 if mine:
                     with open('off_season_report', 'a') as file:

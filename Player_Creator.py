@@ -13,14 +13,14 @@ def additional_trait_roll(tier, fixed="None",amp=0,pre_reflect=0):
     clutch_lower_bound = 1.05
     inc_lower_bound = 0.11
     pp_lower_bound = 0.2
-    explode_lower_bound = 0.4
-    undead_lower_bound = 0.175
+    explode_lower_bound = 0.65
+    undead_lower_bound = 0.18
     reflector_lower_bound = 0.10
     splitter_lower_bound = 0.14
     vampire_lower_bound = 0.375
     heal_nova_possibilities = [x for x in range(36, 84) if x % 12 == 0]
-    heal_tick_possibilities = [13,12,12,11,11,10]
-    stun_tick_possibilities = [10,11,12,13]
+    heal_tick_possibilities = [13,12,12,11,11,10,10]
+    stun_tick_possibilities = [10,10,11,11,12,12,13]
     if tier == 'S':
         heal_nova_possibilities.pop()
         heal_tick_possibilities.pop()
@@ -31,11 +31,11 @@ def additional_trait_roll(tier, fixed="None",amp=0,pre_reflect=0):
         stun_tick_possibilities.pop()
 #multipliers for Toxic, Healer, Flasher, have to be selected a different way
     def toxic_mult(upper_bound):
-        return [round(uniform(0.225, upper_bound), 2), [choice([6,6,7,7,8,8,9]), choice([9,10,10,10,11,11,12])]] #chance, damage, time
+        return [round(uniform(0.25, upper_bound), 2), [choice([8,8,9,9,10]), choice([6,7,7,7,8,8])]] #chance, damage, time
     def healer_mult():
         return [choice(heal_tick_possibilities), choice(heal_nova_possibilities), False]
     def flasher_mult(upper_bound):
-        return [round(uniform(0.20, upper_bound), 2), choice(stun_tick_possibilities)]
+        return [round(uniform(0.15, upper_bound), 2), choice(stun_tick_possibilities)]
 
 
     if tier == 'S':
@@ -48,7 +48,7 @@ def additional_trait_roll(tier, fixed="None",amp=0,pre_reflect=0):
         splitter_upper_bound = 0.155
         vampire_upper_bound = 0.52
         toxic_upper_bound = 0.29
-        flasher_upper_bound = 0.25
+        flasher_upper_bound = 0.225
     elif tier == 'A':
         clutch_upperbound = 1.25
         inc_upperbound = 0.14
@@ -59,7 +59,7 @@ def additional_trait_roll(tier, fixed="None",amp=0,pre_reflect=0):
         splitter_upper_bound = 0.16
         vampire_upper_bound = 0.53
         toxic_upper_bound = 0.295
-        flasher_upper_bound = 0.26
+        flasher_upper_bound = 0.235
     elif tier == 'B':
         clutch_upperbound = 1.275
         inc_upperbound = 0.165
@@ -70,7 +70,7 @@ def additional_trait_roll(tier, fixed="None",amp=0,pre_reflect=0):
         splitter_upper_bound = 0.17
         vampire_upper_bound = 0.54
         toxic_upper_bound = 0.3
-        flasher_upper_bound = 0.27
+        flasher_upper_bound = 0.245
     elif tier == 'C':
         clutch_upperbound = 1.2875
         inc_upperbound = 0.18
@@ -81,7 +81,7 @@ def additional_trait_roll(tier, fixed="None",amp=0,pre_reflect=0):
         splitter_upper_bound = 0.18
         vampire_upper_bound = 0.55
         toxic_upper_bound = 0.31
-        flasher_upper_bound = 0.28
+        flasher_upper_bound = 0.25
     elif tier == '$l':
         return ["None",0]
     else:
@@ -200,7 +200,7 @@ def slasher(amp=0, season_count=-1):
     #Stat Cons: Very low health, very low power, high spawn time
     #Tag: '$'
 
-    atk_dmg = randint(55, 69) + math.floor(amp)
+    atk_dmg = randint(57, 70) + math.floor(amp)
     atk_spd = randint(6, 9)
     insta_kill_pct = round((((randint(64, 73)) / 1000) + (amp * 0.005)),2)
     crit_pct = insta_kill_pct

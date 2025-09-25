@@ -106,7 +106,7 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
         for player in t2lineup:
             player.trait_bools = {'C%' : False, 'I*' : 0, 'Pp' : 0}
 
-    def apply_tick_effects(team1p, team2p, living_team1, living_team2, yta_team1, yta_team2, tick):
+    def apply_tick_effects(team1p, team2p, living_team1, living_team2, yta_team1, yta_team2, tick, TESSERACT):
         for player in team1p:
             if player.trait_tag == "Hn" and (tick % player.trait_multiplier[0] == 0 or player.trait_multiplier[2]):
                 coach_bonus = 10 if (team1.team_coach.trait_effect[0] == 'Hn' and uniform(0,1) < team1.team_coach.trait_effect[1]) else 0
@@ -145,7 +145,10 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
                     # if player is killed by toxin
                     living_team1.remove(player)
                     if player in yta_team1:
+                        TESSERACT -= abs(3 * player.health)
+                        toxin_dealer.damage_data['Overkill'] += abs(3 * player.health)
                         yta_team1.remove(player)
+
             if player.status["Stun"][0] > 0:
                 player.status["Stun"][0] -= 1
 
@@ -164,6 +167,8 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
                     # if player is killed by toxin
                     living_team2.remove(player)
                     if player in yta_team2:
+                        TESSERACT += abs(3 * player.health)
+                        toxin_dealer.damage_data['Overkill'] += abs(3 * player.health)
                         yta_team2.remove(player)
             if player.status["Stun"][0] > 0:
                 player.status["Stun"][0] -= 1
@@ -175,8 +180,6 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
         team2_captain_alive = True
         team1_capt_damage_reduction = team1.captain.damage_taken #this is passed into attack when the respective team is defending
         team2_capt_damage_reduction = team2.captain.damage_taken
-        team1_protector_alive = True
-        team2_protector_alive = True
 
         team1.captain.health = team1.captain.max_health
         team2.captain.health = team2.captain.max_health
@@ -247,14 +250,11 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
 
             #applying clutch for games of length 50
             if playoffs:
-                if tiebreak:
-                    clutch_time = 67
-                else:
-                    clutch_time = 54
+                clutch_time = 52
             else:
-                clutch_time = 58
+                clutch_time = 56
 
-            if tick >= clutch_time or ((tick >= clutch_time - 10) and abs(TESSERACT) <= 100):
+            if tick >= clutch_time or ((tick >= (clutch_time - 10)) and abs(TESSERACT) <= 100):
                 for player in living_team1:
                     if player.trait_tag == 'C%':
                         player.trait_bools['C%'] = True
@@ -273,7 +273,7 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
             #and the while loop breaks when there are no players on either team who are alive and yet to attack
             #once the loop breaks, the next tick begins in the larger for loop
 
-            apply_tick_effects(team1.players, team2.players, living_team1, living_team2, yta_team1, yta_team2, tick)
+            apply_tick_effects(team1.players, team2.players, living_team1, living_team2, yta_team1, yta_team2, tick, TESSERACT)
 
             sub_count = choice([0,1])
             while True:

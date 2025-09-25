@@ -714,15 +714,15 @@ def increment_trait(player, factor):
         player.trait_multiplier[0] -= 1
         player.trait_multiplier[1] += 6 * (math.ceil(factor/3)) #6 or 12
         print(
-            f"{player.name}'s {player.trait_tag} time -1 to {player.trait_multiplier[0]} and heal amount increased by {6 * (math.ceil(factor/3)):.4f} to {player.trait_multiplier[1]}!")
+            f"{player.name}'s {player.trait_tag} time -1 to {player.trait_multiplier[0]} and heal amount increased by {6 * (math.ceil(factor/3))} to {player.trait_multiplier[1]}!")
     elif player.trait_tag == 'Fl':
         player.trait_multiplier[0] += (math.ceil(factor / 2) / 200)  # 0.005, 0.01, 0.015
         print(
             f"{player.name}'s {player.trait_tag} mult increased by {(math.ceil(factor / 2) / 200):.4f} to {player.trait_multiplier[0]:.4f}!")
     elif player.trait_tag == 'V.':
-        player.trait_multiplier += (math.ceil(factor / 2) / 50)  # 0.02, 0.04, or 0.06
+        player.trait_multiplier += (0.01 + (math.ceil(factor / 2) / 50))  # 0.03, 0.05, or 0.07
         print(
-            f"{player.name}'s {player.trait_tag} mult increased by {(math.ceil(factor / 2) / 50):.4f} to {player.trait_multiplier:.4f}!")
+            f"{player.name}'s {player.trait_tag} mult increased by {(0.01 + (math.ceil(factor / 2) / 50)):.4f} to {player.trait_multiplier:.4f}!")
     elif player.trait_tag == 'Sp':
         player.trait_multiplier += (math.ceil(factor / 2) / 225)  # 0.0044, 0.0088, 0.013
         print(
@@ -845,7 +845,7 @@ def choose_perks(team):
             elif slot_choice in ['T', 't']:
                 trait_given = False
                 for pl in team.players:
-                    if pl.trait_tag == "None":
+                    if pl.trait_tag == "None" and not trait_given:
                         tag, mult = additional_trait_roll(tier=pl.tier, fixed=team.team_coach.trait_effect[0])
                         pl.trait_tag = tag
                         pl.trait_multiplier = mult
