@@ -1612,22 +1612,6 @@ def main():
                     if team.mine:
                         print("\n" + Fore.RED + f"{team.name}\n" + Fore.BLUE + team.history[season_count] + Fore.RESET)
 
-            with open('team_coach_data', 'a') as file:
-                file.write(f"--Lineup Modifiers--\n")
-                file.write(
-                    f"NC: {coach_lineup_mod_count['NC']} ({round((100 * coach_lineup_mod_count['NC'] / total_team_count), 2)}%)\n")
-                file.write(
-                    f"1C: {coach_lineup_mod_count['1C']} ({round((100 * coach_lineup_mod_count['1C'] / total_team_count), 2)}%)\n")
-                file.write(
-                    f"2C: {coach_lineup_mod_count['2C']} ({round((100 * coach_lineup_mod_count['2C'] / total_team_count), 2)}%)\n")
-                file.write(
-                    f"3C: {coach_lineup_mod_count['3C']} ({round((100 * coach_lineup_mod_count['3C'] / total_team_count), 2)}%)\n")
-                file.write(
-                    f"4C: {coach_lineup_mod_count['4C']} ({round((100 * coach_lineup_mod_count['4C'] / total_team_count), 2)}%)\n")
-                file.write(
-                    f"5C: {coach_lineup_mod_count['5C']} ({round((100 * coach_lineup_mod_count['5C'] / total_team_count), 2)}%)\n"
-                    f"--Slots Amplified--\n")
-
                 for amped_slots in [(0,), (1,), (2,), (3,), (4,), (5,),
                 (0, 5), (1, 4), (2, 3), (3, 5), (3, 4), (0, 4), (1, 3), (2, 5),
                 (0, 4, 5), (1, 4, 5), (1, 3, 5), (2, 3, 4), (2, 3, 5), (3, 4, 5), (2,4,5)]:
@@ -1964,21 +1948,6 @@ def coach_testing():
         coach_trait_amped_count[team.team_coach.trait_effect[0]][1] += team.team_coach.trait_effect[1]
 
     with open('team_coach_data', 'a') as file:
-        file.write(f"--Lineup Modifiers--\n")
-        file.write(
-            f"NC: {coach_lineup_mod_count['NC']} ({round((100 * coach_lineup_mod_count['NC'] / total_team_count), 2)}%)\n")
-        file.write(
-            f"1C: {coach_lineup_mod_count['1C']} ({round((100 * coach_lineup_mod_count['1C'] / total_team_count), 2)}%)\n")
-        file.write(
-            f"2C: {coach_lineup_mod_count['2C']} ({round((100 * coach_lineup_mod_count['2C'] / total_team_count), 2)}%)\n")
-        file.write(
-            f"3C: {coach_lineup_mod_count['3C']} ({round((100 * coach_lineup_mod_count['3C'] / total_team_count), 2)}%)\n")
-        file.write(
-            f"4C: {coach_lineup_mod_count['4C']} ({round((100 * coach_lineup_mod_count['4C'] / total_team_count), 2)}%)\n")
-        file.write(
-            f"5C: {coach_lineup_mod_count['5C']} ({round((100 * coach_lineup_mod_count['5C'] / total_team_count), 2)}%)\n"
-            f"--Slots Amplified--\n")
-
         for amped_slots in [(0,), (1,), (2,), (3,), (4,), (5,),
         (0, 5), (1, 4), (2, 3), (3, 5), (3, 4), (0, 1), (0,4), (1,3), (2,5),
         (0, 1, 2), (0, 2, 4), (1, 3, 5), (2, 4, 5)]:

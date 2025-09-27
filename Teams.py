@@ -1,5 +1,6 @@
 import math
 import random
+from distutils.command.install import value
 from random import choice, seed, uniform, randint
 from Player_Creator import s_tier, a_tier, b_tier, c_tier, slasher, additional_trait_roll
 from colorama import Fore, Back, Style
@@ -113,7 +114,24 @@ def generate_lineups_six_to_four(six_lineup, team_coach, team_id=-1):
     elif team_coach.lineup_modifier == '8S': #swap lineups 3 and 5
         four_lineups[5] = [six_lineup[0], six_lineup[1], six_lineup[3], six_lineup[4]]
         four_lineups[3] = [six_lineup[0], six_lineup[3], six_lineup[4], six_lineup[5]]
-
+    elif team_coach.lineup_modifier =='1>0': #5N, replace p0 with p1
+        four_lineups[5] = [six_lineup[1], six_lineup[3], six_lineup[4], six_lineup[5]]
+    elif team_coach.lineup_modifier == '2>0': #5N, replace p0 with p2
+        four_lineups[5] = [six_lineup[2], six_lineup[3], six_lineup[4], six_lineup[5]]
+    elif team_coach.lineup_modifier == '2>1': #3N, replace p1 with p2
+        four_lineups[3] = [six_lineup[0], six_lineup[2], six_lineup[3], six_lineup[4]]
+    elif team_coach.lineup_modifier == '3>1': #2N, replace p1 with p3
+        four_lineups[2] = [six_lineup[0], six_lineup[2], six_lineup[3], six_lineup[5]]
+    elif team_coach.lineup_modifier == '3>2': #2N, replace  p2 with p3
+        four_lineups[2] = [six_lineup[0], six_lineup[1], six_lineup[3], six_lineup[5]]
+    elif team_coach.lineup_modifier == '4>2': #4N, replace p2 with p4
+        four_lineups[4] = [six_lineup[1], six_lineup[3], six_lineup[4], six_lineup[5]]
+    elif team_coach.lineup_modifier == '4>3': #4N, replace p3 with p4
+        four_lineups[4] = [six_lineup[1], six_lineup[2], six_lineup[4], six_lineup[5]]
+    elif team_coach.lineup_modifier == '5>3': #3N, replace p3 with p5
+        four_lineups[3] = [six_lineup[0], six_lineup[1], six_lineup[4], six_lineup[5]]
+    elif team_coach.lineup_modifier == '5>4': #3N, replace p4 with p5
+        four_lineups[3] = [six_lineup[0], six_lineup[1], six_lineup[3], six_lineup[5]]
 
 
 
@@ -162,18 +180,22 @@ class Coach:
                 ["Attack Damage", randint(2, 5)],
                 ["Critical Chance", round(uniform(0.0175, 0.03), 2)]
             ]
+            value = choice(slots_amped)
         elif len(slots_amped) == 2:
             slot_amp_possibilities = [
                 ["Power", round(uniform(0.59, 0.889), 2)],
                 ["Attack Damage", randint(3, 6)],
                 ["Critical Chance", round(uniform(0.0225, 0.04), 2)]
             ]
+            value = choice(slots_amped)
         else:
             slot_amp_possibilities = [
                 ["Power", round(uniform(0.69, 0.959), 2)],  # % chance to add power
                 ["Attack Damage", randint(4, 7)],  # raw increment
                 ["Critical Chance", round(uniform(0.025, 0.05), 2)],  # raw increment
-        ]
+            ]
+            value = slots_amped[0]
+            self.lineup_modifier = choice([[f"{value}>{value-2}", f"{value}>{value-1}", "NC", "NC"]])
 
         trait_possibilities = [
             ["Pp", randint(1,6)], ['R#', round(uniform(1.425,2),2)],
@@ -192,12 +214,14 @@ class Coach:
             self.name=fixed_name
 
         lineup_mod_roll = uniform(0,1)
-        if lineup_mod_roll <= 0.4:
-            self.lineup_modifier = "NC"
-        elif lineup_mod_roll <= 0.8:
-            self.lineup_modifier = choice(['1S', '2S', '3S', '4S', '5S', '6S', '7S', '8S'])
-        else:
-            self.lineup_modifier = choice(['1C', '2C', '3C', '4C', '5C', '6C', '7C'])
+
+        if len(slots_amped) != 1:
+            if lineup_mod_roll <= 0.30:
+                self.lineup_modifier = "NC"
+            elif lineup_mod_roll <= 0.65:
+                self.lineup_modifier = choice([f"{value}>{value-2}", f"{value}>{value-1}",'1S', '2S', '3S', '4S', '5S', '6S', '7S', '8S'])
+            else:
+                self.lineup_modifier = choice([f"{value}>{value-2}", f"{value}>{value-1}",'1C', '2C', '3C', '4C', '5C', '6C', '7C'])
 
         self.slot_effect = fixed_slot_effect if fixed_slot_effect else [slots_amped] + choice(slot_amp_possibilities) #slots impacted, traits impacted, amplification amount
         self.trait_effect = fixed_trait_effect if fixed_trait_effect else choice(trait_possibilities) #trait impacted, amplification amount

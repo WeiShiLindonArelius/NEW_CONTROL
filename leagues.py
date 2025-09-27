@@ -1839,7 +1839,8 @@ def league_season(TEAMS,use_saved=False,season_count=-1,final_reversed=True,regi
                 print(f"Hired {str(new_coach)}")
             elif fire_coach == 'l' or fire_coach == 'L':
                 new_lineup_mod = input("What lineup modifier would you like to use?")
-                team.team_coach.lineup_modifier = new_lineup_mod if new_lineup_mod in ['NC', '1S', '2S', '3S', '4S', '5S', '6S', '7S', '8S', '1C', '2C', '3C', '4C', '5C', '6C', '7C'] else choice(['1S', '2S', '3S', '4S', '5S', '6S', '7S', '8S', '1C', '2C', '3C', '4C', '5C', '6C', '7C'])
+                team.team_coach.lineup_modifier = new_lineup_mod if new_lineup_mod in ['NC', '1S', '2S', '3S', '4S', '5S', '6S', '7S', '8S', '1C', '2C', '3C', '4C', '5C', '6C', '7C',
+                                                                                       "1>0", "2>0", "2>1", "3>1", "3>2", "4>2", "4>3", "5>3", "5>4"] else choice(['1S', '2S', '3S', '4S', '5S', '6S', '7S', '8S', '1C', '2C', '3C', '4C', '5C', '6C', '7C'])
                 team.reset_lineups()
 
 

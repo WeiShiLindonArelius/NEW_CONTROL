@@ -1,0 +1,56 @@
+DEFAULT LINEUPS (not including tiebreaker)
+0N - 0, 1, 2, 3
+1N - 0, 1, 2, 4
+2N - 0, 1, 2, 5
+3N - 0, 1, 3, 4
+4N - 1, 2, 3, 5
+5N - 0, 3, 4, 5
+
+
+"1C": #swap lineups 0 and 1, swap p3 and p4 in lineups 4 and 5
+
+'2C': #swaps p0 and p2 in lineups 4 and 5 (2 new lineups: 0135 and 2345)
+
+"3C": #swaps p4 and p5 in lineups 3 and 4 (2 new lineups: 0135 and 1234)
+
+"4C": #swaps p0 and p1 in lineups 4 and 5 (2 new lineups: 0235 and 1345)
+
+'5C': #swaps p2 and p4 in lineups 2 and 5 (2 new lineups: 0145 and 0235)
+
+'6C': #swap p1 and p4 in lineups 0 and 5
+
+'7C': #swap p2 and p3 in lineups 2 and 5
+
+'1S': #swap lineups 1 and 2
+
+'2S': #swap lineups 2 and 3
+
+'3S': #swap lineups 3 and 4
+
+'4S': #swap lineups 4 and 5
+
+'5S': #swap lineups 0 and 2
+
+'6S': #swap lineups 1 and 3
+
+'7S': #swap lineups 2 and 4
+
+'8S': #swap lineups 3 and 5
+
+'1>0': #5N, replace p0 with p1
+
+'2>0': #5N, replace p0 with p2
+
+'2>1': #3N, replace p1 with p2
+
+'3>1': #2N, replace p1 with p3
+
+'3>2': #2N, replace  p2 with p3
+
+'4>2': #4N, replace p2 with p4
+
+'4>3': #4N, replace p3 with p4
+
+'5>3': #3N, replace p3 with p5
+
+'5>4': #3N, replace p4 with p5
