@@ -1827,7 +1827,7 @@ def league_season(TEAMS,use_saved=False,season_count=-1,final_reversed=True,regi
             team.played_region[season_count] += 'Universal'
         else:
             team.played_region[season_count] = translated_region
-        if team.mine:
+        if team.mine or team.jackson:
             print(Fore.BLUE + f"{team.name}: {team.history[season_count]}"
                   + Fore.RESET)
             fire_coach = timed_input(f"Press Y to fire {str(team.team_coach)}, Press L to change lineup, press any other key to do nothing:\n")

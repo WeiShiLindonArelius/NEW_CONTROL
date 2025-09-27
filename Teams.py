@@ -1,6 +1,4 @@
 import math
-import random
-from distutils.command.install import value
 from random import choice, seed, uniform, randint
 from Player_Creator import s_tier, a_tier, b_tier, c_tier, slasher, additional_trait_roll
 from colorama import Fore, Back, Style
@@ -181,6 +179,8 @@ class Coach:
                 ["Critical Chance", round(uniform(0.0175, 0.03), 2)]
             ]
             value = choice(slots_amped)
+            while value == 0:
+                value = choice(slots_amped)
         elif len(slots_amped) == 2:
             slot_amp_possibilities = [
                 ["Power", round(uniform(0.59, 0.889), 2)],
@@ -188,6 +188,8 @@ class Coach:
                 ["Critical Chance", round(uniform(0.0225, 0.04), 2)]
             ]
             value = choice(slots_amped)
+            while value == 0:
+                value = choice(slots_amped)
         else:
             slot_amp_possibilities = [
                 ["Power", round(uniform(0.69, 0.959), 2)],  # % chance to add power
@@ -195,7 +197,9 @@ class Coach:
                 ["Critical Chance", round(uniform(0.025, 0.05), 2)],  # raw increment
             ]
             value = slots_amped[0]
-            self.lineup_modifier = choice([[f"{value}>{value-2}", f"{value}>{value-1}", "NC", "NC"]])
+            gt_mod1 = f"{value}>{value-2}" if (value-2)>0 else "NC"
+            gt_mod2 = f"{value}>{value-1}" if (value-1) > 0 else "NC"
+            self.lineup_modifier = choice([gt_mod1, gt_mod2, "NC", "NC"])
 
         trait_possibilities = [
             ["Pp", randint(1,6)], ['R#', round(uniform(1.425,2),2)],
@@ -216,12 +220,15 @@ class Coach:
         lineup_mod_roll = uniform(0,1)
 
         if len(slots_amped) != 1:
+            gt_mod1 = f"{value}>{value-2}" if ((value-2) not in slots_amped and value-2>0) else "NC"
+            gt_mod2 = f"{value}>{value-1}" if ((value-1) not in slots_amped and value-1>0) else "NC"
+
             if lineup_mod_roll <= 0.30:
-                self.lineup_modifier = "NC"
+                self.lineup_modifier = choice([gt_mod1, gt_mod2, "NC", "NC", "NC"])
             elif lineup_mod_roll <= 0.65:
-                self.lineup_modifier = choice([f"{value}>{value-2}", f"{value}>{value-1}",'1S', '2S', '3S', '4S', '5S', '6S', '7S', '8S'])
+                self.lineup_modifier = choice([gt_mod1, gt_mod2, '1S', '2S', '3S', '4S', '5S', '6S', '7S', '8S'])
             else:
-                self.lineup_modifier = choice([f"{value}>{value-2}", f"{value}>{value-1}",'1C', '2C', '3C', '4C', '5C', '6C', '7C'])
+                self.lineup_modifier = choice([gt_mod1, gt_mod2,'1C', '2C', '3C', '4C', '5C', '6C', '7C'])
 
         self.slot_effect = fixed_slot_effect if fixed_slot_effect else [slots_amped] + choice(slot_amp_possibilities) #slots impacted, traits impacted, amplification amount
         self.trait_effect = fixed_trait_effect if fixed_trait_effect else choice(trait_possibilities) #trait impacted, amplification amount
