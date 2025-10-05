@@ -1297,13 +1297,13 @@ def double_elim_12(t, upset_list = None, upset_count = None, region = None, seas
     #no upsets: l3: 11 seed, l6: five seed, l4: ten seed, l5: eight seed, l1: nine seed, l8: seven seed, l2: twelve seed, l7: six seed
 
     w9, l9 = best_of(l6,l3, r1_thresh, both_return=True, win_by=r1_margin-2, upset_list=upset_list,
-                     upset_count=upset_count, context=context,advantage=5,skunk=sk1)
+                     upset_count=upset_count, context=context,advantage=3,skunk=sk1)
     w10, l10 = best_of(l5,l4, r1_thresh, both_return=True, win_by=r1_margin-2, upset_list=upset_list,
-                     upset_count=upset_count, context=context,advantage=5,skunk=sk1)
+                     upset_count=upset_count, context=context,advantage=3,skunk=sk1)
     w11, l11 = best_of(l8,l1, r1_thresh, both_return=True, win_by=r1_margin-2, upset_list=upset_list,
-                     upset_count=upset_count, context=context,advantage=5,skunk=sk1)
+                     upset_count=upset_count, context=context,advantage=3,skunk=sk1)
     w12, l12 = best_of(l7,l2, r1_thresh, both_return=True, win_by=r1_margin-2, upset_list=upset_list,
-                     upset_count=upset_count, context=context,advantage=5,skunk=sk1)
+                     upset_count=upset_count, context=context,advantage=3,skunk=sk1)
     out1 = sorted([l9, l10, l11, l12], key=lambda x: x.seed, reverse=True)
 
     print(Fore.GREEN + f"R3 winner bracket (to {r3_thresh} / by {r3_margin})" + Fore.RESET)

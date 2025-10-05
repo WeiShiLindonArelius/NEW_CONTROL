@@ -1612,26 +1612,26 @@ def main():
                     if team.mine:
                         print("\n" + Fore.RED + f"{team.name}\n" + Fore.BLUE + team.history[season_count] + Fore.RESET)
 
-                for amped_slots in [(0,), (1,), (2,), (3,), (4,), (5,),
-                (0, 5), (1, 4), (2, 3), (3, 5), (3, 4), (0, 4), (1, 3), (2, 5),
-                (0, 4, 5), (1, 4, 5), (1, 3, 5), (2, 3, 4), (2, 3, 5), (3, 4, 5), (2,4,5)]:
-                    file.write(f"{list(amped_slots)}: {coach_slots_amped_count[amped_slots]} "
-                               f"({round((100 * coach_slots_amped_count[amped_slots] / total_team_count), 2)}%)\n")
-                file.write(f"--Attributes Affected--\n"
-                           f"""Power: {coach_attribute_amped_count["Power"][0]} """
-                           f"""({round((100 * coach_attribute_amped_count["Power"][0] / total_team_count), 2)}%)\n"""
-                           f"""\tAverage Amp: {round((coach_attribute_amped_count["Power"][1] / coach_attribute_amped_count["Power"][0]), 2)}\n"""
-                           f"""Attack Damage: {coach_attribute_amped_count["Attack Damage"][0]} """
-                           f"""({round((100 * coach_attribute_amped_count["Attack Damage"][0] / total_team_count), 2)}%)\n"""
-                           f"""\tAverage Amp: {round((coach_attribute_amped_count["Attack Damage"][1] / coach_attribute_amped_count["Attack Damage"][0]), 2)}\n"""
-                           f"""Critical Chance: {coach_attribute_amped_count["Critical Chance"][0]} """
-                           f"""({round((100 * coach_attribute_amped_count["Critical Chance"][0] / total_team_count), 2)}%)\n"""
-                           f"""\tAverage Amp: {round((coach_attribute_amped_count["Critical Chance"][1] / coach_attribute_amped_count["Critical Chance"][0]), 2)}\n""")
-                file.write("--Traits Affected--\n")
-                for trait in ['Pp', 'R#', 'C%', 'I*', 'U-', 'X+']:
-                    file.write(f"""{trait}: {coach_trait_amped_count[trait][0]} """
-                               f"""({round((100 * coach_trait_amped_count[trait][0] / total_team_count), 2)}%)\n"""
-                               f"""\tAverage Amp: ({round((coach_trait_amped_count[trait][1] / total_team_count), 2)})\n""")
+                #for amped_slots in [(0,), (1,), (2,), (3,), (4,), (5,),
+                #(0, 5), (1, 4), (2, 3), (3, 5), (3, 4), (0, 4), (1, 3), (2, 5),
+                #(0, 4, 5), (1, 4, 5), (1, 3, 5), (2, 3, 4), (2, 3, 5), (3, 4, 5), (2,4,5)]:
+                #    file.write(f"{list(amped_slots)}: {coach_slots_amped_count[amped_slots]} "
+                #               f"({round((100 * coach_slots_amped_count[amped_slots] / total_team_count), 2)}%)\n")
+                #file.write(f"--Attributes Affected--\n"
+                #           f"""Power: {coach_attribute_amped_count["Power"][0]} """
+                #           f"""({round((100 * coach_attribute_amped_count["Power"][0] / total_team_count), 2)}%)\n"""
+                 #          f"""\tAverage Amp: {round((coach_attribute_amped_count["Power"][1] / coach_attribute_amped_count["Power"][0]), 2)}\n"""
+                  #         f"""Attack Damage: {coach_attribute_amped_count["Attack Damage"][0]} """
+                   #        f"""({round((100 * coach_attribute_amped_count["Attack Damage"][0] / total_team_count), 2)}%)\n"""
+                    #       f"""\tAverage Amp: {round((coach_attribute_amped_count["Attack Damage"][1] / coach_attribute_amped_count["Attack Damage"][0]), 2)}\n"""
+                     #      f"""Critical Chance: {coach_attribute_amped_count["Critical Chance"][0]} """
+                      #     f"""({round((100 * coach_attribute_amped_count["Critical Chance"][0] / total_team_count), 2)}%)\n"""
+                       #    f"""\tAverage Amp: {round((coach_attribute_amped_count["Critical Chance"][1] / coach_attribute_amped_count["Critical Chance"][0]), 2)}\n""")
+                #file.write("--Traits Affected--\n")
+                #for trait in ['Pp', 'R#', 'C%', 'I*', 'U-', 'X+']:
+                #    file.write(f"""{trait}: {coach_trait_amped_count[trait][0]} """
+                #               f"""({round((100 * coach_trait_amped_count[trait][0] / total_team_count), 2)}%)\n"""
+                #               f"""\tAverage Amp: ({round((coach_trait_amped_count[trait][1] / total_team_count), 2)})\n""")
 
 
 
