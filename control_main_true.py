@@ -2005,9 +2005,9 @@ from stat_functions import clear_all_databases
 def test():
 
     teams = create_teams(26, region='Universal',season_count=1)
-    for i in range(1,13):
-        teams[i-1].seed = i
-    league_season(teams,season_count=1,upset_count=0,upset_list=[],stats_list={}, )
+    for team in teams:
+        for player in team.players:
+            print(str(player))
 
 
 

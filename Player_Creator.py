@@ -8,6 +8,171 @@ names = player_names
 
 #If the reflector trait doesn't hit, this will trigger next.
 #This returns "" if the player is not given a trait, and the trait tag along with a multiplier if they are
+
+def new_trait_roll(tier, fixed=("NotNone", "NotNone")):
+    fixed = list(fixed)
+    primary_tag = "None"
+    secondary_tag = "None"
+    multiplier = {}
+    primary_tag_possibilities = ['$l', 'R#', 'Hn', 'Fl', 'Sp', 'X+']
+    secondary_tag_possibilities = ['Pp', 'C%', 'I*', 'Tx', 'U-', 'V.']
+    #this function will roll traits in accordance to the new primary/secondary split
+    #a player will have a 40% chance to gain one of 6 primary traits and a 75% chance to gain one of 6 secondary traits
+    #trait_mult = {'Prim' : mult, 'Secondary' : mult}. As usual, mult can be a list.
+    clutch_lower_bound = 1.05
+    inc_lower_bound = 0.11
+    pp_lower_bound = 0.2
+    explode_lower_bound = 45 #now does raw damage instead of being linked to attack damage
+    undead_lower_bound = 0.18
+    reflector_lower_bound = 0.10
+    splitter_lower_bound = 0.14
+    vampire_lower_bound = 0.375
+    heal_nova_possibilities = [x for x in range(36, 84) if x % 12 == 0]
+    heal_tick_possibilities = [13, 12, 12, 11, 11, 10, 10]
+    stun_tick_possibilities = [10, 10, 11, 11, 12, 12, 13]
+    if tier == 'S':
+        heal_nova_possibilities.pop()
+        heal_tick_possibilities.pop()
+        stun_tick_possibilities.pop()
+    if tier == 'A' and choice([True, False]):
+        heal_nova_possibilities.pop()
+        heal_tick_possibilities.pop()
+        stun_tick_possibilities.pop()
+
+    # multipliers for Toxic, Healer, Flasher, have to be selected a different way
+    def toxic_mult(upper_bound):
+        return [round(uniform(0.25, upper_bound), 2),
+                [choice([8, 8, 9, 9, 10]), choice([6, 7, 7, 7, 8, 8])]]  # chance, damage, time
+
+    def healer_mult():
+        return [choice(heal_tick_possibilities), choice(heal_nova_possibilities), False]
+
+    def flasher_mult(upper_bound):
+        return [round(uniform(0.15, upper_bound), 2), choice(stun_tick_possibilities)]
+
+    if tier == 'S':
+        clutch_upperbound = 1.2
+        inc_upperbound = 0.125
+        pp_upperbound = 0.4
+        explode_upperbound = 60
+        undead_upperbound = 0.315
+        reflector_upperbound = 0.17
+        splitter_upper_bound = 0.155
+        vampire_upper_bound = 0.52
+        toxic_upper_bound = 0.29
+        flasher_upper_bound = 0.225
+    elif tier == 'A':
+        clutch_upperbound = 1.25
+        inc_upperbound = 0.14
+        pp_upperbound = 0.45
+        explode_upperbound = 61
+        undead_upperbound = 0.32
+        reflector_upperbound = 0.18
+        splitter_upper_bound = 0.16
+        vampire_upper_bound = 0.53
+        toxic_upper_bound = 0.295
+        flasher_upper_bound = 0.235
+    elif tier == 'B':
+        clutch_upperbound = 1.275
+        inc_upperbound = 0.165
+        pp_upperbound = 0.5
+        explode_upperbound = 62
+        undead_upperbound = 0.325
+        reflector_upperbound = 0.19
+        splitter_upper_bound = 0.17
+        vampire_upper_bound = 0.54
+        toxic_upper_bound = 0.3
+        flasher_upper_bound = 0.245
+    elif tier == 'C':
+        clutch_upperbound = 1.2875
+        inc_upperbound = 0.18
+        pp_upperbound = 0.6
+        explode_upperbound = 63
+        undead_upperbound = 0.35
+        reflector_upperbound = 0.2
+        splitter_upper_bound = 0.18
+        vampire_upper_bound = 0.55
+        toxic_upper_bound = 0.31
+        flasher_upper_bound = 0.25
+    else:
+        # Error handling block; this should never happen
+        clutch_upperbound = 1.3
+        inc_upperbound = 0.1
+        pp_upperbound = 0.14
+        explode_upperbound = 1.55
+        undead_upperbound = 0.5
+        reflector_upperbound = 0.5
+        splitter_upper_bound = 0.15
+        vampire_upper_bound = 0.5
+        toxic_upper_bound = 0.35
+        flasher_upper_bound = 0.21
+
+
+    #PRIMARY ROLL
+    if fixed[0] not in ['$l', 'R#', 'Hn', 'Fl', 'Sp', 'X+']: #only roll for trait if player is not already assigned a primary trait
+        if uniform(0,1) <= 0.4:
+            primary_tag = choice(primary_tag_possibilities)
+    else:
+        primary_tag = fixed
+
+    if fixed[1] not in ['Pp', 'C%', 'I*', 'Tx', 'U-', 'V.']:
+        if uniform(0,1) <= 0.75 and primary_tag != 'Fl': #Flashers are too good to have any other trait.
+            if primary_tag == '$l' or primary_tag == 'Sp':
+                secondary_tag_possibilities.remove("Tx")
+            secondary_tag = choice(secondary_tag_possibilities)
+    else:
+        secondary_tag = fixed
+
+    #todo NEXT: add trait multiplier rolls. Figuring out how to do it with Toxin and Healer might be difficult.
+
+    #primary_tag_possibilities = ['$l', 'R#', 'Hn', 'Fl', 'Sp', 'X+']
+    #secondary_tag_possibilities = ['Pp', 'C%', 'I*', 'Tx', 'U-', 'V.']
+
+    if primary_tag == "$l":
+        multiplier.update({"$l": "N/A"})
+    elif primary_tag == 'R#':
+        multiplier.update({"R#" : round(uniform(reflector_lower_bound, reflector_upperbound), 2)})
+    elif primary_tag == 'Hn':
+        healer_mult_instance = healer_mult()
+        multiplier.update({'Hn' : healer_mult_instance})
+    elif primary_tag == 'Fl':
+        flasher_mult_instance = flasher_mult(flasher_upper_bound)
+        multiplier.update({'Fl' : flasher_mult_instance})
+    elif primary_tag == 'Sp':
+        multiplier.update({'Sp' : round(uniform(splitter_lower_bound, splitter_upper_bound), 2)})
+    elif primary_tag == 'X+':
+        multiplier.update(({'X+' : [randint(explode_lower_bound, explode_upperbound), 1]}))
+
+    if secondary_tag == 'Pp':
+        multiplier.update({'Pp' : round(uniform(pp_lower_bound, pp_upperbound), 2)})
+    if secondary_tag == 'C%':
+        multiplier.update({'C%' : round(uniform(clutch_lower_bound, clutch_upperbound), 2)})
+    if secondary_tag == 'I*':
+        multiplier.update({'I*' : round(uniform(inc_lower_bound, inc_upperbound), 2)})
+    if secondary_tag == 'Tx':
+        toxic_mult_instance = toxic_mult(toxic_upper_bound)
+        multiplier.update({'Tx' : toxic_mult_instance})
+    if secondary_tag == 'U-':
+        multiplier.update({'U-' : round(uniform(undead_lower_bound, undead_upperbound), 2)})
+    if secondary_tag == 'V.':
+        multiplier.update({'V.' : round(uniform(vampire_lower_bound, vampire_upper_bound), 2)})
+
+    return [primary_tag, secondary_tag] , multiplier
+    # primary_tag = tag str
+    # secondary_tag = tag str
+    # multiplier = dict with
+    #   key = tag
+    #   value = mult
+
+
+
+
+
+
+
+
+
+
 def additional_trait_roll(tier, fixed="None",amp=0,pre_reflect=0):
     #amp is no longer being used because of mathematical issues
     clutch_lower_bound = 1.05
@@ -194,35 +359,18 @@ def additional_trait_roll(tier, fixed="None",amp=0,pre_reflect=0):
 
 
 def slasher(amp=0, season_count=-1):
-    #SLASHER
-    #Special Trait: all critical hits deal damage equal to the maximum health of the player they are attacking
-    #Stat Pros: Very high attack damage, fast attack speed
-    #Stat Cons: Very low health, very low power, high spawn time
-    #Tag: '$'
-
-    atk_dmg = randint(57, 70) + math.floor(amp)
-    atk_spd = randint(6, 9)
-    insta_kill_pct = round((((randint(64, 73)) / 1000) + (amp * 0.005)),2)
-    crit_pct = insta_kill_pct
-    crit_x = round((660 / atk_dmg), 2) #average health * 3 to estimate critical damage for xWAR
-    mit_pct = round(uniform(0.01, 0.05))
-    defense_pct = round(uniform(0.015, 0.04))
-    defense_abs = round(uniform(1,4))
-    health = choice([round(uniform(150, 180), 2), round(uniform(135, 200), 2)])
-    power = choice([randint(52, 54), randint(50, 56)])
-    spawn_time = choice([6,6,6,6,7,8,9])
-    crit_dmg = 850
-
-    amp_str = "" if amp==0 else f"^{amp}"
-    return Player('$l', atk_dmg, atk_spd, crit_pct, crit_x, health, power, spawn_time, crit_dmg, f"$l{amp_str}_{choice(names)}",amp=amp, season_count=season_count, insta_kill_pct=insta_kill_pct, trait_tag="$l",
-                  mit_pct=mit_pct, defense_pct=defense_pct, defense_abs=defense_abs)
+    #Slasher tier removed, now replaced with fixed slasher trait to avoid removing every instance
+    tier = choice(['S','A','B','C'])
+    if tier == 'S':
+        return s_tier(fixed='$l')
+    elif tier == 'A':
+        return a_tier(fixed='$l')
+    elif tier == 'B':
+        return b_tier(fixed='$l')
+    else:
+        return c_tier(fixed='$l')
 
 def s_tier(amp=0, season_count=-1, pre_reflect=0, trait_amp=0, fixed='None'):
-    slasher_roll = randint(0, (550-int(amp)))
-    if slasher_roll % 280 == 0:
-        add = round(uniform(-50,50+int(amp)))
-        return slasher(amp=((slasher_roll+add)/100),season_count=season_count)
-
 
     atk_dmg = randint(53, 63)
     atk_spd = randint(6, 9)
@@ -247,7 +395,7 @@ def s_tier(amp=0, season_count=-1, pre_reflect=0, trait_amp=0, fixed='None'):
     # Return a Player object initialized with the generated values
 
     amp_str = "" if amp == 0 else f"^{amp}"
-    tag, mult = additional_trait_roll('S',amp=trait_amp,pre_reflect=pre_reflect, fixed=fixed)
+    tag, mult = new_trait_roll('S', fixed=fixed)
     if tag == "None":
         non_trait_coin = choice([1,1,2,3,4,5,6])
         if non_trait_coin == 1:
@@ -298,7 +446,7 @@ def a_tier(amp=0, season_count=-1, pre_reflect=0, trait_amp=0, fixed='None'):
     spawn_time = choice([6,6,6,7,7,7,8,8])
     # Return a Player object initialized with the generated values
     amp_str = "" if amp == 0 else f"^{amp}"
-    tag, mult = additional_trait_roll('A',amp=trait_amp,pre_reflect=pre_reflect, fixed=fixed)
+    tag, mult = new_trait_roll('A', fixed=fixed)
     if tag == "None":
         non_trait_coin = choice([1,2,3,4,4,5,6])
         if non_trait_coin == 1:
@@ -350,7 +498,7 @@ def b_tier(amp=0, season_count=-1, pre_reflect=0, trait_amp=0, fixed='None'):
     spawn_time = choice([6,6,7,7,7,8,8,8])
     # Return a Player object initialized with the generated values
     amp_str = "" if amp == 0 else f"^{amp}"
-    tag, mult = additional_trait_roll('B',amp=trait_amp,pre_reflect=pre_reflect, fixed=fixed)
+    tag, mult = new_trait_roll('B', fixed=fixed)
     if tag == "None":
         non_trait_coin = choice([1,2,3,4,5,5,6])
         if non_trait_coin == 1:
@@ -401,7 +549,7 @@ def c_tier(amp=0, season_count=-1, pre_reflect=0, trait_amp=0, fixed='None'):
     spawn_time = choice([6,6,7,7,7,7,7,8,8,8,8,8])
             # Return a Player object initialized with the generated values
     amp_str = "" if amp == 0 else f"^{amp}"
-    tag, mult = additional_trait_roll('C',amp=trait_amp,pre_reflect=pre_reflect, fixed=fixed)
+    tag, mult = new_trait_roll('C', fixed=fixed)
     if tag == "None":
         non_trait_coin = choice([1,2,3,4,5,6,6])
         if non_trait_coin == 1:

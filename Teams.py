@@ -45,14 +45,14 @@ def generate_lineups_six_to_four(six_lineup, team_coach, team_id=-1):
 
     for player in six_lineup:
         player.coach_amp = ["None", 0]
-        player.coach_trait_amp = ["N/A", 0] if player.trait_tag == "None" else ["None", 0]
+        player.coach_trait_amp = ["N/A", 0] if player.trait_tag == ["None","None"] else ["None", 0]
 
 
     amped_slots = team_coach.slot_effect[0]
     for i in amped_slots:
         six_lineup[i].coach_amp = [team_coach.slot_effect[1], team_coach.slot_effect[2]] #trait affected, amp amount
     for player in six_lineup:
-        if player.trait_tag == team_coach.trait_effect[0]:
+        if team_coach.trait_effect[0] in player.trait_tag:
             player.coach_trait_amp = [player.trait_tag, team_coach.trait_effect[1]]
 
 
@@ -572,18 +572,18 @@ class Team:
             h.write('--------------\n\n')
 
     def print_accolades(self):
-        self.accolades['Slashers'] = len([p for p in self.players if p.trait_tag == '$l'])
-        self.accolades['Undead'] = len([p for p in self.players if p.trait_tag == 'U-'])
-        self.accolades['Reflectors'] = len([p for p in self.players if p.trait_tag == 'R#'])
-        self.accolades['Clutch Players'] = len([p for p in self.players if p.trait_tag == 'C%'])
-        self.accolades['Inconsistent Players'] = len([p for p in self.players if p.trait_tag == 'I*'])
-        self.accolades['Playoff Performers'] = len([p for p in self.players if p.trait_tag == 'Pp'])
-        self.accolades['Exploders'] = len([p for p in self.players if p.trait_tag == 'X+'])
-        self.accolades['Splitters'] = len([p for p in self.players if p.trait_tag == 'Sp'])
-        self.accolades['Flashers'] = len([p for p in self.players if p.trait_tag == 'Fl'])
-        self.accolades['Toxic Players'] = len([p for p in self.players if p.trait_tag == 'Tx'])
-        self.accolades['Vampires'] = len([p for p in self.players if p.trait_tag == 'V.'])
-        self.accolades['Healers'] = len([p for p in self.players if p.trait_tag == 'Hn'])
+        self.accolades['Slashers'] = len([p for p in self.players if '$l' in p.trait_tag])
+        self.accolades['Undead'] = len([p for p in self.players if 'U-' in p.trait_tag])
+        self.accolades['Reflectors'] = len([p for p in self.players if 'R#' in p.trait_tag])
+        self.accolades['Clutch Players'] = len([p for p in self.players if 'C%' in p.trait_tag])
+        self.accolades['Inconsistent Players'] = len([p for p in self.players if 'I*' in p.trait_tag])
+        self.accolades['Playoff Performers'] = len([p for p in self.players if 'Pp' in p.trait_tag])
+        self.accolades['Exploders'] = len([p for p in self.players if 'X+' in p.trait_tag])
+        self.accolades['Splitters'] = len([p for p in self.players if 'Sp' in p.trait_tag])
+        self.accolades['Flashers'] = len([p for p in self.players if 'Fl' in p.trait_tag])
+        self.accolades['Toxic Players'] = len([p for p in self.players if 'Tx' in p.trait_tag])
+        self.accolades['Vampires'] = len([p for p in self.players if 'V.' in p.trait_tag])
+        self.accolades['Healers'] = len([p for p in self.players if 'Hn' in p.trait_tag])
 
         if self.mine:
             with open('my_teams', 'a') as h:
@@ -715,64 +715,65 @@ epic_decrements = {  # slot negative effects are chosen from here
 
 def increment_trait(player, factor):
     #factor between 1 and 6
-    if player.trait_tag == 'C%':
-        player.trait_multiplier += (math.ceil(factor/2) / 75) #0.013, 0.0267, or 0.04
-        print(f"{player.name}'s {player.trait_tag} mult increased by {(math.ceil(factor/2) / 75):.4f} to {player.trait_multiplier:.3f}!")
-    elif player.trait_tag == 'I*':
-        player.trait_multiplier += (math.ceil(factor / 2) / 200) #0.005, 0.01, 0.015
-        print(f"{player.name}'s {player.trait_tag} mult increased by {(math.ceil(factor / 2) / 200):.4f} to {player.trait_multiplier:.4f}!")
-    elif player.trait_tag == 'Pp':
-        player.trait_multiplier += factor/100 #1-6
+    if 'C%' in player.trait_tag:
+        player.trait_multiplier['C%'] += (math.ceil(factor/2) / 75) #0.013, 0.0267, or 0.04
+        print(f"{player.name}'s C% mult increased by {(math.ceil(factor/2) / 75):.4f} to {player.trait_multiplier['C%']:.3f}!")
+    if 'I*' in player.trait_tag:
+        player.trait_multiplier['I*'] += (math.ceil(factor / 2) / 200) #0.005, 0.01, 0.015
+        print(f"{player.name}'s I* mult increased by {(math.ceil(factor / 2) / 200):.4f} to {player.trait_multiplier['I*']:.4f}!")
+    if 'Pp' in player.trait_tag:
+        player.trait_multiplier['Pp'] += factor/100 #1-6
         print(
-            f"{player.name}'s {player.trait_tag} mult increased by {factor/100} to {player.trait_multiplier:.4f}!")
-    elif player.trait_tag == 'X+':
-        player.trait_multiplier[0] += factor / 100 #1-6
+            f"{player.name}'s Pp mult increased by {factor/100} to {player.trait_multiplier['Pp']:.4f}!")
+    if 'X+' in player.trait_tag:
+        player.trait_multiplier['X+'][0] += factor / 100 #1-6
         print(
-            f"{player.name}'s {player.trait_tag} mult increased by {factor/100} to {player.trait_multiplier[0]:.3f}!")
-    elif player.trait_tag == 'U-':
-        player.trait_multiplier += (math.ceil(factor / 2) / 150) #0.0067, 0.013, 0.02
+            f"{player.name}'s X+ mult increased by {factor/100} to {player.trait_multiplier['X+'][0]:.3f}!")
+    if 'U-' in player.trait_tag:
+        player.trait_multiplier['U-'] += (math.ceil(factor / 2) / 150) #0.0067, 0.013, 0.02
         print(
-            f"{player.name}'s {player.trait_tag} mult increased by {(math.ceil(factor / 2) / 150):.4f} to {player.trait_multiplier:.4f}!")
-    elif player.trait_tag == 'R#':
-        player.trait_multiplier += factor / 320 #0.003125, 0.00625, 0.009375, 0.0125, 0.015625, 0.01875
+            f"{player.name}'s U- mult increased by {(math.ceil(factor / 2) / 150):.4f} to {player.trait_multiplier['U-']:.4f}!")
+    if 'R#' in player.trait_tag:
+        player.trait_multiplier['R#'] += factor / 320 #0.003125, 0.00625, 0.009375, 0.0125, 0.015625, 0.01875
         print(
-            f"{player.name}'s {player.trait_tag} mult increased by {factor / 320:.6f} to {player.trait_multiplier:.4f}!")
-    elif player.trait_tag == 'Tx':
-        player.trait_multiplier[1][0] += math.ceil(factor/3) #1 or 2
+            f"{player.name}'s R# mult increased by {factor / 320:.6f} to {player.trait_multiplier['R#']:.4f}!")
+    if 'Tx' in player.trait_tag:
+        player.trait_multiplier['Tx'][1][0] += math.ceil(factor/3) #1 or 2
         print(
-            f"{player.name}'s Toxin damage increased by {math.ceil(factor/3):.4f} to {player.trait_multiplier[1][0]}!")
-    elif player.trait_tag == 'Hn':
-        player.trait_multiplier[0] -= 1
-        player.trait_multiplier[1] += 6 * (math.ceil(factor/3)) #6 or 12
+            f"{player.name}'s Toxin damage increased by {math.ceil(factor/3):.4f} to {player.trait_multiplier['Tx'][1][0]}!")
+    if 'Hn' in player.trait_tag:
+        player.trait_multiplier['Hn'][0] -= 1
+        player.trait_multiplier['Hn'][1] += 6 * (math.ceil(factor/3)) #6 or 12
         print(
-            f"{player.name}'s {player.trait_tag} time -1 to {player.trait_multiplier[0]} and heal amount increased by {6 * (math.ceil(factor/3))} to {player.trait_multiplier[1]}!")
-    elif player.trait_tag == 'Fl':
-        player.trait_multiplier[0] += (math.ceil(factor / 2) / 200)  # 0.005, 0.01, 0.015
+            f"{player.name}'s healing nova cooldown -1 to {player.trait_multiplier['Hn'][0]} and heal amount increased by {6 * (math.ceil(factor/3))} to {player.trait_multiplier['Hn'][1]}!")
+    if 'Fl' in player.trait_tag:
+        player.trait_multiplier['Fl'][0] += (math.ceil(factor / 2) / 200)  # 0.005, 0.01, 0.015
         print(
-            f"{player.name}'s {player.trait_tag} mult increased by {(math.ceil(factor / 2) / 200):.4f} to {player.trait_multiplier[0]:.4f}!")
-    elif player.trait_tag == 'V.':
-        player.trait_multiplier += (0.01 + (math.ceil(factor / 2) / 50))  # 0.03, 0.05, or 0.07
+            f"{player.name}'s Fl mult increased by {(math.ceil(factor / 2) / 200):.4f} to {player.trait_multiplier['Fl'][0]:.4f}!")
+    if 'V.' in player.trait_tag:
+        player.trait_multiplier['V.'] += (0.01 + (math.ceil(factor / 2) / 50))  # 0.03, 0.05, or 0.07
         print(
-            f"{player.name}'s {player.trait_tag} mult increased by {(0.01 + (math.ceil(factor / 2) / 50)):.4f} to {player.trait_multiplier:.4f}!")
-    elif player.trait_tag == 'Sp':
-        player.trait_multiplier += (math.ceil(factor / 2) / 225)  # 0.0044, 0.0088, 0.013
+            f"{player.name}'s V. mult increased by {(0.01 + (math.ceil(factor / 2) / 50)):.4f} to {player.trait_multiplier['V.']:.4f}!")
+    if 'Sp' in player.trait_tag:
+        player.trait_multiplier['Sp'] += (math.ceil(factor / 2) / 225)  # 0.0044, 0.0088, 0.013
         print(
-            f"{player.name}'s {player.trait_tag} mult increased by {(math.ceil(factor / 2) / 225):.4f} to {player.trait_multiplier:.4f}!")
-    else:
-        add_trait_roll = randint(1,10)
-        if add_trait_roll <= factor:
-            tag, mult = additional_trait_roll(tier=player.tier, fixed='NotNone')
-            player.trait_tag = tag
-            player.trait_multiplier = mult
-            print(f"{player.name} given {tag} with a mult of {mult}!")
-            player.name = f"{tag}{remove_tag_from_name(player.name)}"
+            f"{player.name}'s Sp mult increased by {(math.ceil(factor / 2) / 225):.4f} to {player.trait_multiplier['Sp']:.4f}!")
+    elif player.trait_tag == ["None", "None"]:
+        translated_stats = {'Damage': 'atk_dmg', 'Power': 'power', 'Critical %': 'crit_pct', 'Critical X': 'crit_x',
+                            'Health': 'max_health',
+                            'Defense %': 'defense_pct'}
+        for _ in range(factor):
+            attr_amp = choice(["Damage", "Power", "Critical %", "Critical X", "Health", "Defense %"])
+            setattr(player, translated_stats[attr_amp],
+                    (getattr(player, translated_stats[attr_amp]) + common_increments[attr_amp]))
+            print(f"{player.name} {attr_amp} +{common_increments[attr_amp]}")
 
 perk_option_strings = {
-    "Rare" : ["'C' to amp the captain by an attribute of choice", "'T' to give one (1) random player a random trait",
+    "Rare" : ["'C' to amp the captain by an attribute of choice",
               "'I' to run increment_trait(1 or 2) on three (3) players", "'B' to ensure one (1) player will breakout next season",
               "'P' to give all players +1 power"],
 
-    "Epic" : ["'A' to increment power and one other stat for all players", "'T' to grant a random player a trait which synergizes with the coach",
+    "Epic" : ["'A' to increment power and one other stat for all players",
               "'I' to increment all player trait mults and roll for traits for non-trait players", "'B' to ensure two (2) players will breakout next season",
               "'C' to pick a new captain from five (5) options"],
 
@@ -822,22 +823,8 @@ def choose_perks(team):
                     team.captain.atk_dmg_bonus += 0.04
                     print(f"Captain damage bonus increased by 0.04 to {team.captain.atk_dmg_bonus:.3f}")
                 elif capt_choice == "Health":
-                    team.captain.max_health += 3
-                    print(f"Captain health increased by 3 to {team.captain.max_health}")
-            elif slot_choice in ['T', 't']:
-                trait_given = False
-                for pl in team.players:
-                    if pl.trait_tag == "None":
-                        tag, mult = additional_trait_roll(tier=pl.tier,fixed='NotNone')
-                        pl.trait_tag = tag
-                        pl.trait_multiplier = mult
-                        print(f"{pl.name} given {tag} with a mult of {mult}!")
-                        pl.name = f"{tag}{remove_tag_from_name(pl.name)}"
-                        trait_given = True
-                if not trait_given:
-                    print("All players have traits.")
-                    for i in [0, 2, 4]:
-                        increment_trait(team.players[i], factor=choice([1, 2]))
+                    team.captain.max_health += 4
+                    print(f"Captain health increased by 4 to {team.captain.max_health}")
             elif slot_choice in ['B', 'b']:
                 breakout_player = choice(team.players)
                 breakout_player.breakout = True
@@ -873,32 +860,17 @@ def choose_perks(team):
                     pl.power += 1 #power can be incremented twice to give +2 to all players
                 print(f"All players {attr_choice} +{epic_increments[attr_choice]}")
                 print("All players Power +1")
-            elif slot_choice in ['T', 't']:
-                trait_given = False
-                for pl in team.players:
-                    if pl.trait_tag == "None" and not trait_given:
-                        tag, mult = additional_trait_roll(tier=pl.tier, fixed=team.team_coach.trait_effect[0])
-                        pl.trait_tag = tag
-                        pl.trait_multiplier = mult
-                        print(f"{pl.name} given {tag} with a mult of {mult}!")
-                        pl.name = f"{tag}{remove_tag_from_name(pl.name)}"
-                        trait_given = True
-                if not trait_given:
-                    print("All players have traits.")
-                    pl = choice(team.players)
-                    tag, mult = additional_trait_roll(tier=pl.tier, fixed=team.team_coach.trait_effect[0])
-                    pl.trait_tag = tag
-                    pl.trait_multiplier = mult
-                    print(f"{pl.name} randomly chosen and given {tag} with a mult of {mult}!")
-                    pl.name = f"{tag}{remove_tag_from_name(pl.name)}"
-                    for i in range(6):
-                        increment_trait(team.players[i], factor=choice([1, 2, 2, 3]))
             elif slot_choice in ['C', 'c']:
                 new_cap_1 = Captain()
+                new_cap_1.damage_taken -= 0.008
                 new_cap_2 = Captain()
+                new_cap_2.damage_taken -= 0.008
                 new_cap_3 = Captain()
+                new_cap_3.crit_x_bonus += 0.105
                 new_cap_4 = Captain()
+                new_cap_4.atk_dmg_bonus += 0.042
                 new_cap_5 = Captain()
+                new_cap_5.max_health += 5
                 print(f"Current captain: {str(team.captain)}")
                 print(f"Option 'A': {str(new_cap_1)}")
                 print(f"Option 'B': {str(new_cap_2)}")

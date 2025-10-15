@@ -52,30 +52,30 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
     def apply_traits_before_lineup(t1lineup, t2lineup):
         for player in t1lineup:
             player.atk_counter = 0
-            if player.trait_tag == 'I*':
+            if 'I*' in player.trait_tag:
                 inc_roll = uniform(0,1)
                 if player.coach_trait_amp[0] == 'I*':
                     extra_inc_roll = uniform(0,1)
                 else:
                     extra_inc_roll = 0
-                if inc_roll <= player.trait_multiplier or extra_inc_roll <= player.coach_trait_amp[1]:
+                if inc_roll <= player.trait_multiplier['I*'] or extra_inc_roll <= player.coach_trait_amp[1]:
                     player.trait_bools['I*'] = randint(108,132) / 100
-                elif np.logical_and(inc_roll >= player.trait_multiplier, inc_roll <= (player.trait_multiplier*2)):
+                elif np.logical_and(inc_roll >= player.trait_multiplier['I*'], inc_roll <= (player.trait_multiplier['I*']*2)):
                     player.trait_bools['I*'] = randint(65,82) / 100
-            elif player.trait_tag == 'Pp' and playoffs:
+            elif 'Pp' in player.trait_tag and playoffs:
                 add = 2
                 pp1_roll = randint(0, 100)
                 add += choice([0, 1, 1, 1, 2, 2, 3]) if pp1_roll % 2 == 0 else 1
                 add += 1 if pp1_roll % 3 == 0 else 0
-                add += 3 if pp1_roll <= (player.trait_multiplier * 100) else 0
-                add += 2 if pp1_roll <= (player.trait_multiplier * 100) - 15 else 0
-                add += 2 if pp1_roll <= (player.trait_multiplier * 100) - 30 else 0
-                add += 2 if pp1_roll <= (player.trait_multiplier * 100) - 45 else 0
+                add += 3 if pp1_roll <= (player.trait_multiplier['Pp'] * 100) else 0
+                add += 2 if pp1_roll <= (player.trait_multiplier['Pp'] * 100) - 15 else 0
+                add += 2 if pp1_roll <= (player.trait_multiplier['Pp'] * 100) - 30 else 0
+                add += 2 if pp1_roll <= (player.trait_multiplier['Pp'] * 100) - 45 else 0
                 add += player.coach_trait_amp[1] if player.coach_trait_amp[0] == 'Pp' else 0
                 player.trait_bools['Pp'] = add
         for player in t2lineup:
             player.atk_counter = 0
-            if player.trait_tag == 'I*':
+            if 'I*' in player.trait_tag:
                 inc_roll = uniform(0, 1)
                 if player.coach_trait_amp[0] == 'I*':
                     extra_inc_roll = uniform(0,1)
@@ -84,19 +84,19 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
 
                 if round(inc_roll,2) == 0.01:
                     player.trait_bools['I*'] = 1.4
-                if inc_roll <= player.trait_multiplier or extra_inc_roll <= player.coach_trait_amp[1]:
+                if inc_roll <= player.trait_multiplier['I*'] or extra_inc_roll <= player.coach_trait_amp[1]:
                     player.trait_bools['I*'] = randint(105,130) / 100
-                elif np.logical_and(player.trait_multiplier <= inc_roll, inc_roll <= (player.trait_multiplier + 0.05)):
+                elif np.logical_and(player.trait_multiplier['I*'] <= inc_roll, inc_roll <= (player.trait_multiplier['I*'] + 0.05)):
                     player.trait_bools['I*'] = randint(70,82) / 100
-            elif player.trait_tag == 'Pp' and playoffs:
+            elif 'Pp' in player.trait_tag and playoffs:
                 add = 2
                 pp2_roll = randint(0, 100)
                 add += choice([0,1,1,1,2,2,3])  if pp2_roll % 2 == 0 else 1
                 add += 1 if pp2_roll % 3 == 0 else 0
-                add += 3 if pp2_roll <= (player.trait_multiplier*100) else 0
-                add += 2 if pp2_roll <= (player.trait_multiplier * 100) - 15 else 0
-                add += 2 if pp2_roll <= (player.trait_multiplier * 100) - 30 else 0
-                add += 2 if pp2_roll <= (player.trait_multiplier * 100) - 45 else 0
+                add += 3 if pp2_roll <= (player.trait_multiplier['Pp']*100) else 0
+                add += 2 if pp2_roll <= (player.trait_multiplier['Pp'] * 100) - 15 else 0
+                add += 2 if pp2_roll <= (player.trait_multiplier['Pp'] * 100) - 30 else 0
+                add += 2 if pp2_roll <= (player.trait_multiplier['Pp'] * 100) - 45 else 0
                 add += player.coach_trait_amp[1] if player.coach_trait_amp[0] == 'Pp' else 0
                 player.trait_bools['Pp'] = add
 
@@ -108,27 +108,27 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
 
     def apply_tick_effects(team1p, team2p, living_team1, living_team2, yta_team1, yta_team2, tick, TESSERACT):
         for player in team1p:
-            if player.trait_tag == "Hn" and (tick % player.trait_multiplier[0] == 0 or player.trait_multiplier[2]):
+            if "Hn" in player.trait_tag and (tick % player.trait_multiplier['Hn'][0] == 0 or player.trait_multiplier['Hn'][2]):
                 coach_bonus = 10 if (team1.team_coach.trait_effect[0] == 'Hn' and uniform(0,1) < team1.team_coach.trait_effect[1]) else 0
                 if player in living_team1:
-                    player.damage_data['Team Healed'] += player.trait_multiplier[1]
-                    amt = (player.trait_multiplier[1] + coach_bonus) / len(living_team1)
+                    player.damage_data['Team Healed'] += player.trait_multiplier['Hn'][1]
+                    amt = (player.trait_multiplier['Hn'][1] + coach_bonus) / len(living_team1)
                     for plr in living_team1:
                         plr.health += amt
-                    player.trait_multiplier[2] = False
+                    player.trait_multiplier['Hn'][2] = False
                 else:
-                    player.trait_multiplier[2] = True
+                    player.trait_multiplier['Hn'][2] = True
         for player in team2p:
-            if player.trait_tag == "Hn" and (tick % player.trait_multiplier[0] == 0 or player.trait_multiplier[2]):
+            if "Hn" in player.trait_tag and (tick % player.trait_multiplier['Hn'][0] == 0 or player.trait_multiplier['Hn'][2]):
                 coach_bonus = 10 if (team2.team_coach.trait_effect[0] == 'Hn' and uniform(0, 1) < team2.team_coach.trait_effect[1]) else 0
                 if player in living_team2:
-                    player.damage_data['Team Healed'] += player.trait_multiplier[1]
-                    amt = (player.trait_multiplier[1] + coach_bonus) / len(living_team2)
+                    player.damage_data['Team Healed'] += player.trait_multiplier['Hn'][1]
+                    amt = (player.trait_multiplier['Hn'][1] + coach_bonus) / len(living_team2)
                     for plr in living_team2:
                         plr.health += amt
-                    player.trait_multiplier[2] = False
+                    player.trait_multiplier['Hn'][2] = False
                 else:
-                    player.trait_multiplier[2] = True
+                    player.trait_multiplier['Hn'][2] = True
 
 
         for player in living_team1:
@@ -256,10 +256,10 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
 
             if tick >= clutch_time or ((tick >= (clutch_time - 10)) and abs(TESSERACT) <= 100):
                 for player in living_team1:
-                    if player.trait_tag == 'C%':
+                    if 'C%' in player.trait_tag:
                         player.trait_bools['C%'] = True
                 for player in living_team2:
-                    if player.trait_tag == 'C%':
+                    if 'C%' in player.trait_tag:
                         player.trait_bools['C%'] = True
 
 
@@ -305,12 +305,12 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
                                     if defender in yta_team2:
                                         yta_team2.remove(defender)
                                     #deal explosion damage to all living players on team 1 if defender is an exploder
-                                    if defender.trait_tag == 'X+':
+                                    if 'X+' in defender.trait_tag:
                                         for player in living_team1:
                                             coach_damage_increment = defender.coach_trait_amp[1] if defender.coach_trait_amp[0] == 'X+' else 0
-                                            player.take_damage(defender.trait_multiplier[1]*round(((defender.atk_dmg*defender.trait_multiplier[0]) + coach_damage_increment + 5), 2))
-                                            defender.damage_data['Explosion'] += defender.atk_dmg*defender.trait_multiplier[0]
-                                            defender.damage_data['Total-Damage'] += defender.atk_dmg * defender.trait_multiplier[0]
+                                            player.take_damage(defender.trait_multiplier['X+'][0]*defender.trait_multiplier['X+'][1] + coach_damage_increment)
+                                            defender.damage_data['Explosion'] += defender.trait_multiplier['X+'][0]*defender.trait_multiplier['X+'][1]
+                                            defender.damage_data['Total-Damage'] += defender.trait_multiplier['X+'][0]*defender.trait_multiplier['X+'][1]
                                             if not player.is_alive:
                                                 living_team1.remove(player)
                                                 if player in yta_team1:
@@ -318,8 +318,8 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
                                                 defender.damage_data['Explosion-Kills'] += 1
                                                 defender.kills += 1
                                     #Overkill impact
-                                    TESSERACT += abs(3*defender.health)
-                                elif defender.trait_tag == 'R#' and not attacker.is_alive: #this can happen when lethal damage is reflected back because reflect_damage happens within the attack function
+                                    TESSERACT += abs(3 * defender.health) if '$l' not in attacker.trait_tag else abs(3.75 * defender.health)
+                                elif 'R#' in defender.trait_tag and not attacker.is_alive: #this can happen when lethal damage is reflected back because reflect_damage happens within the attack function
                                     if attacker in living_team1: #it is possible for attacker to die to explosion damage, which will remove them from living_team1
                                         living_team1.remove(attacker)
                                         if attacker in yta_team1:
@@ -365,17 +365,13 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
                                     if defender in yta_team1:
                                         yta_team1.remove(defender)
                                     # deal explosion damage to all living players on team 2 if defender is an exploder
-                                    if defender.trait_tag == 'X+':
+                                    if 'X+' in defender.trait_tag:
                                         for player in living_team2:
                                             coach_damage_increment = defender.coach_trait_amp[1] if \
                                             defender.coach_trait_amp[0] == 'X+' else 0
-                                            player.take_damage(defender.trait_multiplier[1]*round(((
-                                                                                  defender.atk_dmg * defender.trait_multiplier[0]) + coach_damage_increment + 5),
-                                                                     2))
-                                            defender.damage_data[
-                                                'Explosion'] += defender.atk_dmg * defender.trait_multiplier[0]
-                                            defender.damage_data[
-                                                'Total-Damage'] += defender.atk_dmg * defender.trait_multiplier[0]
+                                            player.take_damage(defender.trait_multiplier['X+'][0]*defender.trait_multiplier['X+'][1] + coach_damage_increment)
+                                            defender.damage_data['Explosion'] += defender.trait_multiplier['X+'][0]*defender.trait_multiplier['X+'][1]
+                                            defender.damage_data['Total-Damage'] += defender.trait_multiplier['X+'][0]*defender.trait_multiplier['X+'][1]
                                             if not player.is_alive:
                                                 living_team2.remove(player)
                                                 if player in yta_team2:
@@ -383,8 +379,8 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
                                                 defender.damage_data['Explosion-Kills'] += 1
                                                 defender.kills += 1
                                     # Overkill impact
-                                    TESSERACT -= abs(3 * defender.health)
-                                elif defender.trait_tag == 'R#' and not attacker.is_alive:  # this can happen when lethal damage is reflected back
+                                    TESSERACT -= abs(3 * defender.health) if '$l' not in attacker.trait_tag else abs(3.75 * defender.health)
+                                elif 'R#' in defender.trait_tag and not attacker.is_alive:  # this can happen when lethal damage is reflected back
                                     if attacker in living_team2:  # it is possible for attacker to die to explosion damage, which will remove them from living_team2
                                         living_team2.remove(attacker)
                                         if attacker in yta_team2:
@@ -432,12 +428,12 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
                                     if defender in yta_team1:
                                         yta_team1.remove(defender)
                                     #deal explosion damage to all living players on team 2 if defender is an exploder
-                                    if defender.trait_tag == 'X+':
+                                    if 'X+' in defender.trait_tag:
                                         for player in living_team2:
                                             coach_damage_increment = defender.coach_trait_amp[1] if defender.coach_trait_amp[0] == 'X+' else 0
-                                            player.take_damage(defender.trait_multiplier[1]*round(((defender.atk_dmg * defender.trait_multiplier[0]) + coach_damage_increment + 5),2))
-                                            defender.damage_data['Explosion'] += defender.atk_dmg * defender.trait_multiplier[0]
-                                            defender.damage_data['Total-Damage'] += defender.atk_dmg * defender.trait_multiplier[0]
+                                            player.take_damage(defender.trait_multiplier['X+'][0]*defender.trait_multiplier['X+'][1] + coach_damage_increment)
+                                            defender.damage_data['Explosion'] += defender.trait_multiplier['X+'][0]*defender.trait_multiplier['X+'][1]
+                                            defender.damage_data['Total-Damage'] += defender.trait_multiplier['X+'][0]*defender.trait_multiplier['X+'][1]
                                             if not player.is_alive:
                                                 living_team2.remove(player)
                                                 if player in yta_team2:
@@ -445,8 +441,8 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
                                                 defender.damage_data['Explosion-Kills'] += 1
                                                 defender.kills += 1
                                     #Overkill impact
-                                    TESSERACT -= abs(3*defender.health)
-                                elif defender.trait_tag == 'R#' and not attacker.is_alive: #this can happen when lethal damage is reflected back
+                                    TESSERACT -= abs(3 * defender.health) if '$l' not in attacker.trait_tag else abs(3.75 * defender.health)
+                                elif 'R#' in defender.trait_tag and not attacker.is_alive: #this can happen when lethal damage is reflected back
                                     if attacker in living_team2:  # it is possible for attacker to die to explosion damage, which will remove them from living_team2
                                         living_team2.remove(attacker)
                                         if attacker in yta_team2:
@@ -490,17 +486,13 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
                                     if defender in yta_team2:
                                         yta_team2.remove(defender)
                                     # deal explosion damage to all living players on team 1 if defender is an exploder
-                                    if defender.trait_tag == 'X+':
+                                    if 'X+' in defender.trait_tag:
                                         for player in living_team1:
                                             coach_damage_increment = defender.coach_trait_amp[1] if \
                                             defender.coach_trait_amp[0] == 'X+' else 0
-                                            player.take_damage(defender.trait_multiplier[1] * round(((
-                                                                                  defender.atk_dmg * defender.trait_multiplier[0]) + coach_damage_increment + 5),
-                                                                     2))
-                                            defender.damage_data[
-                                                'Explosion'] += defender.atk_dmg * defender.trait_multiplier[0]
-                                            defender.damage_data[
-                                                'Total-Damage'] += defender.atk_dmg * defender.trait_multiplier[0]
+                                            player.take_damage(defender.trait_multiplier['X+'][0]*defender.trait_multiplier['X+'][1] + coach_damage_increment)
+                                            defender.damage_data['Explosion'] += defender.trait_multiplier['X+'][0]*defender.trait_multiplier['X+'][1]
+                                            defender.damage_data['Total-Damage'] += defender.trait_multiplier['X+'][0]*defender.trait_multiplier['X+'][1]
                                             if not player.is_alive:
                                                 living_team1.remove(player)
                                                 if player in yta_team1:
@@ -508,8 +500,8 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
                                                 defender.damage_data['Explosion-Kills'] += 1
                                                 defender.kills += 1
                                     # Overkill impact
-                                    TESSERACT += abs(3 * defender.health)
-                                elif defender.trait_tag == 'R#' and not attacker.is_alive:  # this can happen when lethal damage is reflected back because reflect_damage happens within the attack function
+                                    TESSERACT += abs(3 * defender.health) if '$l' not in attacker.trait_tag else abs(3.75 * defender.health)
+                                elif 'R#' in defender.trait_tag and not attacker.is_alive:  # this can happen when lethal damage is reflected back because reflect_damage happens within the attack function
                                     if attacker in living_team1:  # it is possible for attacker to die to explosion damage, which will remove them from living_team1
                                         living_team1.remove(attacker)
                                         if attacker in yta_team1:
@@ -721,7 +713,7 @@ def best_of(team1,team2,thresh,amp=4,both_return=False,win_by=1,test_output=Fals
 
     trigger = win_by_immutable = win_by
 
-    end_decrease = math.floor(win_by_immutable / 3)
+    end_decrease = math.floor(win_by_immutable / 2.5)
 
     blockPrint()
     team1_wins = 0 + advantage
