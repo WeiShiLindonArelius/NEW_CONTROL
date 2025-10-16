@@ -410,7 +410,7 @@ def main():
     my_team_count = 5
     franchise_mode = False #f r a n c h i s e
 
-    SEASONS = 50
+    SEASONS = 75
     end_season_times = [float(0) for _ in range(SEASONS+1)]
 
     season_stats_list = {}

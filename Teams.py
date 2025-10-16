@@ -923,7 +923,10 @@ def choose_perks(team):
 
 
     else:
-        no_roll_choice = input("Press 'P' to buff players, 'C' for new captain:\n")
+        if pick_perks:
+            no_roll_choice = input("Press 'P' to buff players, 'C' for new captain:\n")
+        else:
+            no_roll_choice = 'P'
         if no_roll_choice in ["P", "p"]:
             for _ in range(choice([2,2,2,2,3,3,3])):
                 slot_amp = randint(0, 5)

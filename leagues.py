@@ -76,7 +76,8 @@ def player_stats_as_df(player: "PlayerSeason", dt, season_count, averages = None
                   'Defense %' : (player.defense_pct - avg_stats["Defense %"]) / std_devs["Defense %"],
                   'Defense Absolute': (player.defense_abs - avg_stats["Defense Absolute"]) / std_devs["Defense Absolute"],
                   'Spawn Time' : (avg_stats["Spawn Time"] - player.spawn_time) / std_devs["Spawn Time"],
-                  'Trait' : player.trait_tag, 'xWAR' : player.player.xWAR,
+                  'Primary Trait' : player.trait_tag[0], 'Secondary Trait' : player.trait_tag[1],
+                  'xWAR' : player.player.xWAR,
                   'Game Wins' : player.game_wins, 'Game Losses' : player.game_losses, 'Game Winrate' : 100*round((player.game_wins / (player.game_wins+player.game_losses)),4),
                   'Effect' : player.effect, 'Kills' : player.kills, 'Deaths' : player.deaths, 'Slot' : player.player.slot,
                   'Team Winrate' : 100*round((player.player.team_wins / (player.player.team_wins + player.player.team_losses)),4), "Time" : dt}
@@ -541,6 +542,12 @@ def user_draft(teams, season_count, is_regional=False, void=False, second = Fals
         return None
 
     def find_best_upgrade(team, draft_pool):
+        if any("Fl" in p.trait_tag for p in team.players):
+            no_flashers = True
+        else:
+            no_flashers = False
+        #a team cannot draft a flasher if they have one on their roster
+
         team_lineup = team.players
         current_value = team.get_team_xWAR()
         cap = caps[season_count]
@@ -558,7 +565,7 @@ def user_draft(teams, season_count, is_regional=False, void=False, second = Fals
                 new_xWAR = new_player.xWAR
                 new_value = current_value + new_xWAR - old_xWAR
 
-                if cap >= new_value > best_value:
+                if cap >= new_value > best_value and not (no_flashers and "Fl" in new_player.trait_tag):
                     best_value = new_value
                     best_upgrade = new_player
                     best_old_player = old_player.name
@@ -899,7 +906,8 @@ def player_changes(teams, season_count=-1):
 
                 if player.tier not in tier_factor.keys():
                     tier_factor[player.tier] = 0
-                t_factor = trait_factor[player.trait_tag] + tier_factor[player.tier] + random_factor
+                trait_factor_instance = trait_factor[player.trait_tag[0]] if player.trait_tag[1] == "None" else trait_factor[player.trait_tag[1]]
+                t_factor = trait_factor_instance + tier_factor[player.tier] + random_factor
                 factor = age_factor[player.age] + t_factor + x_factor
                 if factor == 1:
                     factor = choice([0.99, 1.01])
@@ -911,7 +919,7 @@ def player_changes(teams, season_count=-1):
                     with open('off_season_report', 'a') as file:
                         file.write(f"Changes for {player.name}\n")
                         file.write(f"Factor: {factor:.6f}\n\tAge Factor: {age_factor[player.age]}\n\tT_Factor: {t_factor:.6f}"
-                                   f"\n\t\tTrait Factor: {trait_factor[player.trait_tag]}\n\t\tTier Factor: {tier_factor[player.tier]}\n\t\tRandom Factor: {random_factor}\n\tX_Factor: {x_factor}\n")
+                                   f"\n\t\tTrait Factor: {trait_factor_instance}\n\t\tTier Factor: {tier_factor[player.tier]}\n\t\tRandom Factor: {random_factor}\n\tX_Factor: {x_factor}\n")
 
 
 
@@ -1933,7 +1941,7 @@ def league_season(TEAMS,use_saved=False,season_count=-1,final_reversed=True,regi
 
 
         region_mvp(stats_list, season_count, region, names_standings)
-        #player_season_excel(stats_list[season_count],season_count=season_count,averages=averages,deviations=deviations)
+        player_season_excel(stats_list[season_count],season_count=season_count,averages=averages,deviations=deviations)
 
 
     season_end_time = time()
