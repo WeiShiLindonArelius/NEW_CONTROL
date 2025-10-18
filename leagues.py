@@ -1941,7 +1941,7 @@ def league_season(TEAMS,use_saved=False,season_count=-1,final_reversed=True,regi
 
 
         region_mvp(stats_list, season_count, region, names_standings)
-        player_season_excel(stats_list[season_count],season_count=season_count,averages=averages,deviations=deviations)
+        #player_season_excel(stats_list[season_count],season_count=season_count,averages=averages,deviations=deviations)
 
 
     season_end_time = time()

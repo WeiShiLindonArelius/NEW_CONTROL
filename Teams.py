@@ -775,7 +775,7 @@ perk_option_strings = {
 
     "Epic" : ["'A' to increment power and one other stat for all players",
               "'I' to increment all player trait mults and roll for traits for non-trait players", "'B' to ensure two (2) players will breakout next season",
-              "'C' to pick a new captain from five (5) options"],
+              "'C' to pick a new captain from six (6) options", "'C2' to amp the captain by an attribute of choice"],
 
     "Legendary" : ["'C' to gain FIFTEEN (15) random common perks", "'I' to increment traits for all players with a factor of 5 or 6"]
 
@@ -814,14 +814,14 @@ def choose_perks(team):
             if slot_choice in ['C', 'c']:
                 capt_choice = input("Damage Taken, Critical X, Damage X, or Health?\n")
                 if capt_choice == "Damage Taken":
-                    team.captain.damage_taken -= 0.0075
-                    print(f"Captain damage taken % decreased by 0.0075 to {team.captain.damage_taken:.4f}")
+                    team.captain.damage_taken -= 0.007
+                    print(f"Captain damage taken % decreased by 0.007 to {team.captain.damage_taken:.4f}")
                 elif capt_choice == "Critical X":
-                    team.captain.crit_x_bonus += 0.1
-                    print(f"Captain critical bonus increased by 0.1 to {team.captain.crit_x_bonus:.3f}")
+                    team.captain.crit_x_bonus += 0.095
+                    print(f"Captain critical bonus increased by 0.095 to {team.captain.crit_x_bonus:.3f}")
                 elif capt_choice == "Damage X":
-                    team.captain.atk_dmg_bonus += 0.04
-                    print(f"Captain damage bonus increased by 0.04 to {team.captain.atk_dmg_bonus:.3f}")
+                    team.captain.atk_dmg_bonus += 0.035
+                    print(f"Captain damage bonus increased by 0.035 to {team.captain.atk_dmg_bonus:.3f}")
                 elif capt_choice == "Health":
                     team.captain.max_health += 4
                     print(f"Captain health increased by 4 to {team.captain.max_health}")
@@ -871,12 +871,14 @@ def choose_perks(team):
                 new_cap_4.atk_dmg_bonus += 0.042
                 new_cap_5 = Captain()
                 new_cap_5.max_health += 5
+                new_cap_6 = Captain()
                 print(f"Current captain: {str(team.captain)}")
                 print(f"Option 'A': {str(new_cap_1)}")
                 print(f"Option 'B': {str(new_cap_2)}")
                 print(f"Option 'C': {str(new_cap_3)}")
                 print(f"Option 'D': {str(new_cap_4)}")
                 print(f"Option 'E': {str(new_cap_5)}")
+                print(f"Option 'F': {str(new_cap_6)}")
                 new_capt_choice = input("Press one of 'A' through 'E' for a new captain, or 'N' to keep the current captain.\n")
                 if new_capt_choice in ["A", "a"]:
                     team.captain = new_cap_1
@@ -888,6 +890,8 @@ def choose_perks(team):
                     team.captain = new_cap_4
                 elif new_capt_choice in ["E", "e"]:
                     team.captain = new_cap_5
+                elif new_capt_choice in ["F", "f"]:
+                    team.captain = new_cap_6
             elif slot_choice in ['B', 'b']:
                 available_breakout = [0,1,2,3,4,5]
                 for _ in range(2):
@@ -895,6 +899,21 @@ def choose_perks(team):
                     team.players[breakout_index].breakout = True
                     print(f"{team.players[breakout_index].name} will breakout next season!")
                     available_breakout.remove(breakout_index)
+
+            elif slot_choice in ['C2', 'c2']:
+                capt_choice = input("Damage Taken, Critical X, Damage X, or Health?\n")
+                if capt_choice == "Damage Taken":
+                    team.captain.damage_taken -= 0.008
+                    print(f"Captain damage taken % decreased by 0.008 to {team.captain.damage_taken:.4f}")
+                elif capt_choice == "Critical X":
+                    team.captain.crit_x_bonus += 0.105
+                    print(f"Captain critical bonus increased by 0.105 to {team.captain.crit_x_bonus:.3f}")
+                elif capt_choice == "Damage X":
+                    team.captain.atk_dmg_bonus += 0.045
+                    print(f"Captain damage bonus increased by 0.045 to {team.captain.atk_dmg_bonus:.3f}")
+                elif capt_choice == "Health":
+                    team.captain.max_health += 6
+                    print(f"Captain health increased by 6 to {team.captain.max_health}")
 
             else:
                 for i in range(6):
@@ -938,13 +957,17 @@ def choose_perks(team):
         else:
             new_cap_1 = Captain()
             new_cap_2 = Captain()
+            new_cap_3 = Captain()
             print(f"Current captain: {str(team.captain)}")
             print(f"Option 'A': {str(new_cap_1)}")
             print(f"Option 'B': {str(new_cap_2)}")
+            print(f"Option 'C': {str(new_cap_3)}")
             new_capt_choice = input("Press 'A' or 'B' for a new captain, or 'N' to keep the current captain.\n")
             if new_capt_choice in ["A", "a"]:
                 team.captain = new_cap_1
             elif new_capt_choice in ["B", "b"]:
+                team.captain = new_cap_2
+            elif new_capt_choice in ["C", "c"]:
                 team.captain = new_cap_2
 
 

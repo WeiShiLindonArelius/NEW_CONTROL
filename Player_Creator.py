@@ -27,8 +27,8 @@ def new_trait_roll(tier, fixed=("NotNone", "NotNone")):
     reflector_lower_bound = 0.10
     splitter_lower_bound = 0.14
     vampire_lower_bound = 0.375
-    heal_nova_possibilities = [x for x in range(36, 84) if x % 12 == 0]
-    heal_tick_possibilities = [13, 12, 12, 11, 11, 10, 10]
+    heal_nova_possibilities = [x for x in range(48, 72) if x % 12 == 0]
+    heal_tick_possibilities = [13, 13, 12, 12, 11, 11, 10]
     stun_tick_possibilities = [10, 10, 11, 11, 12, 12, 13]
     if tier == 'S':
         heal_nova_possibilities.pop()

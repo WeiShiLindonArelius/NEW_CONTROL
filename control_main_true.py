@@ -959,79 +959,77 @@ def main():
 
 
                 groups[g_i].extend([two_seed, three_seed, four_seed, ls_team1, ls_team2])
-            return group_a, group_b, group_c, group_d, group_e, group_f, group_g, group_h
+            #I'm changing this for larger groups so that placement in the universal league is not as dependent on group luck
+            group_1 = group_a + group_b
+            group_2 = group_c + group_d
+            group_3 = group_e + group_f
+            group_4 = group_g + group_h
 
-        group_a, group_b, group_c, group_d, group_e, group_f, group_g, group_h = create_pre_qualifying_groups(pqt)
+            return group_1, group_2, group_3, group_4
 
+        group_one, group_two, group_three, group_four = create_pre_qualifying_groups(pqt)
 
-        print(Fore.GREEN + "PRE-QUALIFYING, GROUP A: " + Fore.RESET, end='')
-        group_a_standings = round_robin(group_a, r=12, qualify_range=len(group_a), print_region_seed=True, cyan_seeds=[0,1,2], red_seeds=[3,4])
-        group_a_champ, group_a_runner_up, group_a_third = group_a_standings[:3]
-        print(Fore.GREEN + "PRE-QUALIFYING, GROUP B: " + Fore.RESET, end='')
-        group_b_standings = round_robin(group_b, r=12, qualify_range=len(group_a), print_region_seed=True, cyan_seeds=[0,1,2], red_seeds=[3,4])
-        group_b_champ, group_b_runner_up, group_b_third = group_b_standings[:3]
-        print(Fore.GREEN + "PRE-QUALIFYING, GROUP C: " + Fore.RESET, end='')
-        group_c_standings = round_robin(group_c, r=12, qualify_range=len(group_a), print_region_seed=True, cyan_seeds=[0,1,2], red_seeds=[3,4])
-        group_c_champ, group_c_runner_up, group_c_third = group_c_standings[:3]
-        print(Fore.GREEN + "PRE-QUALIFYING, GROUP D: " + Fore.RESET, end='')
-        group_d_standings = round_robin(group_d, r=12, qualify_range=len(group_a), print_region_seed=True, cyan_seeds=[0,1,2], red_seeds=[3,4])
-        group_d_champ, group_d_runner_up, group_d_third = group_d_standings[:3]
-        print(Fore.GREEN + "PRE-QUALIFYING, GROUP E: " + Fore.RESET, end='')
-        group_e_standings = round_robin(group_e, r=12, qualify_range=len(group_a), print_region_seed=True, cyan_seeds=[0,1,2], red_seeds=[3,4])
-        group_e_champ, group_e_runner_up, group_e_third = group_e_standings[:3]
-        print(Fore.GREEN + "PRE-QUALIFYING, GROUP F: " + Fore.RESET, end='')
-        group_f_standings = round_robin(group_f, r=12, qualify_range=len(group_a), print_region_seed=True, cyan_seeds=[0,1,2], red_seeds=[3,4])
-        group_f_champ, group_f_runner_up, group_f_third = group_f_standings[:3]
-        print(Fore.GREEN + "PRE-QUALIFYING, GROUP G: " + Fore.RESET, end='')
-        group_g_standings = round_robin(group_g, r=12, qualify_range=len(group_a), print_region_seed=True, cyan_seeds=[0,1,2], red_seeds=[3,4])
-        group_g_champ, group_g_runner_up, group_g_third = group_g_standings[:3]
-        print(Fore.GREEN + "PRE-QUALIFYING, GROUP H: " + Fore.RESET, end='')
-        group_h_standings = round_robin(group_h, r=12, qualify_range=len(group_a), print_region_seed=True, cyan_seeds=[0,1,2], red_seeds=[3,4])
-        group_h_champ, group_h_runner_up, group_h_third = group_h_standings[:3]
+        print(Fore.GREEN + "PRE-QUALIFYING, GROUP ONE: " + Fore.RESET, end='')
+        group_one_standings = round_robin(group_one, r=8, qualify_range=len(group_one), print_region_seed=True,
+                                        cyan_seeds=[0,1,2,3,4,5], red_seeds=[6,7,8,9])
+        group_one_qualif = group_one_standings[:6]
+        print(Fore.GREEN + "PRE-QUALIFYING, GROUP TWO: " + Fore.RESET, end='')
+        group_two_standings = round_robin(group_two, r=8, qualify_range=len(group_two), print_region_seed=True,
+                                        cyan_seeds=[0,1,2,3,4,5], red_seeds=[6,7,8,9])
+        group_two_qualif = group_two_standings[:6]
+        print(Fore.GREEN + "PRE-QUALIFYING, GROUP THREE: " + Fore.RESET, end='')
+        group_three_standings = round_robin(group_three, r=8, qualify_range=len(group_three), print_region_seed=True,
+                                        cyan_seeds=[0,1,2,3,4,5], red_seeds=[6,7,8,9])
+        group_three_qualif = group_three_standings[:6]
+        print(Fore.GREEN + "PRE-QUALIFYING, GROUP FOUR: " + Fore.RESET, end='')
+        group_four_standings = round_robin(group_four, r=8, qualify_range=len(group_four), print_region_seed=True,
+                                        cyan_seeds=[0,1,2,3,4,5], red_seeds=[6,7,8,9])
+        group_four_qualif = group_four_standings[:6]
 
-        i = 0
-        for champ1 in [group_a_champ, group_b_champ, group_c_champ, group_d_champ]:
-            index = ["A", "B", "C", "D"]
-            uni_qualif_g1.append(champ1)
-            champ1.history[season_count] += f" Won PQ Group {index[i]} -> UNI Qualifying."
-            i+=1
-        i = 0
-        for champ2 in [group_e_champ, group_f_champ, group_g_champ, group_h_champ]:
-            index = ["E", "F", "G", "H"]
-            uni_qualif_g2.append(champ2)
-            champ2.history[season_count] += f" Won PQ Group {index[i]} -> UNI Qualifying."
+        i=0
+        for competitor in group_one:
             i += 1
+            if competitor in group_one_qualif:
+                uni_qualif_g1.append(competitor)
+                if i == 1:
+                    competitor.history[season_count] += f"Won PQ Group One -> UNI Qualifying."
+                else:
+                    competitor.history[season_count] += f"{ordinal_string(i)} in PQ Group One -> UNI Qualifying."
+            else:
+                competitor.history[season_count] += f"Eliminated in PQ ({ordinal_string(i)} in Group One)"
         i = 0
-        for runner_up1 in [group_e_runner_up, group_f_runner_up, group_g_runner_up, group_h_runner_up]:
-            index = ["E", "F", "G", "H"]
-            uni_qualif_g1.append(runner_up1)
-            runner_up1.history[season_count] += f" 2nd in PQ Group {index[i]} -> UNI Qualifying."
+        for competitor in group_two:
+            i += 1
+            if competitor in group_two_qualif:
+                uni_qualif_g1.append(competitor)
+                if i == 1:
+                    competitor.history[season_count] += f"Won PQ Group Two -> UNI Qualifying."
+                else:
+                    competitor.history[season_count] += f"{ordinal_string(i)} in PQ Group Two -> UNI Qualifying."
+            else:
+                competitor.history[season_count] += f"Eliminated in PQ ({ordinal_string(i)} in Group Two)"
         i = 0
-        for runner_up2 in [group_a_runner_up, group_b_runner_up, group_c_runner_up, group_d_runner_up]:
-            index = ["A", "B", "C", "D"]
-            uni_qualif_g2.append(runner_up2)
-            runner_up2.history[season_count] += f" 2nd in PQ Group {index[i]} -> UNI Qualifying."
-
+        for competitor in group_three:
+            i += 1
+            if competitor in group_three_qualif:
+                uni_qualif_g2.append(competitor)
+                if i == 1:
+                    competitor.history[season_count] += f"Won PQ Group Three -> UNI Qualifying."
+                else:
+                    competitor.history[season_count] += f"{ordinal_string(i)} in PQ Group Three -> UNI Qualifying."
+            else:
+                competitor.history[season_count] += f"Eliminated in PQ ({ordinal_string(i)} in Group Three)"
         i = 0
-        for third1 in [group_e_third, group_b_third, group_g_third, group_d_third]:
-            index = ["E", "B", "G", "D"]
-            uni_qualif_g1.append(third1)
-            third1.history[season_count] += f" 3rd in PQ Group {index[i]} -> UNI Qualifying."
-        i = 0
-        for third2 in [group_a_third, group_f_third, group_c_third, group_h_third]:
-            index = ["A", "F", "C", "H"]
-            uni_qualif_g2.append(third2)
-            third2.history[season_count] += f" 3rd in PQ Group {index[i]} -> UNI Qualifying."
-
-        for i in [3,4]:
-            group_a_standings[i].history[season_count] += f" Eliminated from PQ ({ordinal_string(i+1)} in Group A)"
-            group_b_standings[i].history[season_count] += f" Eliminated from PQ ({ordinal_string(i+1)} in Group B)"
-            group_c_standings[i].history[season_count] += f" Eliminated from PQ ({ordinal_string(i+1)} in Group C)"
-            group_d_standings[i].history[season_count] += f" Eliminated from PQ ({ordinal_string(i+1)} in Group D)"
-            group_e_standings[i].history[season_count] += f" Eliminated from PQ ({ordinal_string(i+1)} in Group E)"
-            group_f_standings[i].history[season_count] += f" Eliminated from PQ ({ordinal_string(i+1)} in Group F)"
-            group_g_standings[i].history[season_count] += f" Eliminated from PQ ({ordinal_string(i + 1)} in Group G)"
-            group_h_standings[i].history[season_count] += f" Eliminated from PQ ({ordinal_string(i + 1)} in Group H)"
+        for competitor in group_four:
+            i+=1
+            if competitor in group_four_qualif:
+                uni_qualif_g2.append(competitor)
+                if i == 1:
+                    competitor.history[season_count] += f"Won PQ Group Four -> UNI Qualifying."
+                else:
+                    competitor.history[season_count] += f"{ordinal_string(i)} in PQ Group Four -> UNI Qualifying."
+            else:
+                competitor.history[season_count] += f"Eliminated in PQ ({ordinal_string(i)} in Group Four)"
 
 
 
