@@ -33,7 +33,8 @@ def season_wipe(teams):
                                 'Total-Delayed-X': 0.0, 'Delayed-Count': 0, 'Avg-Delayed-X': 0.0,'D% Blocked' : 0.0, "DAbs Blocked" : 0.0,
                                 'Avg-Delayed-Damage': 0.0, 'Overkill': 0.0, 'Overkill-Count': 0, 'Revived' : 0, 'Healed' : 0,
                                   'Reflected' : 0.0, 'Crit-Reflects' : 0, 'Reflect-Kills' : 0, 'Reflect-Count' : 0, 'Explosion' : 0, 'Explosion-Kills' : 0,
-                                  'Toxin' : 0, 'Toxin Kills' : 0, 'Attacks Stunned' : 0, 'Vampire Healed' : 0, 'Extra Attacks' : 0, 'Team Healed' : 0}
+                                  'Toxin' : 0, 'Toxin Kills' : 0, 'Attacks Stunned' : 0, 'Vampire Healed' : 0, 'Extra Attacks' : 0, 'Team Healed' : 0,
+                                  'Ticks Alive' : 0, 'Ticks Dead' : 0}
             total_games = player.games_played['All'] + player.games_played['This-Season']
             player.games_played = {'This-Season' : 0, 'All': total_games, 'Playoffs': 0, 'Matches' : 0}
             player.game_wins = 0

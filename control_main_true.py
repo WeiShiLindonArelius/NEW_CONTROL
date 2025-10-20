@@ -557,7 +557,7 @@ def main():
             ch_slot_effect.extend(ch_att_amped)
             choward_coach = Coach(region=my_team.region, fixed_slot_effect=ch_slot_effect,fixed_name="Carter Howard")
             my_team.change_coach(choward_coach)
-            print('\n' + Fore.BLUE + f"{my_team.name} is your team. Coach: {str(choward_coach)}, {str(my_team.captain)}")
+            print('\n' + Fore.BLUE + f"{my_team.name} is your team. Coach: {str(choward_coach)}\n {str(my_team.captain)}")
             my_team.print_roster(first=True)
         if jackson_playing:
             for i in range(len(jackson_teams)):
@@ -568,7 +568,7 @@ def main():
                 jk_slot_effect.extend(jk_att_amped)
                 jkeefe_coach = Coach(region=j_team.region, fixed_slot_effect=jk_slot_effect,fixed_name="Jackson Keefe")
                 j_team.change_coach(jkeefe_coach)
-                print('\n' + Fore.BLUE + f"{j_team.name} is your team. Coach: {str(jkeefe_coach)}, {str(j_team.captain)}")
+                print('\n' + Fore.BLUE + f"{j_team.name} is your team. Coach: {str(jkeefe_coach)}\n {str(j_team.captain)}")
                 j_team.print_roster(first=True)
 
 
@@ -680,6 +680,8 @@ def main():
     promoted = {}
 
     for num in range(SEASONS):
+
+        clear_file('playerstats')
 
         if num >= 1:
             write_to_file(filename='my_team_results', words="\n",

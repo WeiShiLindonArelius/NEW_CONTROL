@@ -1,6 +1,6 @@
 #this file contains a bunch of booleans to toggle game options
 
-pick_perks = True
+pick_perks = False
 
 make_coach_decisions = False
 

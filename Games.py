@@ -106,6 +106,19 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
         for player in t2lineup:
             player.trait_bools = {'C%' : False, 'I*' : 0, 'Pp' : 0}
 
+    def apply_living_tick_data(team1p, team2p, living_team1, living_team2):
+        for player in team1p:
+            if player in living_team1:
+                player.damage_data['Ticks Alive'] += 1
+            else:
+                player.damage_data['Ticks Dead'] += 1
+        for player in team2p:
+            if player in living_team2:
+                player.damage_data['Ticks Alive'] += 1
+            else:
+                player.damage_data['Ticks Dead'] += 1
+
+
     def apply_tick_effects(team1p, team2p, living_team1, living_team2, yta_team1, yta_team2, tick, TESSERACT):
         for player in team1p:
             if "Hn" in player.trait_tag and (tick % player.trait_multiplier['Hn'][0] == 0 or player.trait_multiplier['Hn'][2]):
@@ -273,8 +286,8 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
             #and the while loop breaks when there are no players on either team who are alive and yet to attack
             #once the loop breaks, the next tick begins in the larger for loop
 
-            apply_tick_effects(team1.players, team2.players, living_team1, living_team2, yta_team1, yta_team2, tick, TESSERACT)
-
+            apply_tick_effects(team1_lineup, team2_lineup, living_team1, living_team2, yta_team1, yta_team2, tick, TESSERACT)
+            apply_living_tick_data(team1_lineup, team2_lineup, living_team1, living_team2)
             sub_count = choice([0,1])
             while True:
                 sub_count += 1

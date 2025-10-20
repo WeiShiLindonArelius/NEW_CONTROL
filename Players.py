@@ -361,6 +361,8 @@ class PlayerSeason:
             self.effect = player.damage_data['Tesseract'] / self.game_count
             self.total_attacks = player.damage_data['Total-Attacks'] / self.game_count
             self.total_delayed_damage = player.damage_data['Total-Delayed-Damage'] / self.game_count
+            self.ticks_alive = player.damage_data['Ticks Alive'] / self.game_count
+            self.ticks_dead = player.damage_data['Ticks Dead'] / self.game_count
             try:
                 self.avg_delayed_x_per_atk = player.damage_data['Total-Delayed-X'] / player.damage_data['Total-Attacks']
             except ZeroDivisionError:
@@ -441,7 +443,6 @@ class PlayerSeason:
             if self.season_grade_data != 0:
                 print(f"Season Grade: {round(self.season_grade_data, 3)}\n")
 
-            #print(f"Breakdown: {self.grade_breakdown}\n\n"
             print(f"Games Played: {self.player.games_played['This-Season']} ({self.match_count} matches)\n"
             f"{self.captain_stats}"
             f"Kills Per Game: {self.kills :.3f}\n"
@@ -461,7 +462,6 @@ class PlayerSeason:
                 p.write(self.player.drafted + f" (this is their {ordinal_string(self.age+1)} season)." + '\n')
                 if self.season_grade_data != 0:
                     p.write(f"Season Grade: {round(self.season_grade_data, 3)}\n")
-                #p.write(f"Breakdown: {self.grade_breakdown}\n\n")
                 p.write(f"Games Played: {self.player.games_played['This-Season']} ({self.match_count} matches)\n"
                 f"{self.captain_stats}"
                 f"xWAR: {self.player.xWAR}\n"
@@ -478,6 +478,8 @@ class PlayerSeason:
                 f"AGE: {self.player.age}\n"
                 f"Kills Per Game: {self.kills :.3f} (Avg {self.league_averages['Kills']})\n"
                 f"Deaths Per Game: {self.deaths :.3f} (Avg {self.league_averages['Deaths']})\n"
+                f"Ticks Alive per Game: {self.ticks_alive :.3f}\n"
+                f"Ticks Dead per Game: {self.ticks_dead :.3f}\n"
                 f"Critical Kills Per Game: {self.crit_kills :.3f} (Avg {self.league_averages['Critical Kills']})\n"
                 f"Damage Dealt Per Game: {self.damage :.3f} (Avg {self.league_averages['Damage']})\n"
                 f"Damage Mitigated Per Game: {self.mitigated :.3f} (Avg {self.league_averages['Mitigated']})\n{reflector_str}{exploder_str}{toxic_str}{flasher_str}{vampire_str}{splitter_str}{healer_str}"
@@ -486,8 +488,8 @@ class PlayerSeason:
                 f"Total Attacks Per Game: {self.total_attacks:.3f}\nDelayed Damage Per Game: {self.total_delayed_damage:.3f}\n"
                 f"Average Delayed Multiplier Per Attack: {self.avg_delayed_x_per_atk:.3f}\n"
                 f"Total Effect Per Game: {self.effect :.3f} (Avg {self.league_averages['Effect']})\n"
-                f"Overkill Effect Per Game: {self.overkill :.3f} (Avg {self.league_averages['Overkill']})\n{undead_str}"
-                f"Best Kill Streak: {self.streak}\n\n")
+                f"Overkill Effect Per Game: {self.overkill :.3f} [{100 * self.overkill/self.effect:.2f}% of total Effect] (Avg {self.league_averages['Overkill']})\n"
+                f"Non-Overkill Effect Per Game: {self.effect-self.overkill:.3f} [{100 * (self.effect-self.overkill) / self.effect:.3f}% of Total Effect]\n{undead_str}\n")
 
         if '**' in self.player.team or '!' in self.player.team and filename != 'region_mvp': #region_mvp function writes to both region_mvp and playerstats, so if one of my players is
             #a region mvp, it will write twice
@@ -497,11 +499,9 @@ class PlayerSeason:
                 p.write(self.player.drafted + f" (this is their {ordinal_string(self.age + 1)} season)." + '\n')
                 if self.season_grade_data != 0:
                     p.write(f"Season Grade: {round(self.season_grade_data, 3)}\n")
-                # p.write(f"Breakdown: {self.grade_breakdown}\n\n")
                 p.write(f"Games Played: {self.player.games_played['This-Season']} ({self.match_count} matches)\n"
                         f"{self.captain_stats}"
                         f"xWAR: {self.player.xWAR}\n"
-                        f"Breakdown: {self.xWAR_breakdown}\n\n"
                         f"Attack Damage: {self.player.atk_dmg}\n"
                         f"Attack Speed: {self.player.atk_spd}\n"
                         f"Crit %: {self.player.crit_pct}\n"
@@ -515,6 +515,8 @@ class PlayerSeason:
                         f"AGE: {self.player.age}\n"
                         f"Kills Per Game: {self.kills :.3f} (Avg {self.league_averages['Kills']})\n"
                         f"Deaths Per Game: {self.deaths :.3f} (Avg {self.league_averages['Deaths']})\n"
+                        f"Ticks Alive per Game: {self.ticks_alive :.3f}\n"
+                        f"Ticks Dead per Game: {self.ticks_dead :.3f}\n"
                         f"Critical Kills Per Game: {self.crit_kills :.3f} (Avg {self.league_averages['Critical Kills']})\n"
                         f"Damage Dealt Per Game: {self.damage :.3f} (Avg {self.league_averages['Damage']})\n"
                         f"Damage Mitigated Per Game: {self.mitigated :.3f} (Avg {self.league_averages['Mitigated']})\n{reflector_str}{exploder_str}{toxic_str}{flasher_str}{vampire_str}{splitter_str}{healer_str}"
@@ -523,8 +525,9 @@ class PlayerSeason:
                         f"Total Attacks Per Game: {self.total_attacks:.3f}\nDelayed Damage Per Game: {self.total_delayed_damage:.3f}\n"
                         f"Average Delayed Multiplier Per Attack: {self.avg_delayed_x_per_atk:.3f}\n"
                         f"Total Effect Per Game: {self.effect :.3f} (Avg {self.league_averages['Effect']})\n"
-                        f"Overkill Effect Per Game: {self.overkill :.3f} (Avg {self.league_averages['Overkill']})\n{undead_str}"
-                        f"Best Kill Streak: {self.streak}\n\n")
+                        f"Overkill Effect Per Game: {self.overkill :.3f} [{100 * self.overkill/self.effect:.2f}% of total Effect] (Avg {self.league_averages['Overkill']})\n"
+                        f"Non-Overkill Effect Per Game: {self.effect-self.overkill:.3f} [{100 * (self.effect-self.overkill) / self.effect:.3f}% of Total Effect]\n{undead_str}\n")
+
 
 
 class Player:
@@ -613,7 +616,8 @@ class Player:
                             'Avg-Delayed-Damage' : 0.0, 'Overkill' : 0.0, 'Overkill-Count' : 0,
                             'Revived' : 0, 'Healed' : 0, 'Reflect-Kills' : 0, 'Explosion' : 0, 'Explosion-Kills' : 0,
                             'Toxin' : 0, 'Toxin Kills' : 0, 'Attacks Stunned' : 0,
-                            'Vampire Healed' : 0, 'Extra Attacks' : 0, 'Team Healed' : 0}
+                            'Vampire Healed' : 0, 'Extra Attacks' : 0, 'Team Healed' : 0,
+                            'Ticks Alive' : 0, 'Ticks Dead' : 0,}
         self.games_played = {'All' : 0, 'This-Season' : 0, 'Playoffs' : 0, 'Matches' : 0}
         self.game_wins = 0 #explicitly refers to this season
         self.game_losses = 0 #only refers to this season
@@ -814,8 +818,12 @@ class Player:
 
                 else:
                     defender.die()
-                    self.damage_data['Overkill'] += abs(3 * defender.health)
-                    self.damage_data['Tesseract'] += abs(3 * defender.health)
+                    if '$l' not in self.trait_tag:
+                        self.damage_data['Overkill'] += abs(3 * defender.health)
+                        self.damage_data['Tesseract'] += abs(3 * defender.health)
+                    else:
+                        self.damage_data['Overkill'] += abs(4 * defender.health)
+                        self.damage_data['Tesseract'] += abs(4 * defender.health)
                     self.damage_data['Overkill-Count'] += 1
                     defender.deaths += 1
                     if crit:
@@ -826,8 +834,12 @@ class Player:
 
             else:
                 defender.die()
-                self.damage_data['Overkill'] += abs(3 * defender.health)
-                self.damage_data['Tesseract'] += abs(3 * defender.health)
+                if '$l' not in self.trait_tag:
+                    self.damage_data['Overkill'] += abs(3 * defender.health)
+                    self.damage_data['Tesseract'] += abs(3 * defender.health)
+                else:
+                    self.damage_data['Overkill'] += abs(4 * defender.health)
+                    self.damage_data['Tesseract'] += abs(4 * defender.health)
                 self.damage_data['Overkill-Count'] += 1
                 defender.deaths += 1
                 if crit:

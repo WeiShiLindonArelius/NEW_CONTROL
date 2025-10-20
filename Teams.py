@@ -154,13 +154,13 @@ class Captain:
         self.max_health = round(uniform(90, 101))
         self.health = self.max_health
         self.atk_dmg_bonus = round(uniform(1.1, 1.25), 3)
-        self.crit_pct_bonus = round(uniform(1.05, 1.2), 3)
+        self.crit_pct_bonus = 0 #NO MORE - THIS IS WAY TOO MUCH IMPACT FOR A CAPTAIN
         self.crit_x_bonus = round(uniform(1.25, 1.5), 3)
-        self.power_bonus = round(uniform(0.05,0.75), 4)
+        self.power_bonus = round(uniform(0.25,0.7), 4)
 
     def __str__(self):
         return (f"Captain: {self.name}, {self.damage_taken} damage taken, {self.max_health} health, {self.atk_dmg_bonus}x attack damage,"
-                f" {self.crit_x_bonus}x critical damage, {self.crit_pct_bonus}x crit chance, {self.power_bonus} power bonus per tick\n")
+                f" {self.crit_x_bonus}x critical damage, {self.power_bonus} power bonus per tick\n")
 
 
 
