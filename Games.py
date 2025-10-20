@@ -318,7 +318,13 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
                                                 defender.damage_data['Explosion-Kills'] += 1
                                                 defender.kills += 1
                                     #Overkill impact
-                                    TESSERACT += abs(3 * defender.health) if '$l' not in attacker.trait_tag else abs(3.75 * defender.health)
+                                    if '$l' in attacker.trait_tag:
+                                        if team1.team_coach.trait_effect[0] != '$l':
+                                            TESSERACT += abs(4 * defender.health)
+                                        else:
+                                            TESSERACT += abs((4+team1.team_coach.trait_effect[1]) * defender.health)
+                                    else:
+                                        TESSERACT += abs(3 * defender.health)
                                 elif 'R#' in defender.trait_tag and not attacker.is_alive: #this can happen when lethal damage is reflected back because reflect_damage happens within the attack function
                                     if attacker in living_team1: #it is possible for attacker to die to explosion damage, which will remove them from living_team1
                                         living_team1.remove(attacker)
@@ -379,7 +385,13 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
                                                 defender.damage_data['Explosion-Kills'] += 1
                                                 defender.kills += 1
                                     # Overkill impact
-                                    TESSERACT -= abs(3 * defender.health) if '$l' not in attacker.trait_tag else abs(3.75 * defender.health)
+                                    if '$l' in attacker.trait_tag:
+                                        if team2.team_coach.trait_effect[0] != '$l':
+                                            TESSERACT += abs(4 * defender.health)
+                                        else:
+                                            TESSERACT += abs((4+team2.team_coach.trait_effect[1]) * defender.health)
+                                    else:
+                                        TESSERACT -= abs(3 * defender.health)
                                 elif 'R#' in defender.trait_tag and not attacker.is_alive:  # this can happen when lethal damage is reflected back
                                     if attacker in living_team2:  # it is possible for attacker to die to explosion damage, which will remove them from living_team2
                                         living_team2.remove(attacker)
@@ -441,7 +453,13 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
                                                 defender.damage_data['Explosion-Kills'] += 1
                                                 defender.kills += 1
                                     #Overkill impact
-                                    TESSERACT -= abs(3 * defender.health) if '$l' not in attacker.trait_tag else abs(3.75 * defender.health)
+                                    if '$l' in attacker.trait_tag:
+                                        if team2.team_coach.trait_effect[0] != '$l':
+                                            TESSERACT += abs(4 * defender.health)
+                                        else:
+                                            TESSERACT += abs((4+team2.team_coach.trait_effect[1]) * defender.health)
+                                    else:
+                                        TESSERACT -= abs(3 * defender.health)
                                 elif 'R#' in defender.trait_tag and not attacker.is_alive: #this can happen when lethal damage is reflected back
                                     if attacker in living_team2:  # it is possible for attacker to die to explosion damage, which will remove them from living_team2
                                         living_team2.remove(attacker)
@@ -500,7 +518,13 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
                                                 defender.damage_data['Explosion-Kills'] += 1
                                                 defender.kills += 1
                                     # Overkill impact
-                                    TESSERACT += abs(3 * defender.health) if '$l' not in attacker.trait_tag else abs(3.75 * defender.health)
+                                    if '$l' in attacker.trait_tag:
+                                        if team1.team_coach.trait_effect[0] != '$l':
+                                            TESSERACT += abs(4 * defender.health)
+                                        else:
+                                            TESSERACT += abs((4+team1.team_coach.trait_effect[1]) * defender.health)
+                                    else:
+                                        TESSERACT += abs(3 * defender.health)
                                 elif 'R#' in defender.trait_tag and not attacker.is_alive:  # this can happen when lethal damage is reflected back because reflect_damage happens within the attack function
                                     if attacker in living_team1:  # it is possible for attacker to die to explosion damage, which will remove them from living_team1
                                         living_team1.remove(attacker)
