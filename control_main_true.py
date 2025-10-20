@@ -846,7 +846,7 @@ def main():
         for key in last_stand_groups.keys():
             print(Fore.GREEN + f"LAST STAND, GROUP {ls_group_names[index]}: " + Fore.RESET, end='')
             index+=1
-            temp_standings = round_robin(last_stand_groups[key], 25, 4, print_region_seed=True,cyan_seeds=[0,1],
+            temp_standings = round_robin(last_stand_groups[key], 24, 4, print_region_seed=True,cyan_seeds=[0,1],
                                                        red_seeds=[2,3])
 
             temp_standings[0].history[season_count] += f" 1st in Last Stand Group {key} -> Pre-Qualifying Group."
@@ -970,19 +970,19 @@ def main():
         group_one, group_two, group_three, group_four = create_pre_qualifying_groups(pqt)
 
         print(Fore.GREEN + "PRE-QUALIFYING, GROUP ONE: " + Fore.RESET, end='')
-        group_one_standings = round_robin(group_one, r=8, qualify_range=len(group_one), print_region_seed=True,
+        group_one_standings = round_robin(group_one, r=15, qualify_range=len(group_one), print_region_seed=True,
                                         cyan_seeds=[0,1,2,3,4,5], red_seeds=[6,7,8,9])
         group_one_qualif = group_one_standings[:6]
         print(Fore.GREEN + "PRE-QUALIFYING, GROUP TWO: " + Fore.RESET, end='')
-        group_two_standings = round_robin(group_two, r=8, qualify_range=len(group_two), print_region_seed=True,
+        group_two_standings = round_robin(group_two, r=15, qualify_range=len(group_two), print_region_seed=True,
                                         cyan_seeds=[0,1,2,3,4,5], red_seeds=[6,7,8,9])
         group_two_qualif = group_two_standings[:6]
         print(Fore.GREEN + "PRE-QUALIFYING, GROUP THREE: " + Fore.RESET, end='')
-        group_three_standings = round_robin(group_three, r=8, qualify_range=len(group_three), print_region_seed=True,
+        group_three_standings = round_robin(group_three, r=15, qualify_range=len(group_three), print_region_seed=True,
                                         cyan_seeds=[0,1,2,3,4,5], red_seeds=[6,7,8,9])
         group_three_qualif = group_three_standings[:6]
         print(Fore.GREEN + "PRE-QUALIFYING, GROUP FOUR: " + Fore.RESET, end='')
-        group_four_standings = round_robin(group_four, r=8, qualify_range=len(group_four), print_region_seed=True,
+        group_four_standings = round_robin(group_four, r=15, qualify_range=len(group_four), print_region_seed=True,
                                         cyan_seeds=[0,1,2,3,4,5], red_seeds=[6,7,8,9])
         group_four_qualif = group_four_standings[:6]
 

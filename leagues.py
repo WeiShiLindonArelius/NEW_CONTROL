@@ -27,7 +27,7 @@ def timed_input(prompt): #False = do nothing with coach decisions, True = manual
         return "O"
 
 
-caps = [2700, 2850, 3100, 3250, 3500, 3600] + ([3600] * 50)
+caps = [1200, 1350, 1400, 1450, 1500] + ([1500] * 100)
 
 def closest_multiple_of_6(n):
     lower_multiple = (n // 6) * 6
@@ -895,7 +895,7 @@ def player_changes(teams, season_count=-1):
                                  '$l': choice([0, 0.005, 0.005, 0.01, 0.01, 0.015, 0.02]), #because crit multipliers naturally go up over time and slasher crit x stays the same, they need to be compensated
                                  'Sp' : choice([-0.01, -0.005, 0, 0.01]),
                                  'V.' : choice([-0.01, -0.005, 0, 0.01]),
-                                 'Hn' : choice([-0.015, -0.0125, -0.01, -0.0075]),
+                                 'Hn' : choice([-0.04, -0.03, -0.02, -0.01]),
                                  'Tx' : choice([-0.01, -0.005, 0, 0.01, 0.015]),
                                  'Fl' : choice([-0.05, -0.04, -0.03]), #by far the best trait in the game
                                  "None" : 0

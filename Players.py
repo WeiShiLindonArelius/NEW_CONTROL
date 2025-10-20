@@ -489,7 +489,8 @@ class PlayerSeason:
                 f"Overkill Effect Per Game: {self.overkill :.3f} (Avg {self.league_averages['Overkill']})\n{undead_str}"
                 f"Best Kill Streak: {self.streak}\n\n")
 
-        if '**' in self.player.team or '!' in self.player.team:
+        if '**' in self.player.team or '!' in self.player.team and filename != 'region_mvp': #region_mvp function writes to both region_mvp and playerstats, so if one of my players is
+            #a region mvp, it will write twice
             team_standing_str = f", finished {ordinal_string(team_standing)}" if team_standing else ""
             with open('my_team_playerstats', 'a') as p:
                 p.write(f"{self.player.name} (for S{self.season}_{self.player.team}{team_standing_str})\n")
@@ -868,7 +869,7 @@ class Player:
             if coach_power_roll <= self.coach_amp[1]:
                 impact+=choice([1,1,1,2,2])
         if capt_bonus != 0:
-            impact += round(uniform(0,capt_bonus))
+            impact += capt_bonus
 
         self.damage_data['Tesseract'] += impact
         return np.round(impact)

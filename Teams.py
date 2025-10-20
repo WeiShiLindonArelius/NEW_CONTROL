@@ -150,16 +150,17 @@ def generate_lineups_six_to_four(six_lineup, team_coach, team_id=-1):
 class Captain:
     def __init__(self):
         self.name = choice(player_names)
-        self.damage_taken = round(uniform(0.09, 0.11), 4)
-        self.max_health = round(uniform(85, 100))
+        self.damage_taken = round(uniform(0.0925, 0.1125), 4)
+        self.max_health = round(uniform(90, 101))
         self.health = self.max_health
         self.atk_dmg_bonus = round(uniform(1.1, 1.25), 3)
-        self.crit_pct_bonus = round(uniform(1.1, 1.25), 3)
+        self.crit_pct_bonus = round(uniform(1.05, 1.2), 3)
         self.crit_x_bonus = round(uniform(1.25, 1.5), 3)
-        self.power_bonus = round(uniform(1.6,2), 4)
+        self.power_bonus = round(uniform(0.05,0.75), 4)
 
     def __str__(self):
-        return f"Captain: {self.name}, {self.damage_taken} damage taken, {self.max_health} health, {self.atk_dmg_bonus}x attack damage, {self.crit_x_bonus}x critical damage\n"
+        return (f"Captain: {self.name}, {self.damage_taken} damage taken, {self.max_health} health, {self.atk_dmg_bonus}x attack damage,"
+                f" {self.crit_x_bonus}x critical damage, {self.crit_pct_bonus}x crit chance, {self.power_bonus} power bonus per tick\n")
 
 
 
@@ -175,8 +176,8 @@ class Coach:
         if len(slots_amped) == 3:
             slot_amp_possibilities = [
                 ["Power", round(uniform(0.549, 0.809), 2)],
-                ["Attack Damage", randint(2, 5)],
-                ["Critical Chance", round(uniform(0.0175, 0.03), 2)]
+                ["Attack Damage", randint(2, 4)],
+                ["Critical Chance", round(uniform(0.01, 0.02), 3)]
             ]
             value = choice(slots_amped)
             while value == 0:
@@ -184,8 +185,8 @@ class Coach:
         elif len(slots_amped) == 2:
             slot_amp_possibilities = [
                 ["Power", round(uniform(0.59, 0.889), 2)],
-                ["Attack Damage", randint(3, 6)],
-                ["Critical Chance", round(uniform(0.0225, 0.04), 2)]
+                ["Attack Damage", randint(3, 5)],
+                ["Critical Chance", round(uniform(0.015, 0.025), 3)]
             ]
             value = choice(slots_amped)
             while value == 0:
@@ -193,8 +194,8 @@ class Coach:
         else:
             slot_amp_possibilities = [
                 ["Power", round(uniform(0.69, 0.959), 2)],  # % chance to add power
-                ["Attack Damage", randint(4, 7)],  # raw increment
-                ["Critical Chance", round(uniform(0.025, 0.05), 2)],  # raw increment
+                ["Attack Damage", randint(4, 6)],  # raw increment
+                ["Critical Chance", round(uniform(0.02, 0.03), 3)],  # raw increment
             ]
             value = slots_amped[0]
             gt_mod1 = f"{value}>{value-2}" if (value-2)>0 else "NC"
@@ -205,7 +206,8 @@ class Coach:
             ["Pp", randint(1,6)], ['R#', round(uniform(1.425,2),2)],
             ['C%', round(uniform(1.2,1.45),2)],
             ['U-', round(uniform(1.25,1.5),2)], ['X+', randint(4,9)],
-            ['Hn', round(uniform(0.75,0.9))], ['Tx', round(uniform(1.15,1.3),2)]
+            ['Hn', round(uniform(0.75,0.9))], ['Tx', round(uniform(1.15,1.3),2)],
+            ['$l', round(uniform(0.25,0.5))]
         ]
 
         if not fixed_name:
