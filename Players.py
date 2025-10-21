@@ -579,6 +579,7 @@ class Player:
         self.spawn_time = spawn_time
         self.amp = amp
         self.coach_amp = ["None", float(0)]
+        self.coach_def_amp = ["None", float(0)]
         self.coach_trait_amp = ["N/A", 0] if trait_tag == "None" else ["None", float(0)]
         self.slot = -1
 
@@ -760,7 +761,8 @@ class Player:
                 self.crit_data['Miss'] += 1
 
         parry_roll = uniform(0,1)
-        if parry_roll <= defender.mit_pct: #if defender mitigates damage
+        coach_mit_increment = defender.coach_def_amp[1] if defender.coach_def_amp[0] == "Mitigated %" else 0
+        if parry_roll <= (defender.mit_pct + coach_mit_increment): #if defender mitigates damage
             if defender.crit_data:
                 defender.crit_data['Parry'] += 1
                 defender.crit_data['Mitigated'] += damage
@@ -793,6 +795,11 @@ class Player:
 
         damage -= (damage*defender.defense_pct)
         damage -= defender.defense_abs
+        if defender.coach_def_amp[0] == "Defense %":
+            damage -= (damage * defender.coach_def_amp[1])
+
+        if defender.coach_def_amp[0] == "Defense Absolute":
+            damage -= defender.coach_def_amp[1]
 
         defender.damage_data['D% Blocked'] += (damage*defender.defense_pct)
         defender.damage_data['DAbs Blocked'] += defender.defense_abs

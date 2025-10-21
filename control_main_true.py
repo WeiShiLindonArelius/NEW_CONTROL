@@ -1501,7 +1501,7 @@ def main():
                 (0, 4, 5) : 0, (1, 4, 5) : 0, (1, 3, 5) : 0, (2, 3, 4) : 0, (2, 3, 5) : 0, (3, 4, 5) : 0, (2,4,5) : 0
             }
             coach_attribute_amped_count = {"Power" : [0,0], "Attack Damage" : [0,0], "Critical Chance" : [0,0]} #list values: [count of coaches whom affect this trait, total multiplier value]
-            coach_trait_amped_count = {'Pp' : [0,0], 'R#' : [0,0], 'C%' : [0,0], 'I*' : [0,0], 'U-' : [0,0], 'X+' : [0,0], 'Hn' : [0,0], 'Tx' : [0,0]}
+            coach_trait_amped_count = {'Pp' : [0,0], 'R#' : [0,0], 'C%' : [0,0], 'I*' : [0,0], 'U-' : [0,0], 'X+' : [0,0], 'Hn' : [0,0], 'Tx' : [0,0], '$l' : [0,0]}
             total_team_count = 0
             slasher_list = []
             undead_list = []

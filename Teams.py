@@ -44,13 +44,14 @@ def generate_lineups_six_to_four(six_lineup, team_coach, team_id=-1):
         six_lineup[i].slot = i
 
     for player in six_lineup:
-        player.coach_amp = ["None", 0]
+        player.coach_amp = player.coach_def_amp = ["None", 0]
         player.coach_trait_amp = ["N/A", 0] if player.trait_tag == ["None","None"] else ["None", 0]
 
 
     amped_slots = team_coach.slot_effect[0]
     for i in amped_slots:
-        six_lineup[i].coach_amp = [team_coach.slot_effect[1], team_coach.slot_effect[2]] #trait affected, amp amount
+        six_lineup[i].coach_amp = [team_coach.slot_effect[1], team_coach.slot_effect[2]]#trait affected, amp amount
+        six_lineup[i].coach_def_amp = [team_coach.slot_effect[3], team_coach.slot_effect[4]]
     for player in six_lineup:
         if team_coach.trait_effect[0] in player.trait_tag:
             player.coach_trait_amp = [player.trait_tag, team_coach.trait_effect[1]]
@@ -167,17 +168,36 @@ class Captain:
 
 class Coach:
     from lists import coach_names, extra_first_names, extra_last_names
+
+
     def __init__(self,region=None,fixed_lineup_modifier=None,fixed_slot_effect=None,fixed_trait_effect=None,fixed_name=None):
+
+        def valid_mod(mod_str, slots):
+            if '>' not in mod_str:
+                return True
+            else:
+                left = int(mod_str.split(">")[0])
+                return left in slots
+
         slots_amped = choice([ [0], [1], [2], [3], [4], [5],
             [0,5], [1,4], [2,3], [3,5], [3,4], [0,4], [1,3], [2,5],
             [0,4,5], [1,4,5], [1,3,5], [2,3,4], [2,3,5], [3,4,5]
         ])
+
+        value = choice(slots_amped)
+        if fixed_slot_effect:
+            slots_amped = fixed_slot_effect[0]
 
         if len(slots_amped) == 3:
             slot_amp_possibilities = [
                 ["Power", round(uniform(0.549, 0.809), 2)],
                 ["Attack Damage", randint(2, 4)],
                 ["Critical Chance", round(uniform(0.01, 0.02), 3)]
+            ]
+            def_amp_possibilities = [  # defense
+                ["Defense Absolute", 1],
+                ["Defense %", round(uniform(0.005, 0.0095), 4)],
+                ["Mitigated %", round(uniform(0.005, 0.0095), 4)]
             ]
             value = choice(slots_amped)
             while value == 0:
@@ -188,19 +208,32 @@ class Coach:
                 ["Attack Damage", randint(3, 5)],
                 ["Critical Chance", round(uniform(0.015, 0.025), 3)]
             ]
+            def_amp_possibilities = [  # defense
+                ["Defense Absolute", choice([1,2])],
+                ["Defense %", round(uniform(0.0075, 0.01), 4)],
+                ["Mitigated %", round(uniform(0.0075, 0.01), 4)]
+            ]
             value = choice(slots_amped)
             while value == 0:
                 value = choice(slots_amped)
         else:
-            slot_amp_possibilities = [
+            slot_amp_possibilities = [ #offense
                 ["Power", round(uniform(0.69, 0.959), 2)],  # % chance to add power
                 ["Attack Damage", randint(4, 6)],  # raw increment
                 ["Critical Chance", round(uniform(0.02, 0.03), 3)],  # raw increment
             ]
-            value = slots_amped[0]
-            gt_mod1 = f"{value}>{value-2}" if (value-2)>0 else "NC"
-            gt_mod2 = f"{value}>{value-1}" if (value-1) > 0 else "NC"
-            self.lineup_modifier = choice([gt_mod1, gt_mod2, "NC", "NC"])
+            def_amp_possibilities = [ #defense
+                ["Defense Absolute", 2],
+                ["Defense %", round(uniform(0.01, 0.015), 4)],
+                ["Mitigated %", round(uniform(0.01, 0.015), 4)]
+            ]
+            value = choice(slots_amped) #should only be one possibility
+            gt_mod1 = f"{value}>{value-2}" if (value-2)>=0 else "NC"
+            gt_mod2 = f"{value}>{value-1}" if (value-1) >= 0 else "NC"
+            valid_mods = [mod for mod in [gt_mod1, gt_mod2, "NC"] if valid_mod(mod, slots_amped)]
+            if value == 1:
+                valid_mods.remove("NC")
+            self.lineup_modifier = choice(valid_mods)
 
         trait_possibilities = [
             ["Pp", randint(1,6)], ['R#', round(uniform(1.425,2),2)],
@@ -222,17 +255,25 @@ class Coach:
         lineup_mod_roll = uniform(0,1)
 
         if len(slots_amped) != 1:
-            gt_mod1 = f"{value}>{value-2}" if ((value-2) not in slots_amped and value-2>0) else "NC"
-            gt_mod2 = f"{value}>{value-1}" if ((value-1) not in slots_amped and value-1>0) else "NC"
+            gt_mod1 = f"{value}>{value-2}" if ((value-2) not in slots_amped and value-2>=0) else "NC"
+            gt_mod2 = f"{value}>{value-1}" if ((value-1) not in slots_amped and value-1>=0) else "NC"
 
             if lineup_mod_roll <= 0.30:
-                self.lineup_modifier = choice([gt_mod1, gt_mod2, "NC", "NC", "NC"])
+                valid_mods = [mod for mod in [gt_mod1, gt_mod2] if valid_mod(mod, slots_amped)]
+                if not fixed_slot_effect:
+                    valid_mods.extend(['NC', 'NC', 'NC'])
             elif lineup_mod_roll <= 0.65:
-                self.lineup_modifier = choice([gt_mod1, gt_mod2, '1S', '2S', '3S', '4S', '5S', '6S', '7S', '8S'])
+                valid_mods = [mod for mod in [gt_mod1, gt_mod2] if valid_mod(mod, slots_amped)]
+                if not fixed_slot_effect or (fixed_slot_effect and choice([True,False,False,False])):
+                    valid_mods.extend(['1S', '2S', '3S', '4S', '5S', '6S', '7S', '8S'])
             else:
-                self.lineup_modifier = choice([gt_mod1, gt_mod2,'1C', '2C', '3C', '4C', '5C', '6C', '7C'])
+                valid_mods = [mod for mod in [gt_mod1, gt_mod2] if valid_mod(mod, slots_amped)]
+                if not fixed_slot_effect or (fixed_slot_effect and choice([True,False,False,False])):
+                    valid_mods.extend(['1C', '2C', '3C', '4C', '5C', '6C', '7C'])
+            self.lineup_modifier = choice(valid_mods)
 
-        self.slot_effect = fixed_slot_effect if fixed_slot_effect else [slots_amped] + choice(slot_amp_possibilities) #slots impacted, traits impacted, amplification amount
+        self.slot_effect = fixed_slot_effect + choice(def_amp_possibilities) if fixed_slot_effect else [slots_amped] + choice(
+            slot_amp_possibilities) + choice(def_amp_possibilities) # slots impacted, traits impacted, amplification amount
         self.trait_effect = fixed_trait_effect if fixed_trait_effect else choice(trait_possibilities) #trait impacted, amplification amount
 
         self.coach_record = {"Match Wins" : 0, "Match Losses" : 0, "Game Wins" : 0, "Game Losses" : 0}
@@ -248,7 +289,7 @@ class Coach:
 
 
     def __str__(self):
-        return f"{self.name} (Lineup: {self.lineup_modifier} // Slots {self.slot_effect[0]} {self.slot_effect[1]} + {self.slot_effect[2]} // {self.trait_effect[0]} amp {self.trait_effect[1]})"
+        return f"{self.name} (Lineup: {self.lineup_modifier} // Slots {self.slot_effect[0]} {self.slot_effect[1]} + {self.slot_effect[2]} and {self.slot_effect[3]} + {self.slot_effect[4]} // {self.trait_effect[0]} amp {self.trait_effect[1]})"
 
 
 
