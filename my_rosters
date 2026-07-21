@@ -1,0 +1,708 @@
+!!!!!!_SEASON 2_!!!!!!
+**SHINING-CORE_ROCS** ROSTER
+
+(0)
+Hn-I*S_Flynn ({'Hn': [11, 42, False], 'I*': 0.15})
+	**Shining-Core_Rocs**
+xWAR: 24.295 (Rank 1)
+Attack Damage: 57
+Attack Speed: 7
+Crit %: 0.056
+Mitigate %: 0.0451
+Defense Absolute: 6
+Defense %: 0.0546
+Crit X: 8.53
+Health: 231.23
+Power: 56
+Spawn Time: 6
+AGE: 1
+
+(1)
+X+-C%S^0.35_Oliver ({'X+': [42, 1], 'C%': 1.24})
+	**Shining-Core_Rocs**
+xWAR: 21.409 (Rank 2)
+Attack Damage: 54
+Attack Speed: 7
+Crit %: 0.063
+Mitigate %: 0.0784
+Defense Absolute: 6
+Defense %: 0.0343
+Crit X: 7.62
+Health: 219.0
+Power: 56
+Spawn Time: 6
+AGE: 0
+
+(2)
+FlS^3.6_Chase ({'Fl': [0.11, 10]})
+	**Shining-Core_Rocs**
+xWAR: 18.434 (Rank 3)
+Attack Damage: 61
+Attack Speed: 7
+Crit %: 0.069
+Mitigate %: 0.0458
+Defense Absolute: 6
+Defense %: 0.0496
+Crit X: 8.06
+Health: 239.58
+Power: 58
+Spawn Time: 8
+AGE: 0
+
+(3)
+Fl-U-A^1.8_Lorelei ({'Fl': [0.08, 10], 'U-': 0.28})
+	**Shining-Core_Rocs**
+xWAR: 15.6 (Rank 4)
+Attack Damage: 53
+Attack Speed: 8
+Crit %: 0.065
+Mitigate %: 0.069
+Defense Absolute: 4
+Defense %: 0.0552
+Crit X: 6.44
+Health: 219.08999999999997
+Power: 56
+Spawn Time: 6
+AGE: 1
+
+(4)
+R#-I*B^-0.63_Umberto ({'R#': 0.11, 'I*': 0.07})
+	**Shining-Core_Rocs**
+xWAR: 10.929 (Rank 5)
+Attack Damage: 58
+Attack Speed: 8
+Crit %: 0.052
+Mitigate %: 0.0649
+Defense Absolute: 4
+Defense %: 0.0431
+Crit X: 7.577
+Health: 226.97
+Power: 54
+Spawn Time: 8
+AGE: 1
+
+(5)
+PpA^1.0_Marley ({'Pp': 0.35})
+	**Shining-Core_Rocs**
+xWAR: 8.198 (Rank 6)
+Attack Damage: 62
+Attack Speed: 8
+Crit %: 0.057
+Mitigate %: 0.0286
+Defense Absolute: 5
+Defense %: 0.0469
+Crit X: 5.898
+Health: 232.09
+Power: 58
+Spawn Time: 6
+AGE: 1
+
+
+----------------------
+
+**DIAMOND-SEA_GODKILLERS** ROSTER
+
+(0)
+Fl-I*S_Theo ({'Fl': [0.1, 10], 'I*': 0.13})
+	**Diamond-Sea_Godkillers**
+xWAR: 25.519 (Rank 1)
+Attack Damage: 55
+Attack Speed: 6
+Crit %: 0.057
+Mitigate %: 0.0259
+Defense Absolute: 4
+Defense %: 0.0426
+Crit X: 8.97
+Health: 224.24
+Power: 57
+Spawn Time: 6
+AGE: 1
+
+(1)
+R#-I*B^-0.03_Gia ({'R#': 0.12, 'I*': 0.1})
+	**Diamond-Sea_Godkillers**
+xWAR: 15.31 (Rank 2)
+Attack Damage: 56
+Attack Speed: 7
+Crit %: 0.06
+Mitigate %: 0.0588
+Defense Absolute: 5
+Defense %: 0.0324
+Crit X: 7.71
+Health: 185.65
+Power: 54
+Spawn Time: 7
+AGE: 1
+
+(2)
+Sp-V.B^-0.16_Zephyr ({'Sp': 0.31, 'V.': 0.45})
+	**Diamond-Sea_Godkillers**
+xWAR: 11.873 (Rank 3)
+Attack Damage: 59
+Attack Speed: 8
+Crit %: 0.067
+Mitigate %: 0.0654
+Defense Absolute: 5
+Defense %: 0.0479
+Crit X: 6.26
+Health: 214.23
+Power: 55
+Spawn Time: 8
+AGE: 1
+
+(3)
+V.A^1.71_Kyra ({'V.': 0.5})
+	**Diamond-Sea_Godkillers**
+xWAR: 11.448 (Rank 4)
+Attack Damage: 62
+Attack Speed: 8
+Crit %: 0.068
+Mitigate %: 0.0491
+Defense Absolute: 5
+Defense %: 0.038
+Crit X: 7.39
+Health: 238.58
+Power: 55
+Spawn Time: 6
+AGE: 0
+
+(4)
+X+C^3.18_Darcy ({'X+': [57, 1]})
+	**Diamond-Sea_Godkillers**
+xWAR: 6.546 (Rank 5)
+Attack Damage: 59
+Attack Speed: 9
+Crit %: 0.07
+Mitigate %: 0.0635
+Defense Absolute: 3
+Defense %: 0.0309
+Crit X: 8.639
+Health: 219.2
+Power: 53
+Spawn Time: 7
+AGE: 1
+
+(5)
+PpA^0.48_Anya ({'Pp': 0.33})
+	**Diamond-Sea_Godkillers**
+xWAR: -0.819 (Rank 6)
+Attack Damage: 50
+Attack Speed: 7
+Crit %: 0.066
+Mitigate %: 0.0225
+Defense Absolute: 3
+Defense %: 0.0456
+Crit X: 7.102
+Health: 233.14999999999998
+Power: 54
+Spawn Time: 7
+AGE: 1
+
+
+----------------------
+
+!-WEB-OF-NATIONS_THUNDERBIRDS-! ROSTER
+
+(0)
+Fl-V.S^0.56_Phoenix ({'Fl': [0.11, 10], 'V.': 0.49})
+	!-Web-of-Nations_Thunderbirds-!
+xWAR: 13.924 (Rank 1)
+Attack Damage: 62
+Attack Speed: 9
+Crit %: 0.058
+Mitigate %: 0.0696
+Defense Absolute: 5
+Defense %: 0.062
+Crit X: 8.12
+Health: 218.22
+Power: 54
+Spawn Time: 6
+AGE: 1
+
+(1)
+C%B^4.01_Eris ({'C%': 1.16})
+	!-Web-of-Nations_Thunderbirds-!
+xWAR: 11.622 (Rank 2)
+Attack Damage: 58
+Attack Speed: 7
+Crit %: 0.066
+Mitigate %: 0.0411
+Defense Absolute: 3
+Defense %: 0.0542
+Crit X: 6.58
+Health: 206.68
+Power: 58
+Spawn Time: 7
+AGE: 0
+
+(2)
+Hn-I*S_Iris ({'Hn': [11, 42, False], 'I*': 0.15})
+	!-Web-of-Nations_Thunderbirds-!
+xWAR: 9.918 (Rank 3)
+Attack Damage: 53
+Attack Speed: 8
+Crit %: 0.052
+Mitigate %: 0.0716
+Defense Absolute: 6
+Defense %: 0.0307
+Crit X: 7.915
+Health: 224.49
+Power: 53
+Spawn Time: 8
+AGE: 1
+
+(3)
+A^3.11_Eris ({})
+	!-Web-of-Nations_Thunderbirds-!
+xWAR: 8.867 (Rank 4)
+Attack Damage: 54
+Attack Speed: 6
+Crit %: 0.069
+Mitigate %: 0.0713
+Defense Absolute: 5
+Defense %: 0.0411
+Crit X: 7.5
+Health: 233.48
+Power: 56
+Spawn Time: 8
+AGE: 0
+
+(4)
+TxC^-1.85_Naya ({'Tx': [0.28, [10, 8]]})
+	!-Web-of-Nations_Thunderbirds-!
+xWAR: 5.49 (Rank 5)
+Attack Damage: 53
+Attack Speed: 7
+Crit %: 0.05
+Mitigate %: 0.02
+Defense Absolute: 4
+Defense %: 0.0312
+Crit X: 6.205
+Health: 210
+Power: 52
+Spawn Time: 7
+AGE: 1
+
+(5)
+I*B^4.16_Xiomara ({'I*': 0.12})
+	!-Web-of-Nations_Thunderbirds-!
+xWAR: 5.205 (Rank 6)
+Attack Damage: 63
+Attack Speed: 8
+Crit %: 0.06
+Mitigate %: 0.0822
+Defense Absolute: 3
+Defense %: 0.0472
+Crit X: 7.097
+Health: 218.29
+Power: 52
+Spawn Time: 8
+AGE: 1
+
+
+----------------------
+
+**CANDYLAND_SUCCUBI** ROSTER
+
+(0)
+R#-I*S_Tatum ({'R#': 0.11, 'I*': 0.11})
+	**Candyland_Succubi**
+xWAR: 17.169 (Rank 1)
+Attack Damage: 54
+Attack Speed: 8
+Crit %: 0.054
+Mitigate %: 0.0618
+Defense Absolute: 6
+Defense %: 0.0235
+Crit X: 7.58
+Health: 232.32
+Power: 59
+Spawn Time: 7
+AGE: 1
+
+(1)
+Fl-TxA^0.18_Jordan ({'Fl': [0.1, 10], 'Tx': [0.27, [13, 7]]})
+	**Candyland_Succubi**
+xWAR: 14.888 (Rank 2)
+Attack Damage: 51
+Attack Speed: 7
+Crit %: 0.056
+Mitigate %: 0.0491
+Defense Absolute: 3
+Defense %: 0.0377
+Crit X: 6.86
+Health: 211.16
+Power: 54
+Spawn Time: 6
+AGE: 1
+
+(2)
+HnA^1.01_Yvette ({'Hn': [12, 48, False]})
+	**Candyland_Succubi**
+xWAR: 14.652 (Rank 3)
+Attack Damage: 54
+Attack Speed: 8
+Crit %: 0.062
+Mitigate %: 0.0734
+Defense Absolute: 4
+Defense %: 0.0327
+Crit X: 8.6
+Health: 207.97
+Power: 58
+Spawn Time: 6
+AGE: 1
+
+(3)
+PpB^1.79_Naya ({'Pp': 0.39})
+	**Candyland_Succubi**
+xWAR: 10.917 (Rank 4)
+Attack Damage: 59
+Attack Speed: 6
+Crit %: 0.052
+Mitigate %: 0.0552
+Defense Absolute: 3
+Defense %: 0.0593
+Crit X: 8.52
+Health: 213.08
+Power: 57
+Spawn Time: 7
+AGE: 0
+
+(4)
+C%B^-0.54_Tate ({'C%': 1.12})
+	**Candyland_Succubi**
+xWAR: 2.492 (Rank 5)
+Attack Damage: 57
+Attack Speed: 9
+Crit %: 0.052
+Mitigate %: 0.0713
+Defense Absolute: 4
+Defense %: 0.0335
+Crit X: 6.8
+Health: 209.75
+Power: 53
+Spawn Time: 7
+AGE: 1
+
+(5)
+PpA^0.04_Rowan ({'Pp': 0.39})
+	**Candyland_Succubi**
+xWAR: -4.277 (Rank 6)
+Attack Damage: 51
+Attack Speed: 8
+Crit %: 0.062
+Mitigate %: 0.0605
+Defense Absolute: 5
+Defense %: 0.0428
+Crit X: 7.23
+Health: 195.46
+Power: 53
+Spawn Time: 6
+AGE: 1
+
+
+----------------------
+
+#LABYRINTH_GOBLINS# ROSTER
+
+(0)
+X+-U-A^3.49_Ximena ({'X+': [58, 1], 'U-': 0.31})
+	#Labyrinth_Goblins#
+xWAR: 19.604 (Rank 1)
+Attack Damage: 60
+Attack Speed: 7
+Crit %: 0.056
+Mitigate %: 0.0511
+Defense Absolute: 6
+Defense %: 0.0465
+Crit X: 7.78
+Health: 243.12
+Power: 59
+Spawn Time: 8
+AGE: 0
+
+(1)
+HnC^0.03_Presley ({'Hn': [11, 42, False]})
+	Labyrinth_Goblins
+xWAR: 11.804 (Rank 2)
+Attack Damage: 61
+Attack Speed: 9
+Crit %: 0.06
+Mitigate %: 0.0212
+Defense Absolute: 5
+Defense %: 0.0422
+Crit X: 8.099
+Health: 222.69
+Power: 57
+Spawn Time: 7
+AGE: 1
+
+(2)
+HnB^1.08_Briar ({'Hn': [12, 36, False]})
+	Labyrinth_Goblins
+xWAR: 11.54 (Rank 3)
+Attack Damage: 57
+Attack Speed: 9
+Crit %: 0.057
+Mitigate %: 0.0277
+Defense Absolute: 5
+Defense %: 0.058
+Crit X: 5.995
+Health: 220.1
+Power: 57
+Spawn Time: 7
+AGE: 1
+
+(3)
+I*A^1.04_Nova ({'I*': 0.1})
+	Labyrinth_Goblins
+xWAR: 9.697 (Rank 4)
+Attack Damage: 51
+Attack Speed: 9
+Crit %: 0.055
+Mitigate %: 0.0492
+Defense Absolute: 5
+Defense %: 0.0494
+Crit X: 6.86
+Health: 208.97
+Power: 58
+Spawn Time: 6
+AGE: 1
+
+(4)
+C%S^1.43_Landon ({'C%': 1.15})
+	Labyrinth_Goblins
+xWAR: 8.854 (Rank 5)
+Attack Damage: 56
+Attack Speed: 9
+Crit %: 0.053
+Mitigate %: 0.0299
+Defense Absolute: 4
+Defense %: 0.0462
+Crit X: 7.923
+Health: 211.05
+Power: 59
+Spawn Time: 6
+AGE: 1
+
+(5)
+TxA^1.42_Gunnar ({'Tx': [0.27, [11, 7]]})
+	Labyrinth_Goblins
+xWAR: 6.355 (Rank 6)
+Attack Damage: 51
+Attack Speed: 7
+Crit %: 0.068
+Mitigate %: 0.0755
+Defense Absolute: 3
+Defense %: 0.0437
+Crit X: 6.744
+Health: 225.28
+Power: 53
+Spawn Time: 7
+AGE: 1
+
+
+----------------------
+
+**HELL'S-CIRCLE_STONE-GIANTS** ROSTER
+
+(0)
+Sp-I*S_Carter ({'Sp': 0.32, 'I*': 0.13})
+	**Hell's-Circle_Stone-Giants**
+xWAR: 15.284 (Rank 1)
+Attack Damage: 57
+Attack Speed: 9
+Crit %: 0.06
+Mitigate %: 0.051
+Defense Absolute: 6
+Defense %: 0.0499
+Crit X: 8.2
+Health: 216.62
+Power: 53
+Spawn Time: 6
+AGE: 1
+
+(1)
+C%S^0.54_Vance ({'C%': 1.23})
+	**Hell's-Circle_Stone-Giants**
+xWAR: 14.834 (Rank 2)
+Attack Damage: 63
+Attack Speed: 8
+Crit %: 0.064
+Mitigate %: 0.0733
+Defense Absolute: 7
+Defense %: 0.0587
+Crit X: 8.93
+Health: 230.86
+Power: 58
+Spawn Time: 8
+AGE: 1
+
+(2)
+HnA^3.97_Saylor ({'Hn': [12, 54, False]})
+	**Hell's-Circle_Stone-Giants**
+xWAR: 12.197 (Rank 3)
+Attack Damage: 63
+Attack Speed: 9
+Crit %: 0.069
+Mitigate %: 0.075
+Defense Absolute: 4
+Defense %: 0.059
+Crit X: 7.64
+Health: 230.53
+Power: 54
+Spawn Time: 8
+AGE: 0
+
+(3)
+I*S^2.2_Imogen ({'I*': 0.14})
+	**Hell's-Circle_Stone-Giants**
+xWAR: 11.997 (Rank 4)
+Attack Damage: 53
+Attack Speed: 9
+Crit %: 0.051
+Mitigate %: 0.089
+Defense Absolute: 7
+Defense %: 0.0597
+Crit X: 8.12
+Health: 223.9
+Power: 57
+Spawn Time: 6
+AGE: 0
+
+(4)
+TxA^2.49_Lorelei ({'Tx': [0.27, [13, 6]]})
+	**Hell's-Circle_Stone-Giants**
+xWAR: 10.335 (Rank 5)
+Attack Damage: 54
+Attack Speed: 8
+Crit %: 0.057
+Mitigate %: 0.0454
+Defense Absolute: 2
+Defense %: 0.0305
+Crit X: 9.746
+Health: 261.88
+Power: 57
+Spawn Time: 7
+AGE: 1
+
+(5)
+A^1.16_Sutton ({})
+	**Hell's-Circle_Stone-Giants**
+xWAR: 8.479 (Rank 6)
+Attack Damage: 63
+Attack Speed: 6
+Crit %: 0.067
+Mitigate %: 0.0593
+Defense Absolute: 5
+Defense %: 0.0572
+Crit X: 7.205
+Health: 217.77999999999997
+Power: 52
+Spawn Time: 7
+AGE: 1
+
+
+----------------------
+
+!-STEEL-HEART_SWASHBUCKLERS-! ROSTER
+
+(0)
+X+-I*S_Dakota ({'X+': [41, 1], 'I*': 0.11})
+	!-Steel-Heart_Swashbucklers-!
+xWAR: 25.118 (Rank 1)
+Attack Damage: 56
+Attack Speed: 6
+Crit %: 0.074
+Mitigate %: 0.0299
+Defense Absolute: 6
+Defense %: 0.0674
+Crit X: 8.01
+Health: 226.28
+Power: 54
+Spawn Time: 6
+AGE: 1
+
+(1)
+X+-TxB^-0.47_Ryder ({'X+': [53, 1], 'Tx': [0.28, [11, 7]]})
+	!-Steel-Heart_Swashbucklers-!
+xWAR: 20.438 (Rank 2)
+Attack Damage: 56
+Attack Speed: 6
+Crit %: 0.052
+Mitigate %: 0.0527
+Defense Absolute: 3
+Defense %: 0.0377
+Crit X: 6.73
+Health: 209.25
+Power: 54
+Spawn Time: 6
+AGE: 1
+
+(2)
+I*A^1.89_Sparrow ({'I*': 0.11})
+	!-Steel-Heart_Swashbucklers-!
+xWAR: 14.112 (Rank 3)
+Attack Damage: 53
+Attack Speed: 8
+Crit %: 0.067
+Mitigate %: 0.0681
+Defense Absolute: 6
+Defense %: 0.0283
+Crit X: 6.464
+Health: 239.34
+Power: 57
+Spawn Time: 6
+AGE: 1
+
+(3)
+U-A^5.04_Tilly ({'U-': 0.29})
+	!-Steel-Heart_Swashbucklers-!
+xWAR: 12.978 (Rank 4)
+Attack Damage: 60
+Attack Speed: 6
+Crit %: 0.055
+Mitigate %: 0.0263
+Defense Absolute: 5
+Defense %: 0.0572
+Crit X: 8.98
+Health: 250.29999999999998
+Power: 54
+Spawn Time: 8
+AGE: 0
+
+(4)
+HnC^5.71_Cassius ({'Hn': [13, 48, False]})
+	!-Steel-Heart_Swashbucklers-!
+xWAR: 11.907 (Rank 5)
+Attack Damage: 49
+Attack Speed: 8
+Crit %: 0.07
+Mitigate %: 0.02
+Defense Absolute: 3
+Defense %: 0.0437
+Crit X: 9.163
+Health: 229.68
+Power: 56
+Spawn Time: 7
+AGE: 1
+
+(5)
+I*B^1.11_Paxton ({'I*': 0.12})
+	!-Steel-Heart_Swashbucklers-!
+xWAR: 11.141 (Rank 6)
+Attack Damage: 60
+Attack Speed: 6
+Crit %: 0.052
+Mitigate %: 0.0253
+Defense Absolute: 3
+Defense %: 0.0341
+Crit X: 7.97
+Health: 188.35
+Power: 51
+Spawn Time: 6
+AGE: 1
+
+
+----------------------
+

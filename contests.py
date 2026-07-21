@@ -3,8 +3,9 @@ import math
 from Games import game, no_op, blockPrint, enablePrint, best_of
 import random
 from colorama import Fore
-from load_pickle import season_wipe
-from Teams import generate_lineups_six_to_four, Coach
+from season_wipe import season_wipe
+from Teams import generate_lineups_six_to_four, Coach, Captain
+from Players import Player
 
 def ordinal_string(n: int) -> str:
     if 10 <= n % 100 < 20:
@@ -109,12 +110,11 @@ def alter_lineup(team):
 
     team.lineups = generate_lineups_six_to_four(team.players, team.team_coach)
 
-def round_robin(TEAMS,r,qualify_range,amp=4,alt_qualify_range = None, is_test=False,franchise_mode=False,
-                print_region_seed=False,cyan_seeds=None, yellow_seeds=None, red_seeds=None, is_universal=False):
+def round_robin(TEAMS,r,qualify_range,amp=4,alt_qualify_range = None, is_test=False,print_by_round=True,
+                print_region_seed=False,cyan_seeds=None, yellow_seeds=None, red_seeds=None, is_universal=False, real_war_team_alpha=None, replacement_player = None, replacing=""):
 
     for team in TEAMS:
         team.previous_seed = -1
-    franchise_functions = franchise_mode #prints standing by round
     if is_test:
         for team in TEAMS:
             team.wins = team.losses = 0
@@ -126,57 +126,71 @@ def round_robin(TEAMS,r,qualify_range,amp=4,alt_qualify_range = None, is_test=Fa
         half_round=False
 
     r=int(r)
-    for k in range(r):
-        for i in range(SIZE):
-            for j in range(i + 1, SIZE):
-                team1 = TEAMS[i]
-                team2 = TEAMS[j]
-                game(team1, team2,amp,playoffs=None)
-        if franchise_functions and ((k != r-1 or half_round) and not (r>6 and k%2==0)):
-            for team in TEAMS:
-                team.points = (3*team.match_wins) + team.match_draws
-            TEAMS.sort(key=lambda x: (x.points, x.wins, x.margin), reverse=True)
-            print_standings(TEAMS,round_no=k+1,print_region_seed=print_region_seed)
-            i = 0
-            for team in TEAMS:
-                team.previous_seed = i+1
-                i+=1
-                #if team.mine:
-                #    alter_lineup(team)
-        if k == r-1: #end of last round
-            if half_round:
-                division1 = []
-                division2 = []
+    if real_war_team_alpha:
+        real_war_team_alpha.players.sort(key=lambda pl: pl.xWAR, reverse=True)
+        print(f"Lineup: {[p.name for p in real_war_team_alpha.players]}")
+        if isinstance(replacement_player, Captain):
+            print(str(replacement_player))
+        for team in TEAMS:
+            team.wins = team.losses = 0
+            real_war_team_alpha.living_captain[0] = real_war_team_alpha.living_captain[1] = 0
+            for player in team.players:
+                player.game_wins = 0
+                player.game_losses = 0
+        for k in range(r):
+            for i in range(1, SIZE):
+                #real_war_team_alpha is the 0 index
+                team2 = TEAMS[i]
+                game(real_war_team_alpha, team2, amp, playoffs=None)
+            if k == r - 1:  # end of last round
+                if not replacement_player:
+                    return 0
+                else:
+                    if isinstance(replacement_player, Captain):
+                        replacement_player_winrate = round(100 * (real_war_team_alpha.wins / (real_war_team_alpha.wins + real_war_team_alpha.losses)), 2)
+                        if replacement_player.name == "Captain R" or replacement_player.name == "Non-Captain":
+                            print(f"{replacement_player.name} in Place of {replacing} Game Winrate: {replacement_player_winrate} ({real_war_team_alpha.wins}-{real_war_team_alpha.losses})\n")
+                            print(f"Captain alive for {100 * round((real_war_team_alpha.living_captain[0] / (real_war_team_alpha.living_captain[0] + real_war_team_alpha.living_captain[1])), 4)}% of ticks\n")
+                            return replacement_player_winrate
+                        else:
+                            print(f"{replacement_player.name} Game Winrate: {replacement_player_winrate} ({real_war_team_alpha.wins}-{real_war_team_alpha.losses})\n")
+                            print(f"Captain alive for {100 * round((real_war_team_alpha.living_captain[0] / (real_war_team_alpha.living_captain[0] + real_war_team_alpha.living_captain[1])), 4)}% of ticks\n")
+                            return replacement_player_winrate
+                    elif isinstance(replacement_player, Player):
+                        replacement_player_winrate = round(100 * (replacement_player.game_wins / (replacement_player.game_wins + replacement_player.game_losses)), 2)
+                        if replacement_player.name == "Player R":
+                            print(f"Player R in Place of {replacing} Game Winrate: {replacement_player_winrate} ({replacement_player.game_wins}-{replacement_player.game_losses})\n")
+                            return replacement_player_winrate
+                        else:
+                            print(f"{replacement_player.name} Game Winrate: {replacement_player_winrate} ({replacement_player.game_wins}-{replacement_player.game_losses})\n")
+                            return 0
+    else:
+        for k in range(r):
+            for i in range(SIZE):
+                for j in range(i + 1, SIZE):
+                    team1 = TEAMS[i]
+                    team2 = TEAMS[j]
+                    game(team1, team2,amp,playoffs=None)
+            if print_by_round and ((k != r-1 or half_round) and not (r>6 and k%2==0)):
+                for team in TEAMS:
+                    team.points = (3*team.match_wins) + team.match_draws
+                TEAMS.sort(key=lambda x: (x.points, x.wins, x.margin), reverse=True)
+                print_standings(TEAMS,round_no=k+1,print_region_seed=print_region_seed)
+                i = 0
+                for team in TEAMS:
+                    team.previous_seed = i+1
+                    i+=1
+            if k == r-1: #end of last round
 
-                # split the teams into two divisions of 11
+                for team in TEAMS:
+                    team.points = (3*team.match_wins) + team.match_draws
 
-                for x in range(1, 22):
-                    if x % 2 == 0:
-                        division1.append(TEAMS[x])
-                    else:
-                        division2.append(TEAMS[x])
-
-                for a in range(len(division1)):
-                    for b in range(a + 1, len(division1)):
-                        tm1 = division1[a]
-                        tm2 = division1[b]
-                        game(tm1, tm2, amp, playoffs=None)
-
-                for a in range(len(division2)):
-                    for b in range(a + 1, len(division2)):
-                        tm1 = division2[a]
-                        tm2 = division2[b]
-                        game(tm1, tm2, amp, playoffs=None)
-
-            for team in TEAMS:
-                team.points = (3*team.match_wins) + team.match_draws
-
-                team.team_coach.coach_record["Game Wins"] += team.wins
-                team.team_coach.coach_record["Game Losses"] += team.losses
-                team.team_coach.coach_record["Match Wins"] += team.match_wins
-                team.team_coach.coach_record["Match Losses"] += team.match_losses
-            TEAMS.sort(key=lambda x: (x.points, x.wins, x.margin), reverse=True)
-            print_standings(TEAMS,print_region_seed=print_region_seed,cyan_seeds=cyan_seeds, yellow_seeds=yellow_seeds, red_seeds=red_seeds)
+                    team.team_coach.coach_record["Game Wins"] += team.wins
+                    team.team_coach.coach_record["Game Losses"] += team.losses
+                    team.team_coach.coach_record["Match Wins"] += team.match_wins
+                    team.team_coach.coach_record["Match Losses"] += team.match_losses
+                TEAMS.sort(key=lambda x: (x.points, x.wins, x.margin), reverse=True)
+                print_standings(TEAMS,print_region_seed=print_region_seed,cyan_seeds=cyan_seeds, yellow_seeds=yellow_seeds, red_seeds=red_seeds)
 
     if qualify_range == 1:
         return TEAMS[0]

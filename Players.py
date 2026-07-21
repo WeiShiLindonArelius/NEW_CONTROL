@@ -8,11 +8,14 @@ from collections import OrderedDict
 import sqlite3
 import lightgbm as lgb
 from datetime import datetime
+from statistics import mean
 
-NO_SQL = True
+from switches import NO_SQL
 
-bst = lgb.Booster(model_file="player_model.bin")
-bst.save_model("player_model.bin")
+
+
+bst = lgb.Booster(model_file="new_player_model.bin")
+bst.save_model("new_player_model.bin")
 
 def remove_tag_from_name(s:str):
     targets = ["$l", "R#", "C%", "I*", "Tx", "Hn", "Sp", "Fl", "Pp", "U-", "X+", "V"]
@@ -536,17 +539,23 @@ class Player:
                  team="None", insta_kill_pct = 0, trait_tag = ("None", "None"), amp=0, season_count=0, undead_chance=0,
                  trait_multiplier=None):
 
-        trait_tag = list(trait_tag)
-        trait_trans = {'$l' : 'Slasher', 'U-' : 'Undead', 'R#' : 'Reflector'}
-        #try:
-        #    tag_param = trait_trans[trait_tag]
-        #except KeyError:
-        #    tag_param = trait_tag
-        #player_params = (amp, tier, tag_param, name, season_count)
-        #player_sql = """
-        #INSERT INTO Player(amp, tier, trait, player_name, season_of_origin)
-        #VALUES(?, ?, ?, ?, ?)
-        #"""
+        primary_trait_tag = trait_tag[0]
+        secondary_trait_tag = trait_tag[1]
+        trait_trans = {'$l' : 'Slasher', 'R#' : 'Reflector', 'Hn' : 'Healer', 'Fl' : 'Flasher', 'Sp' : 'Splitter', 'X+' : 'Exploder',
+                       'Pp' : 'Playoff Performer', 'C%' : 'Clutch', 'I*' : 'Inconsistent', 'Tx' : 'Toxic', 'U-' : 'Undead', 'V.' : 'Vampire'}
+        try:
+            primary_tag_param = trait_trans[primary_trait_tag]
+        except KeyError:
+            primary_tag_param = trait_tag[0]
+        try:
+            secondary_tag_param = trait_trans[secondary_trait_tag]
+        except KeyError:
+            secondary_tag_param = trait_tag[1]
+        player_params = (amp, tier, primary_tag_param, secondary_tag_param, name, season_count)
+        player_sql = """
+        INSERT INTO Player(amp, tier, primary_trait, secondary_trait, player_name, season_of_origin)
+        VALUES(?, ?, ?, ?, ?, ?)
+        """
 
         #This is a universal number for calculating the impact of traits created AFTER Reflector.
         #Clutch, Inconsistent, and Playoff Performer use this multiplier in a formula contained in
@@ -560,7 +569,7 @@ class Player:
         #I* should be set to False at the end of a lineup, and Pp should be set to False at the end of a game
         self.trait_bools = {'C%' : False, 'I*' : 0, 'Pp' : 0}
 
-        #self.player_id = QUERY(player_sql, params=player_params, is_select=False)
+        self.player_id = QUERY(player_sql, params=player_params, is_select=False)
 
         #baseline stats
         self.tier = tier
@@ -582,6 +591,8 @@ class Player:
         self.coach_def_amp = ["None", float(0)]
         self.coach_trait_amp = ["N/A", 0] if trait_tag == "None" else ["None", float(0)]
         self.slot = -1
+        self.retired = False
+        self.season_of_origin = season_count
 
         self.drafted = "Not Drafted (Intro)"
 
@@ -637,24 +648,15 @@ class Player:
     def __str__(self):
         if self.deaths != 0:
             self.ratio = round((self.kills/self.deaths),4)
-        x_breakdown = ""
 
-        for word in ['Power', 'DPS', 'Critical X', 'Critical %', 'Health', 'Spawn Time']:
-            x_breakdown += f"{word}({self.grade_dict[word]}), "
-        translated_tag = {'$l': 'Slasher', 'U-': 'Undead', 'R#': 'Reflector', 'X+': 'Exploder', 'I*': 'Inconsistent','Pp': 'Playoff Performer', 'C%': 'Clutch', "None" : "", "Sp": "Splitter", "V.": "Vampire", "Tx" : "Toxic", "Hn": "Healer", "Fl" : "Flasher"}
         tag_str = f" ({self.trait_multiplier})"
 
-        #for trait in self.trait_tag:
-        #    if trait != "None":
-        #        tag_str += f", {translated_tag[trait]} : {self.trait_multiplier}"
-        #if self.trait_tag in ['$l', 'U-', 'R#', 'X+', 'C%']:
-        #    x_breakdown += f"{translated_tag[self.trait_tag]} Bonus({self.grade_dict['Trait Bonus']})"
+
         if self.kills != 0:
 
             holder = f"{self.name}{tag_str}\n" \
             f"\t{self.team}\n"\
             f"xWAR: {self.xWAR} (Rank {self.grade_dict['Rank']})\n" \
-                     f"{x_breakdown}\n" \
             f"Attack Damage: {self.atk_dmg}\n" \
             f"Attack Speed: {self.atk_spd}\n" \
             f"Crit %: {self.crit_pct}\n" \
@@ -665,12 +667,11 @@ class Player:
             f"Health: {self.max_health}\n" \
             f"Power: {self.power}\n" \
             f"Spawn Time: {self.spawn_time}\n" \
-            f"AGE: {self.age}\n"
+            f"AGE: {self.age}\n\n"
         else:
             holder = f"{self.name}{tag_str}\n" \
             f"\t{self.team}\n" \
             f"xWAR: {self.xWAR} (Rank {self.grade_dict['Rank']})\n" \
-            f"{x_breakdown}\n" \
             f"Attack Damage: {self.atk_dmg}\n" \
             f"Attack Speed: {self.atk_spd}\n" \
             f"Crit %: {self.crit_pct}\n" \
@@ -681,7 +682,7 @@ class Player:
             f"Health: {self.max_health}\n" \
             f"Power: {self.power}\n" \
             f"Spawn Time: {self.spawn_time}\n" \
-            f"AGE: {self.age}\n"
+            f"AGE: {self.age}\n\n"
         return holder
 
     def reflect_damage(self, receiver, crit=False):
@@ -698,10 +699,11 @@ class Player:
             # game checks for defender life status after the attack function is over
             undead_roll = uniform(0, 1)
             coach_amp_increment = receiver.coach_trait_amp[1] if receiver.coach_trait_amp[0] == 'U-' else 1
+            undead_roll = undead_roll / coach_amp_increment
             if 'U-' in receiver.trait_tag and undead_roll <= receiver.trait_multiplier['U-']:
-                receiver.damage_data['Healed'] += (receiver.max_health * (2*receiver.trait_multiplier['U-']) * coach_amp_increment) - receiver.health
+                receiver.damage_data['Healed'] += (receiver.max_health * (2.25*receiver.trait_multiplier['U-']) * coach_amp_increment) - receiver.health
                 receiver.damage_data['Revived'] += 1
-                receiver.health = (receiver.max_health * (2*receiver.trait_multiplier['U-']) * coach_amp_increment)
+                receiver.health = (receiver.max_health * (2.25*receiver.trait_multiplier['U-']) * coach_amp_increment)
 
             else:
                 receiver.die()
@@ -719,15 +721,24 @@ class Player:
         if self.status["Stun"][0] > 0:
             self.status["Stun"][1].damage_data['Attacks Stunned'] += 1
             return 0
-        if "Sp" in self.trait_tag and uniform(0, 1) <= self.trait_multiplier['Sp']:
+        if "Sp" in self.trait_tag and uniform(0, 1) <= self.trait_multiplier['Sp'] or (self.coach_trait_amp[0] == "Sp" and uniform(0, 1) <= self.coach_trait_amp[1]):
             self.atk_counter = self.atk_spd-1
             self.damage_data['Extra Attacks'] += 1
         else:
             self.atk_counter = 0
         self.damage_data['Total-Attacks'] += 1
         if "Tx" in self.trait_tag and uniform(0,1) < self.trait_multiplier['Tx'][0]:
-            defender.status["Toxin"] = [self.trait_multiplier['Tx'][1][0], self.trait_multiplier['Tx'][1][1], self]
+            if defender.status["Toxin"][1] > 0:
+                defender.status["Toxin"][0] += self.trait_multiplier['Tx'][1][0]
+                defender.status["Toxin"][1] = mean([self.trait_multiplier['Tx'][1][1], defender.status["Toxin"][1]])
+                defender.status["Toxin"][2] = self
+            else:
+                defender.status["Toxin"] = [self.trait_multiplier['Tx'][1][0], self.trait_multiplier['Tx'][1][1], self]
             #toxin status: damage, ticks
+            #if defender already has toxin applied, we add the amount of ticks to the current amount and average the
+            #amount of damage taken in case toxin is taken from two separate sources.
+            #Sometimes, players will not be properly credited with toxin damage if someone applies more toxin before theirs
+            #is done, but there is no way around this.
         elif "Fl" in self.trait_tag and uniform(0,1) < self.trait_multiplier['Fl'][0]:
             defender.status["Stun"] = [self.trait_multiplier['Fl'][1], self]
         damage = self.atk_dmg
@@ -787,12 +798,6 @@ class Player:
         if captain_bonus:
             damage*=captain_bonus[0]
 
-        if defending_capt != 0:
-            defending_capt_damage = damage * defending_capt
-            damage -= defending_capt_damage
-        else:
-            defending_capt_damage = 0
-
         damage -= (damage*defender.defense_pct)
         damage -= defender.defense_abs
         if defender.coach_def_amp[0] == "Defense %":
@@ -801,10 +806,23 @@ class Player:
         if defender.coach_def_amp[0] == "Defense Absolute":
             damage -= defender.coach_def_amp[1]
 
-        defender.damage_data['D% Blocked'] += (damage*defender.defense_pct)
+        defender.damage_data['D% Blocked'] += (damage * defender.defense_pct)
         defender.damage_data['DAbs Blocked'] += defender.defense_abs
 
-        defender.health -= damage if not reflected else 0 #defender should not take damage if it was reflected
+
+        if not reflected:
+
+            if defending_capt != 0:
+                defending_capt_damage = damage * defending_capt
+                damage -= defending_capt_damage
+            else:
+                defending_capt_damage = 0
+
+            defender.health -= damage
+        else:
+            defending_capt_damage = 0
+
+
         self.damage_data['Total-Damage'] += damage
         if "V." in self.trait_tag and uniform(0,1) < self.trait_multiplier['V.']:
             vamp_heal = damage*(uniform(0.5,0.7))
@@ -814,8 +832,8 @@ class Player:
             #lineup checks for defender life status after the attack function is over
             if 'U-' in defender.trait_tag:
                 undead_roll = uniform(0, 1)
-                undead_roll *= defender.coach_trait_amp[1] if defender.coach_trait_amp[0] == 'U-' else 1
                 coach_amp_increment = defender.coach_trait_amp[1] if defender.coach_trait_amp[0] == 'U-' else 1
+                undead_roll = undead_roll / coach_amp_increment
 
                 if undead_roll <= defender.trait_multiplier['U-']:
                     defender.damage_data['Healed'] += (defender.max_health * (2*defender.trait_multiplier['U-']) * coach_amp_increment) - defender.health
@@ -891,7 +909,7 @@ class Player:
             impact += capt_bonus
 
         self.damage_data['Tesseract'] += impact
-        return np.round(impact)
+        return impact
 
     def respawn(self):
         self.health = self.max_health
@@ -905,10 +923,11 @@ class Player:
             #lineup checks for life status after the attack function is over
             undead_roll = uniform(0, 1)
             coach_amp_increment = self.coach_trait_amp[1] if self.coach_trait_amp[0] == 'U-' else 1
+            undead_roll = undead_roll / coach_amp_increment
             if 'U-' in self.trait_tag and undead_roll <= self.trait_multiplier['U-']:
                 self.damage_data['Healed'] += (self.max_health * (2*self.trait_multiplier['U-']) * coach_amp_increment) - self.health
                 self.damage_data['Revived'] += 1
-                self.health = (self.max_health * (2*self.trait_multiplier['U-']) * coach_amp_increment)
+                self.health = (self.max_health * (2.25*self.trait_multiplier['U-']) * coach_amp_increment)
                 self.delayed_atk = 0
             else:
                 self.die()
@@ -917,15 +936,44 @@ class Player:
                     self.trait_multiplier['X+'][1] += 1
 
     def get_xWAR(self,averages=None,set_stats=None,deviations=None):
-        #THIS FUNCTION SHOULD ONLY BE USED UPON PLAYER INITIALIZATION AND PLAYER CHANGES
-        self.xWAR = 0
-        predicted_winrate = bst.predict(xwar_stats_df(self, datetime.now().strftime("%m-%d_%H:%M"), season_count=0, for_model=True))
-        self.xWAR = round(((float(predicted_winrate) - 50) * 100), 4)
-        #write_to_file(filename="xWAR_tests", words=str(self.xWAR), mode='a')
-        return self.xWAR
+        row = {
+            "Power": self.power,
+            "Critical Chance": self.crit_pct,
+            "Critical Multiplier": self.crit_x,
+            "Max Health": self.max_health,
+            "Spawn Time": self.spawn_time,
+            "Attack Damage": self.atk_dmg,
+            "Attack Speed": self.atk_spd,
 
-        #base_features = ["Power", "Critical %", "Critical X", "Health", "Spawn Time", "DPS",
-                 #"Trait_$l","Trait_C%","Trait_I*","Trait_Pp",r"Trait_R#","Trait_U-","Trait_X+",
-                 #"Trait_Hn","Trait_Tx",r"Trait_Fl","Trait_Sp","Trait_V.", "Mitigated %",
-                 #"Defense %", "Defense Absolute"]
-        #above is the order in which the model has the features saved
+            "Primary Trait_R#": 0,
+            "Primary Trait_X+": 0,
+            "Primary Trait_Hn": 0,
+            "Primary Trait_Fl": 0,
+            "Primary Trait_Sp": 0,
+
+            "Secondary Trait_C%": 0,
+            "Secondary Trait_I*": 0,
+            "Secondary Trait_Pp": 0,
+            "Secondary Trait_U-": 0,
+            "Secondary Trait_Tx": 0,
+            "Secondary Trait_V.": 0,
+
+            "Mitigation Chance": self.mit_pct,
+            "Defense %": self.defense_pct,
+            "Defense Absolute": self.defense_abs
+        }
+
+        # turn on trait columns
+        if self.trait_tag[0] and self.trait_tag[0] != "None":
+            row[f"Primary Trait_{self.trait_tag[0]}"] = 1
+
+        if self.trait_tag[1] and self.trait_tag[1] != "None":
+            row[f"Secondary Trait_{self.trait_tag[1]}"] = 1
+
+        player_df = pd.DataFrame([row])
+
+        xWAR = bst.predict(player_df)[0]
+
+        return round(xWAR, 3)
+
+

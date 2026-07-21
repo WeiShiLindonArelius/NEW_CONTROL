@@ -8,6 +8,7 @@ import pandas as pd
 import numpy as np
 from seed import generate_seed
 import re
+from switches import game_length
 
 import sys
 
@@ -59,9 +60,9 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
                 else:
                     extra_inc_roll = 0
                 if inc_roll <= player.trait_multiplier['I*'] or extra_inc_roll <= player.coach_trait_amp[1]:
-                    player.trait_bools['I*'] = randint(108,132) / 100
+                    player.trait_bools['I*'] = randint(105,125) / 100
                 elif np.logical_and(inc_roll >= player.trait_multiplier['I*'], inc_roll <= (player.trait_multiplier['I*']*2)):
-                    player.trait_bools['I*'] = randint(65,82) / 100
+                    player.trait_bools['I*'] = randint(70,90) / 100
             elif 'Pp' in player.trait_tag and playoffs:
                 add = 2
                 pp1_roll = randint(0, 100)
@@ -82,12 +83,10 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
                 else:
                     extra_inc_roll = 0
 
-                if round(inc_roll,2) == 0.01:
-                    player.trait_bools['I*'] = 1.4
                 if inc_roll <= player.trait_multiplier['I*'] or extra_inc_roll <= player.coach_trait_amp[1]:
-                    player.trait_bools['I*'] = randint(105,130) / 100
-                elif np.logical_and(player.trait_multiplier['I*'] <= inc_roll, inc_roll <= (player.trait_multiplier['I*'] + 0.05)):
-                    player.trait_bools['I*'] = randint(70,82) / 100
+                    player.trait_bools['I*'] = randint(105, 125) / 100
+                elif np.logical_and(inc_roll >= player.trait_multiplier['I*'], inc_roll <= (player.trait_multiplier['I*'] * 2)):
+                    player.trait_bools['I*'] = randint(70, 90) / 100
             elif 'Pp' in player.trait_tag and playoffs:
                 add = 2
                 pp2_roll = randint(0, 100)
@@ -145,13 +144,13 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
 
 
         for player in living_team1:
-            if player.status["Toxin"][0] > 0:
+            if player.status["Toxin"][1] > 0:
                 toxin_dealer = player.status["Toxin"][2]
                 coach_tx_bonus = team2.team_coach.trait_effect[1] if team2.team_coach.trait_effect[0] == 'Tx' else 1
-                player.status["Toxin"][0] -= 1
+                player.status["Toxin"][1] -= 1
                 toxin_dealer.damage_data['Toxin'] += player.status["Toxin"][1]
                 toxin_dealer.damage_data['Total-Damage'] += player.status["Toxin"][1]
-                player.take_damage(player.status["Toxin"][1]*coach_tx_bonus)
+                player.take_damage(player.status["Toxin"][0]*coach_tx_bonus)
                 if not player.is_alive:
                     toxin_dealer.damage_data['Toxin Kills'] += 1
                     toxin_dealer.kills += 1
@@ -169,11 +168,11 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
         for player in living_team2:
             toxin_dealer = player.status["Toxin"][2]
             coach_tx_bonus = team1.team_coach.trait_effect[1] if team1.team_coach.trait_effect[0] == 'Tx' else 1
-            if player.status["Toxin"][0] > 0:
-                player.status["Toxin"][0] -= 1
+            if player.status["Toxin"][1] > 0:
+                player.status["Toxin"][1] -= 1
                 toxin_dealer.damage_data['Toxin'] += player.status["Toxin"][1]
                 toxin_dealer.damage_data['Total-Damage'] += player.status["Toxin"][1]
-                player.take_damage(player.status["Toxin"][1]*coach_tx_bonus)
+                player.take_damage(player.status["Toxin"][0]*coach_tx_bonus)
                 if not player.is_alive:
                     toxin_dealer.damage_data['Toxin Kills'] += 1
                     toxin_dealer.kills += 1
@@ -189,8 +188,8 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
 
     def lineup(team1_lineup, team2_lineup, lineup_index, team1=team1, team2=team2, tiebreak=False):
 
-        team1_captain_alive = True
-        team2_captain_alive = True
+        team1_captain_alive = (team1.captain.max_health > 0) #Test "non-captains" have 0 max health, should be initialized as dead
+        team2_captain_alive = (team2.captain.max_health > 0)
         team1_capt_damage_reduction = team1.captain.damage_taken #this is passed into attack when the respective team is defending
         team2_capt_damage_reduction = team2.captain.damage_taken
 
@@ -215,7 +214,7 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
         apply_traits_before_lineup(team1_lineup, team2_lineup)
 
         TESSERACT = 0
-        length = 72
+        length = game_length
         #length *= amp
         length += 1
 
@@ -261,13 +260,13 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
                 else:
                     pl.countdown -= 1
 
-            #applying clutch for games of length 50
+            #applying clutch for games of length 72
             if playoffs:
-                clutch_time = 52
+                clutch_time = 50
             else:
-                clutch_time = 56
+                clutch_time = 52
 
-            if tick >= clutch_time or ((tick >= (clutch_time - 10)) and abs(TESSERACT) <= 100):
+            if tick >= clutch_time or ((tick >= (clutch_time - 12)) and abs(TESSERACT) <= 100):
                 for player in living_team1:
                     if 'C%' in player.trait_tag:
                         player.trait_bools['C%'] = True
@@ -570,13 +569,6 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
                 player.team_wins +=1
             for player in team2.players:
                 player.team_losses +=1
-            if False and length >= 54: #only saves game data to SQL if it's full-length, remove "and length >= 54" to save everything
-                query = """
-                INSERT INTO Game (winning_team_id, losing_team_id, margin_of_victory, lineup_count, playoffs)
-                VALUES(?, ?, ?, ?, ?)
-                """
-                sql_params = (team1.team_id, team2.team_id, abs(round(TESSERACT,2)), lineup_index, ('Yes' if playoffs else 'No'))
-                QUERY(query, connect, params=sql_params, is_select=False)
 
             team1.wins += 1
             team1.margin += abs(round(TESSERACT,2))
@@ -594,13 +586,6 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
                 player.team_wins +=1
             for player in team2.players:
                 player.team_losses +=1
-            if False and length >= 54:
-                query = """
-                                INSERT INTO Game (winning_team_id, losing_team_id, margin_of_victory, lineup_count, playoffs)
-                                VALUES(?, ?, ?, ?, ?)
-                                """
-                sql_params = (team2.team_id, team1.team_id, abs(round(TESSERACT, 2)), lineup_index, ('Yes' if playoffs else 'No'))
-                QUERY(query, connect, params=sql_params, is_select=False)
 
             team1.losses += 1
             team1.margin -= abs(round(TESSERACT,2))
@@ -643,44 +628,44 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
                 team2_lineups_won += 1
             lineup_count += 1
         if team1_lineups_won > team2_lineups_won:
-            match_params = (team1.team_id, team2.team_id, f"{team1_lineups_won}-{team2_lineups_won}",
-                            lw[0], lw[1], lw[2], lw[3], lw[4], lw[5], lw[6], lw[7], lw[8], 'No')
-            match_query = """
-            INSERT INTO Match (winning_team_id, losing_team_id, match_score, _0N_winner_id, _1N_winner_id, _2N_winner_id, _3N_winner_id, _4N_winner_id, _5N_winner_id, _6N_winner_id, _7N_winner_id, _8N_winner_id, playoffs)
-            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """
-            QUERY(match_query, connect, params=match_params, is_select=False)
+            #match_params = (team1.team_id, team2.team_id, f"{team1_lineups_won}-{team2_lineups_won}",
+            #                lw[0], lw[1], lw[2], lw[3], lw[4], lw[5], lw[6], lw[7], lw[8], 'No')
+            #match_query = """
+            #INSERT INTO Match (winning_team_id, losing_team_id, match_score, _0N_winner_id, _1N_winner_id, _2N_winner_id, _3N_winner_id, _4N_winner_id, _5N_winner_id, _6N_winner_id, _7N_winner_id, _8N_winner_id, playoffs)
+            #VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            #"""
+            #QUERY(match_query, connect, params=match_params, is_select=False)
 
 
             team1.match_wins += 1
             team2.match_losses += 1
             return team1
         elif team2_lineups_won > team1_lineups_won:
-            match_params = (team2.team_id, team1.team_id, f"{team2_lineups_won}-{team1_lineups_won}",
-                            lw[0], lw[1], lw[2], lw[3], lw[4], lw[5], lw[6], lw[7], lw[8],
-                            'No')
-            match_query = """
-                        INSERT INTO Match (winning_team_id, losing_team_id, match_score, _0N_winner_id, _1N_winner_id,
-                        _2N_winner_id, _3N_winner_id, _4N_winner_id, _5N_winner_id, _6N_winner_id, _7N_winner_id, _8N_winner_id, playoffs)
-                        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                        """
-            QUERY(match_query, connect, params=match_params, is_select=False)
+            #match_params = (team2.team_id, team1.team_id, f"{team2_lineups_won}-{team1_lineups_won}",
+            #                lw[0], lw[1], lw[2], lw[3], lw[4], lw[5], lw[6], lw[7], lw[8],
+            #                'No')
+            #match_query = """
+            #            INSERT INTO Match (winning_team_id, losing_team_id, match_score, _0N_winner_id, _1N_winner_id,
+            #            _2N_winner_id, _3N_winner_id, _4N_winner_id, _5N_winner_id, _6N_winner_id, _7N_winner_id, _8N_winner_id, playoffs)
+            #            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            #            """
+            #QUERY(match_query, connect, params=match_params, is_select=False)
 
             team2.match_wins += 1
             team1.match_losses += 1
             return team2
         else:
             temp_winner = choice([team1, team2])
-            temp_loser = team1 if temp_winner == team2 else team2
-            match_params = (temp_winner.team_id, temp_loser.team_id, f"{team1_lineups_won}-{team2_lineups_won}",
-                            lw[0], lw[1], lw[2], lw[3], lw[4], lw[5], lw[6], lw[7], lw[8],
-                            'No')
-            match_query = """
-                        INSERT INTO Match (winning_team_id, losing_team_id, match_score, _0N_winner_id, _1N_winner_id,
-                        _2N_winner_id, _3N_winner_id, _4N_winner_id, _5N_winner_id, _6N_winner_id, _7N_winner_id, _8N_winner_id, playoffs)
-                        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                        """
-            QUERY(match_query, connect, params=match_params, is_select=False)
+            #temp_loser = team1 if temp_winner == team2 else team2
+            #match_params = (temp_winner.team_id, temp_loser.team_id, f"{team1_lineups_won}-{team2_lineups_won}",
+            #                lw[0], lw[1], lw[2], lw[3], lw[4], lw[5], lw[6], lw[7], lw[8],
+            #                'No')
+            #match_query = """
+            #            INSERT INTO Match (winning_team_id, losing_team_id, match_score, _0N_winner_id, _1N_winner_id,
+            #            _2N_winner_id, _3N_winner_id, _4N_winner_id, _5N_winner_id, _6N_winner_id, _7N_winner_id, _8N_winner_id, playoffs)
+            #            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            #            """
+            #QUERY(match_query, connect, params=match_params, is_select=False)
 
             team1.match_draws += 1
             team2.match_draws += 1
@@ -722,27 +707,27 @@ def game(team1, team2, amp=4, type_of='None', playoff_dict=None, playoffs=False,
         playoff_dict["Total Score Dictionary"]["Team 2 Total Lineup Wins"] += team2_lineups_won
 
         if team1_lineups_won > team2_lineups_won:
-            match_params = (team1.team_id, team2.team_id, f"{team1_lineups_won}-{team2_lineups_won}",
-                            lw[0], lw[1], lw[2], lw[3], lw[4], lw[5], lw[6], lw[7], lw[8],
-                            'Yes')
-            match_query = """
-                        INSERT INTO Match (winning_team_id, losing_team_id, match_score, _0N_winner_id, _1N_winner_id, _2N_winner_id, _3N_winner_id, _4N_winner_id, _5N_winner_id, _6N_winner_id, _7N_winner_id, _8N_winner_id, playoffs)
-                        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                        """
-            QUERY(match_query, connect, params=match_params, is_select=False)
+            #match_params = (team1.team_id, team2.team_id, f"{team1_lineups_won}-{team2_lineups_won}",
+            #                lw[0], lw[1], lw[2], lw[3], lw[4], lw[5], lw[6], lw[7], lw[8],
+            #                'Yes')
+            #match_query = """
+            #            INSERT INTO Match (winning_team_id, losing_team_id, match_score, _0N_winner_id, _1N_winner_id, _2N_winner_id, _3N_winner_id, _4N_winner_id, _5N_winner_id, _6N_winner_id, _7N_winner_id, _8N_winner_id, playoffs)
+            #            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            #            """
+            #QUERY(match_query, connect, params=match_params, is_select=False)
             return team1
         elif team2_lineups_won > team1_lineups_won:
-            match_params = (team2.team_id, team1.team_id, f"{team2_lineups_won}-{team1_lineups_won}",
-                            lw[0], lw[1], lw[2], lw[3], lw[4], lw[5], lw[6], lw[7], lw[8],
-                            'Yes')
-            match_query = """
-                        INSERT INTO Match (winning_team_id, losing_team_id, match_score, _0N_winner_id, _1N_winner_id, _2N_winner_id, _3N_winner_id, _4N_winner_id, _5N_winner_id, _6N_winner_id, _7N_winner_id, _8N_winner_id, playoffs)
-                        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                        """
-            QUERY(match_query, connect, params=match_params, is_select=False)
+            #match_params = (team2.team_id, team1.team_id, f"{team2_lineups_won}-{team1_lineups_won}",
+            #                lw[0], lw[1], lw[2], lw[3], lw[4], lw[5], lw[6], lw[7], lw[8],
+            #                'Yes')
+            #match_query = """
+            #            INSERT INTO Match (winning_team_id, losing_team_id, match_score, _0N_winner_id, _1N_winner_id, _2N_winner_id, _3N_winner_id, _4N_winner_id, _5N_winner_id, _6N_winner_id, _7N_winner_id, _8N_winner_id, playoffs)
+            #            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            #            """
+            #QUERY(match_query, connect, params=match_params, is_select=False)
             return team2
 
-def best_of(team1,team2,thresh,amp=4,both_return=False,win_by=1,test_output=False,is_uni=False, upset_list= None, upset_count=None, context=None, advantage=0,skunk=None):
+def best_of(team1,team2,thresh,amp=4,both_return=False,win_by=1,test_output=False,is_uni=False, context=None, advantage=0,skunk=None):
 
     t_dec_index = 0
     decrease_count = 0
@@ -756,6 +741,8 @@ def best_of(team1,team2,thresh,amp=4,both_return=False,win_by=1,test_output=Fals
     team1_wins = 0 + advantage
     team2_wins = 0
     game_count = 0
+
+    season_count = int(context.split()[0][1:])
 
     if skunk:
         skunk_thresh = skunk[0]
@@ -920,7 +907,12 @@ def best_of(team1,team2,thresh,amp=4,both_return=False,win_by=1,test_output=Fals
                                               team1_tb_wins=playoff_objects['Team 1 Tiebreaker Wins'],
                                               team2_tb_wins=playoff_objects['Team 2 Tiebreaker Wins'])
 
-        series_params = (team1.team_id, team2.team_id,
+        try:
+            series_params = (season_count,
+                             team1.team_id, team2.team_id,
+                             team1.team_seasons[season_count].team_season_id,
+                             team2.team_seasons[season_count].team_season_id,
+                         team1.seed, team2.seed, (team1.seed - team2.seed),
                          (f"({team1.seed}){team1.name}" if context != 'Last Stand Tournament' else team1.name),
                          (f"({team2.seed}){team2.name}" if context != 'Last Stand Tournament' else team2.name),
                          f"{team1_wins}-{team2_wins}",
@@ -933,12 +925,14 @@ def best_of(team1,team2,thresh,amp=4,both_return=False,win_by=1,test_output=Fals
                          f"{team1_alt_lineup_wins[6]}-{team2_alt_lineup_wins[6]}",
                          f"{sum(team1_alt_lineup_wins)}-{sum(team2_alt_lineup_wins)}",
                          context)
-        series_query = """
-        INSERT INTO Series(winning_team_id, losing_team_id, winner_name, loser_name, series_score, _0N_score, _1N_score,
-                _2N_score, _3N_score, _4N_score, _5N_score, _6N_score, _7N_score, _8N_score, series_game_score, context)
-        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """
-        QUERY(series_query, connect, params=series_params)
+            series_query = """
+            INSERT INTO Series(season_count, winning_team_id, losing_team_id, winning_team_season_id, losing_team_season_id, winning_seed, losing_seed, seed_diff, winner_name, loser_name, series_score, _0N_score, _1N_score,
+                _2N_score, _3N_score, _4N_score, _5N_score, _6N_score, series_game_score, context)
+            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """
+            QUERY(series_query, connect, params=series_params)
+        except TypeError:
+            pass
 
         enablePrint()
         # team1 will always have advantage if there is one
@@ -957,15 +951,6 @@ def best_of(team1,team2,thresh,amp=4,both_return=False,win_by=1,test_output=Fals
         if team1.seed != -1:
             final_str = f"{skunk_str}{team1.name}({team1.seed}) {adv_string}{comeback_string}defeat {team2.name}({team2.seed}) by a score of {team1_wins}-{team2_wins}."
             print(Back.RED + Fore.BLACK + final_str + Fore.BLUE + Back.RESET + lineup_statement + Fore.RESET + tiebreak_statement)
-            if team1.seed > team2.seed:
-                try:
-                    upset_count += 1
-                except TypeError:
-                    pass
-                temp_context = f"{skunk_str}{team1.seed}({team1.name}){comeback_string} defeat {team2.seed}({team2.name}) by a score of {team1_wins}-{team2_wins} ({context})"
-                seed_diff = team1.seed - team2.seed
-                upset_obj = tuple([temp_context, seed_diff])
-                upset_list.append(upset_obj)
         else:
             final_str = f"{skunk_str}{team1.name}{t1_region_seed_str}{comeback_string} defeat {team2.name}{t2_region_seed_str} by a score of {team1_wins}-{team2_wins}."
             print(Back.RED + Fore.BLACK + final_str + Fore.BLUE + Back.RESET + lineup_statement + Fore.RESET + tiebreak_statement)
@@ -991,25 +976,32 @@ def best_of(team1,team2,thresh,amp=4,both_return=False,win_by=1,test_output=Fals
                                               team1_tb_wins=playoff_objects['Team 2 Tiebreaker Wins'],
                                               team2_tb_wins=playoff_objects['Team 1 Tiebreaker Wins'])
 
-        series_params = (team2.team_id, team1.team_id,
-                         (f"({team2.seed}){team2.name}" if context != 'Last Stand Tournament' else team1.name),
-                         (f"({team1.seed}){team1.name}" if context != 'Last Stand Tournament' else team2.name),
-                         f"{team2_wins}-{team1_wins}",
-                         f"{team2_alt_lineup_wins[0]}-{team1_alt_lineup_wins[0]}",
-                         f"{team2_alt_lineup_wins[1]}-{team1_alt_lineup_wins[1]}",
-                         f"{team2_alt_lineup_wins[2]}-{team1_alt_lineup_wins[2]}",
-                         f"{team2_alt_lineup_wins[3]}-{team1_alt_lineup_wins[3]}",
-                         f"{team2_alt_lineup_wins[4]}-{team1_alt_lineup_wins[4]}",
-                         f"{team2_alt_lineup_wins[5]}-{team1_alt_lineup_wins[5]}",
-                         f"{team2_alt_lineup_wins[6]}-{team1_alt_lineup_wins[6]}",
-                         f"{sum(team2_alt_lineup_wins)}-{sum(team1_alt_lineup_wins)}",
-                         context)
-        series_query = """
-                INSERT INTO Series(winning_team_id, losing_team_id, winner_name, loser_name, series_score, _0N_score, _1N_score,
-                _2N_score, _3N_score, _4N_score, _5N_score, _6N_score, _7N_score, _8N_score, series_game_score, context)
-                VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """
-        QUERY(series_query, connect, params=series_params)
+        try:
+            series_params = (season_count,
+                             team2.team_id, team1.team_id,
+                             team2.team_seasons[season_count].team_season_id,
+                             team1.team_seasons[season_count].team_season_id,
+                             team2.seed, team1.seed, (team2.seed - team1.seed),
+                             (f"({team2.seed}){team2.name}" if context != 'Last Stand Tournament' else team1.name),
+                             (f"({team1.seed}){team1.name}" if context != 'Last Stand Tournament' else team2.name),
+                             f"{team2_wins}-{team1_wins}",
+                             f"{team2_alt_lineup_wins[0]}-{team1_alt_lineup_wins[0]}",
+                             f"{team2_alt_lineup_wins[1]}-{team1_alt_lineup_wins[1]}",
+                             f"{team2_alt_lineup_wins[2]}-{team1_alt_lineup_wins[2]}",
+                             f"{team2_alt_lineup_wins[3]}-{team1_alt_lineup_wins[3]}",
+                             f"{team2_alt_lineup_wins[4]}-{team1_alt_lineup_wins[4]}",
+                             f"{team2_alt_lineup_wins[5]}-{team1_alt_lineup_wins[5]}",
+                             f"{team2_alt_lineup_wins[6]}-{team1_alt_lineup_wins[6]}",
+                             f"{sum(team2_alt_lineup_wins)}-{sum(team1_alt_lineup_wins)}",
+                             context)
+            series_query = """
+                    INSERT INTO Series(season_count, winning_team_id, losing_team_id, winning_team_season_id, losing_team_season_id, winning_seed, losing_seed, seed_diff, winner_name, loser_name, series_score, _0N_score, _1N_score,
+                    _2N_score, _3N_score, _4N_score, _5N_score, _6N_score, series_game_score, context)
+                    VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """
+            QUERY(series_query, connect, params=series_params)
+        except TypeError:
+            pass
 
 
         enablePrint()
@@ -1027,15 +1019,6 @@ def best_of(team1,team2,thresh,amp=4,both_return=False,win_by=1,test_output=Fals
         if team2.seed != -1:
             final_str = f"{skunk_str}{team2.name}({team2.seed}) {adv_string}{comeback_string}defeat {team1.name}({team1.seed}) by a score of {team2_wins}-{team1_wins}."
             print(Back.RED + Fore.BLACK + final_str + Fore.BLUE + Back.RESET + lineup_statement + Fore.RESET + tiebreak_statement)
-            if team2.seed > team1.seed:
-                try:
-                    upset_count += 1
-                except TypeError:
-                    pass
-                temp_context = f"{skunk_str}{team2.seed}({team2.name}){comeback_string} defeat {team1.seed}({team1.name}) by a score of {team2_wins}-{team1_wins} ({context})"
-                seed_diff = team2.seed - team1.seed
-                upset_obj = tuple([temp_context, seed_diff])
-                upset_list.append(upset_obj)
         else:
             final_str = f"{skunk_str}{team2.name}{t2_region_seed_str}{comeback_string} defeat {team1.name}{t1_region_seed_str} by a score of {team2_wins}-{team1_wins}."
             print(Back.RED + Fore.BLACK + final_str + Fore.BLUE + Back.RESET + lineup_statement + Fore.RESET + tiebreak_statement)

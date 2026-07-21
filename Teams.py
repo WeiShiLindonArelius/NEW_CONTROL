@@ -1,6 +1,15 @@
 import math
 from random import choice, seed, uniform, randint
-from Player_Creator import s_tier, a_tier, b_tier, c_tier, slasher, additional_trait_roll
+import pandas as pd
+import lightgbm as lgb
+import sqlite3
+
+captain_model = lgb.Booster(model_file="captain_model.bin")
+captain_model.save_model("captain_model.bin")
+
+from bottleneck.slow.move import lastrank
+
+from Player_Creator import s_tier, a_tier, b_tier, c_tier
 from colorama import Fore, Back, Style
 from numpy import mean
 from stat_functions import QUERY
@@ -54,7 +63,7 @@ def generate_lineups_six_to_four(six_lineup, team_coach, team_id=-1):
         six_lineup[i].coach_def_amp = [team_coach.slot_effect[3], team_coach.slot_effect[4]]
     for player in six_lineup:
         if team_coach.trait_effect[0] in player.trait_tag:
-            player.coach_trait_amp = [player.trait_tag, team_coach.trait_effect[1]]
+            player.coach_trait_amp = team_coach.trait_effect
 
 
     four_lineups[0] = [six_lineup[0], six_lineup[1], six_lineup[2], six_lineup[3]]
@@ -158,10 +167,26 @@ class Captain:
         self.crit_pct_bonus = 0 #NO MORE - THIS IS WAY TOO MUCH IMPACT FOR A CAPTAIN
         self.crit_x_bonus = round(uniform(1.25, 1.5), 3)
         self.power_bonus = round(uniform(0.25,0.7), 4)
+        self.years_remaining = 100 #this is disabled due to balancing captain changes on age and including them in the draft
+        self.age = 0
+        self.captain_xWAR = self.get_captain_xWAR()
 
     def __str__(self):
         return (f"Captain: {self.name}, {self.damage_taken} damage taken, {self.max_health} health, {self.atk_dmg_bonus}x attack damage,"
                 f" {self.crit_x_bonus}x critical damage, {self.power_bonus} power bonus per tick\n")
+
+    def get_captain_xWAR(self):
+        captain_df = pd.DataFrame([{
+            "Damage Taken": self.damage_taken,
+            "Max Health": self.max_health,
+            "Base Damage Bonus": self.atk_dmg_bonus,
+            "Critical Damage Bonus": self.crit_x_bonus,
+            "Power Bonus": self.power_bonus
+        }])
+
+        xWAR = captain_model.predict(captain_df)[0]
+
+        return round(xWAR, 3)
 
 
 
@@ -180,10 +205,10 @@ class Coach:
                 return left in slots
 
         slots_amped = choice([ [0], [1], [2], [3], [4], [5],
-            [0,5], [1,4], [2,3], [3,5], [3,4], [0,4], [1,3], [2,5],
-            [0,4,5], [1,4,5], [1,3,5], [2,3,4], [2,3,5], [3,4,5]
+             [1,4], [2,3], [3,5], [3,4],  [1,3], [2,5],
+             [1,4,5], [1,3,5], [2,3,4], [2,3,5], [3,4,5]
         ])
-
+        # Values [0,5], [0,4], and [0,4,5] were removed on 7/3/2026 as a balancing effort
         value = choice(slots_amped)
         if fixed_slot_effect:
             slots_amped = fixed_slot_effect[0]
@@ -192,7 +217,7 @@ class Coach:
             slot_amp_possibilities = [
                 ["Power", round(uniform(0.549, 0.809), 2)],
                 ["Attack Damage", randint(2, 4)],
-                ["Critical Chance", round(uniform(0.01, 0.02), 3)]
+                ["Critical Chance", round(uniform(0.01, 0.015), 3)]
             ]
             def_amp_possibilities = [  # defense
                 ["Defense Absolute", 1],
@@ -206,7 +231,7 @@ class Coach:
             slot_amp_possibilities = [
                 ["Power", round(uniform(0.59, 0.889), 2)],
                 ["Attack Damage", randint(3, 5)],
-                ["Critical Chance", round(uniform(0.015, 0.025), 3)]
+                ["Critical Chance", round(uniform(0.0125, 0.02), 3)]
             ]
             def_amp_possibilities = [  # defense
                 ["Defense Absolute", choice([1,2])],
@@ -220,7 +245,7 @@ class Coach:
             slot_amp_possibilities = [ #offense
                 ["Power", round(uniform(0.69, 0.959), 2)],  # % chance to add power
                 ["Attack Damage", randint(4, 6)],  # raw increment
-                ["Critical Chance", round(uniform(0.02, 0.03), 3)],  # raw increment
+                ["Critical Chance", round(uniform(0.015, 0.025), 3)],  # raw increment
             ]
             def_amp_possibilities = [ #defense
                 ["Defense Absolute", 2],
@@ -237,10 +262,10 @@ class Coach:
 
         trait_possibilities = [
             ["Pp", randint(1,6)], ['R#', round(uniform(1.425,2),2)],
-            ['C%', round(uniform(1.2,1.45),2)],
+            ['C%', round(uniform(1.2,1.45),2)], ["I*", round(uniform(0.01,0.05),4)],
             ['U-', round(uniform(1.25,1.5),2)], ['X+', randint(4,9)],
-            ['Hn', round(uniform(0.75,0.9))], ['Tx', round(uniform(1.15,1.3),2)],
-            ['$l', round(uniform(0.25,0.5))]
+            ['Hn', round(uniform(0.75,0.9), 2)], ['Tx', round(uniform(1.15,1.3),2)],
+            ["Sp", round(uniform(0.05, 0.1), 3)]
         ]
 
         if not fixed_name:
@@ -279,6 +304,7 @@ class Coach:
         self.coach_record = {"Match Wins" : 0, "Match Losses" : 0, "Game Wins" : 0, "Game Losses" : 0}
         self.teams_coached = []
         self.team_id = -1 #SQL
+        self.lifespan = choice([5,6,6,7])
 
         coach_sql = """ 
                                 INSERT INTO Coach(coach_name, lineup_modifier, slots_amped, attribute_amped, attribute_amp_mult, trait_amped, trait_amp_mult)
@@ -303,17 +329,19 @@ class Team:
     names_copy = names.copy()
     names_backup = names_copy.copy()
 
-    def __init__(self,region,mine=False,pre_name=None,season_count=-1,fixed_coach=None,jackson=False):
+    def __init__(self,region,mine=False,pre_name=None,season_count=-1,fixed_coach=None,jackson=False,allow_duplicate_names=False):
         seed()
         if pre_name:
             b = pre_name
         else:
             try:
                 b = choice(Team.names_copy)
-                Team.names_copy.remove(b)
+                if not allow_duplicate_names:
+                    Team.names_copy.remove(b)
             except IndexError:
                 b = choice(Team.names_backup)
-                Team.names_backup.remove(b)
+                if not allow_duplicate_names:
+                    Team.names_backup.remove(b)
         n = f"{region}_{b}"
         self.mine = mine
         self.jackson = jackson
@@ -326,10 +354,13 @@ class Team:
         else:
             self.name = n
         self.region = region
+        self.region_of_origin = region
         self.season_origin = season_count
         self.full_name = self.name
 
         self.is_noteworthy = False
+
+        self.cup_seed = ["None", -1]
 
         self.captain = Captain()
         self.living_captain = [0, 0] #ticks with a living captain, ticks with a dead captain
@@ -344,34 +375,27 @@ class Team:
         # and the number of wins/losses that lineup has
         # this will initiate the full lineup of six (team.players object) and generate...() will be run AFTER
 
-        if region == 'OneLeague':
-            self.players = [s_tier(season_count=season_count),s_tier(season_count=season_count),s_tier(season_count=season_count),
-                           a_tier(season_count=season_count),a_tier(season_count=season_count),a_tier(season_count=season_count),
-                           b_tier(season_count=season_count),b_tier(season_count=season_count),b_tier(season_count=season_count),
-                           c_tier(season_count=season_count),c_tier(season_count=season_count),c_tier(season_count=season_count),
-                           a_tier(season_count=season_count),b_tier(season_count=season_count),slasher(season_count=season_count)]
-
-        elif region == 'Universal':
+        if region == 'Universal':
             uni_coin = choice([1,2,3,4])
             uni_coin2 = choice([1,2,3,4])
 
             if uni_coin == 1:
-                coin_player = s_tier(round(uniform(5.01,6.99),2), season_count=season_count, fixed=choice(['R#', 'I*', 'C%']))
+                coin_player = s_tier(round(uniform(5.01,6.99),2), season_count=season_count, fixed=(choice(['R#', 'Hn', 'Fl', 'Sp', 'X+']), "None"))
             elif uni_coin == 2:
-                coin_player = slasher(round(uniform(2.09,3.49), 2), season_count=season_count)
+                coin_player = a_tier(round(uniform(2.09,3.49), 2), season_count=season_count)
             elif uni_coin == 3:
-                coin_player = slasher(round(uniform(3.09,5.49), 2), season_count=season_count)
+                coin_player = b_tier(round(uniform(3.09,5.49), 2), season_count=season_count)
             else:
-                coin_player = a_tier(round(uniform(5.49, 8.49), 2), season_count=season_count, trait_amp=0.9)
+                coin_player = c_tier(round(uniform(5.49, 8.49), 2), season_count=season_count, trait_amp=0.9)
 
             if uni_coin2 == 1:
-                coin2_player = s_tier(round(uniform(2.99, 9.99), 2), season_count=season_count)
+                coin2_player = s_tier(round(uniform(0.99, 9.99), 2), season_count=season_count)
             elif uni_coin2 == 2:
-                coin2_player = s_tier(round(uniform(2.99, 9.99), 2), season_count=season_count)
+                coin2_player = s_tier(round(uniform(1.99, 9.99), 2), season_count=season_count)
             elif uni_coin2 == 3:
                 coin2_player = s_tier(round(uniform(2.99, 9.99), 2), season_count=season_count)
             else:
-                coin2_player = s_tier(round(uniform(2.99, 9.99), 2), season_count=season_count)
+                coin2_player = s_tier(round(uniform(3.99, 9.99), 2), season_count=season_count)
 
 
 
@@ -383,65 +407,40 @@ class Team:
                             coin2_player, coin_player]
 
         elif region == 'Labyrinth':
-            self.players = [slasher(round(uniform(1.09,3.49),2), season_count=season_count),
-                            a_tier(round(uniform(-1.51,1.49),2), season_count=season_count, fixed=choice(["None", "None", choice(['I*', 'Pp', 'Pp', 'C%', 'R#', 'U-', 'X+'])])),
-                            a_tier(round(uniform(-1.51,1.49),2), season_count=season_count, fixed=choice(["None", "None", choice(['I*', 'Pp', 'Pp', 'C%', 'R#', 'U-', 'X+'])])),
-                            b_tier(round(uniform(-1.51,1.49),2), season_count=season_count, fixed=choice(["None", choice(['I*', 'Pp', 'Pp', 'C%', 'R#', 'U-', 'X+'])])),
-                            b_tier(round(uniform(-1.51,1.49),2), season_count=season_count, fixed=choice(["None", choice(['I*', 'Pp', 'Pp', 'C%', 'R#', 'U-', 'X+'])])),
-                            c_tier(round(uniform(-2.21,4.99)*uniform(-2.21,3.99),2),season_count=season_count, fixed=choice(["R#", "R#", "None"]))]
+            self.players = [s_tier(round(uniform(1.09,1.49),2), season_count=season_count),
+                            a_tier(round(uniform(-1.51,1.49),2), season_count=season_count, fixed=("None", choice(['C%', 'Tx']))),
+                            a_tier(round(uniform(-1.51,1.49),2), season_count=season_count, fixed=("None", choice(['I*', 'U-']))),
+                            b_tier(round(uniform(-1.51,1.49),2), season_count=season_count, fixed=("None", choice(['V.', 'Pp']))),
+                            b_tier(round(uniform(-1.51,1.49),2), season_count=season_count, fixed=(choice(['R#', 'Hn', 'Fl', 'Sp', 'X+']), "None")),
+                            c_tier(round(uniform(-2.21,4.99)*uniform(-2.21,3.99),2),season_count=season_count, fixed=(choice(['Hn', 'Sp', 'X+']), choice(["None", "I*", "C%"])))]
         elif region == 'Test':
-            self.players = [s_tier(round(uniform(1,2.99),2), season_count=season_count), a_tier(round(uniform(1,3.99),2), season_count=season_count),
+            self.players = [s_tier(round(uniform(0,2.99),2), season_count=season_count), a_tier(round(uniform(0,3.99),2), season_count=season_count),
                             b_tier(round(uniform(0.5,4.99),2), season_count=season_count), b_tier(round(uniform(0.59,4.99),2), season_count=season_count),
                             c_tier(round(uniform(0,5.99),2), season_count=season_count), c_tier(round(uniform(0,6.99),2), season_count=season_count)]
-        elif region == 'Cosmic':
-            self.players = [slasher(round(uniform(1,4),2), season_count=season_count), slasher(round(uniform(1,3.8),2), season_count=season_count),
-                            slasher(round(uniform(1,3.6),2), season_count=season_count), slasher(round(uniform(1,3.4),2), season_count=season_count),
-                            slasher(round(uniform(1,3.2),2), season_count=season_count), slasher(round(uniform(1,3),2), season_count=season_count)]
-        elif region == 'Tartarus':
-            self.players = [s_tier(round(uniform(1.25, 2), 2), season_count=season_count, fixed='U-') if choice([True, False]) else a_tier(round(uniform(1, 1.59), 2), season_count=season_count, fixed='U-'),
-                            a_tier(round(uniform(1.5, 2.5), 2), season_count=season_count, fixed='U-') if choice([True, True, False]) else b_tier(round(uniform(1, 1.49), 2), season_count=season_count, fixed='U-'),
-                            a_tier(round(uniform(1.25, 3), 2), season_count=season_count, fixed='U-') if choice([True, False, False]) else b_tier(round(uniform(1, 2.99), 2), season_count=season_count,fixed='U-'),
-                            b_tier(round(uniform(1.5, 2.5), 2), season_count=season_count, fixed='U-') if choice([True, True, False]) else c_tier(round(uniform(1, 1.59), 2), season_count=season_count,fixed='U-'),
-                            b_tier(round(uniform(1.25, 3), 2), season_count=season_count, fixed='U-') if choice([True, False, False]) else c_tier(round(uniform(1, 1.99), 2), season_count=season_count,fixed='U-'),
-                            c_tier(round(uniform(1.49, 3.99), 2), season_count=season_count, fixed='U-') if choice([True, False]) else s_tier(season_count=season_count, fixed='U-')]
-        elif region == 'Beyond':
-            self.players = [s_tier(round(uniform(1, 3.99), 2), season_count=season_count, fixed='I*'),
-                            a_tier(round(uniform(1, 3.99), 2), season_count=season_count, fixed='I*'),
-                            b_tier(round(uniform(1.5, 4.49), 2), season_count=season_count, fixed='I*'),
-                            b_tier(round(uniform(1.5, 3.49), 2), season_count=season_count, fixed='I*'),
-                            c_tier(round(uniform(3, 4.49), 2), season_count=season_count, fixed='I*'),
-                            c_tier(round(uniform(2, 6.99), 2), season_count=season_count, fixed='I*')]
-        elif region == 'Clasmia':
-            self.players = [s_tier(round(uniform(0.25,2),2), season_count=season_count, fixed='X+') if choice([True, False]) else a_tier(round(uniform(0,1.59),2), season_count=season_count, fixed='X+'),
-                            a_tier(round(uniform(0.5,2.5),2), season_count=season_count, fixed='X+') if choice([True, True, False]) else b_tier(round(uniform(0,1.59),2), season_count=season_count, fixed='X+'),
-                            a_tier(round(uniform(0.25,3.99),2), season_count=season_count, fixed='X+') if choice([True, False, False]) else b_tier(round(uniform(0,1.99),2), season_count=season_count, fixed='X+'),
-                            b_tier(round(uniform(0.5,2.59),2), season_count=season_count, fixed='X+') if choice([True, True, False]) else c_tier(round(uniform(0,1.59),2), season_count=season_count, fixed='X+'),
-                            b_tier(round(uniform(0.25,2.99),2), season_count=season_count, fixed='X+') if choice([True, False, False]) else c_tier(round(uniform(0,1.99),2), season_count=season_count, fixed='X+'),
-                            c_tier(round(uniform(0,3.99),2), season_count=season_count, fixed='X+') if choice([True, False]) else s_tier(season_count=season_count, fixed='X+')]
 
         elif jackson:
-            self.players = [s_tier(season_count=season_count, fixed='I*'),
-                            a_tier(round(uniform(0.01, 0.99), 2), season_count=season_count, fixed='I*'),
-                            b_tier(round(uniform(-1, (4.515 if choice([True, False, False]) else 4)), 2),season_count=season_count, fixed='I*'),
-                            (b_tier(round(uniform(0.02, 1.59),2), season_count=season_count, fixed='X+') if choice([True, True, False]) else a_tier(round(uniform(0, 2.59),2), season_count=season_count)),
-                            (c_tier(round(uniform(-2.01, 6.99),2), season_count=season_count) if choice([True, True, True, False]) else s_tier(round(uniform(-0.05, 0.99),2),season_count=season_count, fixed='R#')),
-                            (c_tier(round(uniform(-2.01, 6.99),2), season_count=season_count) if choice([True, True, False]) else b_tier(round(uniform(0, 1.99), 2), season_count=season_count,fixed='U-'))]
+            self.players = [s_tier(season_count=season_count, fixed=(choice(['NotNone']), 'I*')),
+                            a_tier(round(uniform(-0.01, 2.99), 2), season_count=season_count, fixed=('NotNone', 'I*')),
+                            b_tier(round(uniform(-0.5, (7 if choice([True, False]) else 4)), 2),season_count=season_count, fixed=('NotNone', 'I*')),
+                            (b_tier(round(uniform(-1.02, 1.59),2), season_count=season_count, fixed=('X+', 'NotNone')) if choice([True, True, False]) else a_tier(round(uniform(0, 2.59),2), season_count=season_count)),
+                            (c_tier(round(uniform(-2, 6.99),2), season_count=season_count) if choice([True, True, False]) else s_tier(round(uniform(-0.05, 0.99),2),season_count=season_count, fixed=(choice(['Fl','Hn']), choice(['I*', 'V.'])))),
+                            (c_tier(round(uniform(-2, 6.99),2), season_count=season_count) if choice([True, False]) else s_tier(round(uniform(-0.5, 1.99), 2), season_count=season_count))]
 
         elif self.mine:
-            self.players = [s_tier(season_count=season_count,fixed='I*'),
-                            a_tier(round(uniform(-0.01,2.99),2), season_count=season_count, fixed=choice(['Pp','Fl','Pp','Fl','Tx'])),
-                            b_tier(round(uniform(-1,(2.515 if choice([True, False, False]) else 2)),2), season_count=season_count, fixed=choice(['C%','Sp','C%','Sp','Tx'])),
-                            (b_tier(round(uniform(-0.02, 3.59),2), season_count=season_count,fixed=choice(['X+','V.','X+','V.','Tx'])) if choice([True, False, False]) else a_tier(round(uniform(1, 2.59),2),season_count=season_count)),
-                            (c_tier(round(uniform(-1.01,6.99),2), season_count=season_count) if choice([True, True, False]) else s_tier(round(uniform(0.45,0.99),2), season_count=season_count, fixed=choice(['R#','Tx']))),
-                            (c_tier(round(uniform(-1.81,6.59),2), season_count=season_count) if choice([True, False, False]) else b_tier(round(uniform(-0.89,2.99),2), season_count=season_count, fixed=choice(['U-','Hn'])))]
+            self.players = [s_tier(season_count=season_count,fixed=(choice(['R#', 'Hn', 'Fl', 'Sp', 'X+']), "I*")),
+                            a_tier(round(uniform(-0.01,2.99),2), season_count=season_count, fixed=(choice(['None', 'Fl']), choice(['Pp','Tx','U-']))),
+                            b_tier(round(uniform(-1,(2.515 if choice([True, False, False]) else 2)),2), season_count=season_count, fixed=("NotNone", choice(['C%', 'I*', 'V.']))),
+                            (b_tier(round(uniform(-1.02, 3.59),2), season_count=season_count,fixed=(choice(['None', 'Hn', 'R#']), choice(['I*', 'C%', 'None']))) if choice([True, False, False]) else a_tier(round(uniform(1, 2.59),2),season_count=season_count)),
+                            (c_tier(round(uniform(-1.49,6.99),2), season_count=season_count) if choice([True, True, False]) else s_tier(round(uniform(0.45,0.99),2), season_count=season_count, fixed=(choice(['R#','Fl', 'None']), choice(['C%', 'Tx', 'None'])))),
+                            (c_tier(round(uniform(-1.39,6.59),2), season_count=season_count) if choice([True, False, False]) else a_tier(round(uniform(-0.89,2.99),2), season_count=season_count, fixed=(choice(['Sp','X+', 'None']), choice(['Pp', 'U-', 'None']))))]
 
         else: #regional league season 0 teams
             self.players = [s_tier(round(uniform(-1.05, 4.99),2), season_count=season_count),
                             a_tier(round(uniform(-1.1, (3.79 if choice([True, False]) else 5.49)), 2),season_count=season_count),
                             b_tier(round(uniform(-1.2, (4.79 if choice([True, False, False]) else 6.49)), 2),season_count=season_count),
-                            (b_tier(round(uniform(-1.5, 6)), season_count=season_count) if choice([True, True, False]) else a_tier(round(uniform(0, 2.89),2), season_count=season_count,fixed=choice(['C%', 'I*', 'Pp']))),
-                            (c_tier(round(uniform(-1.3, (4.79 if choice([True,False]) else 6.19)),2), season_count=season_count) if choice([True, True, False]) else slasher(round(uniform(0, 2.59),2), season_count=season_count)),
-                            (c_tier(round(uniform(0, 3.79),2), season_count=season_count) if choice([True, True, False]) else b_tier(round(uniform(0, 1.99), 2), season_count=season_count,fixed='U-'))]
+                            (b_tier(round(uniform(-1.5, 6)), season_count=season_count) if choice([True, True, False]) else a_tier(round(uniform(0, 2.89),2), season_count=season_count,fixed=("NotNone", choice(['C%', 'I*', 'Pp'])))),
+                            (c_tier(round(uniform(-1.3, (4.79 if choice([True,False]) else 6.19)),2), season_count=season_count) if choice([True, True, False]) else s_tier(round(uniform(-2, 2.59),2), season_count=season_count)),
+                            (c_tier(round(uniform(0, 3.79),2), season_count=season_count) if choice([True, True, False]) else b_tier(round(uniform(0, 1.99), 2), season_count=season_count,fixed=(choice(["NotNone", "None", "Sp"]), choice(['U-', 'U-', 'Tx']))))]
 
         self.team_coach = fixed_coach if fixed_coach else Coach(region)
         self.fired_coach_this_season = False
@@ -462,6 +461,8 @@ class Team:
         self.team_id = QUERY(team_sql, params=team_params, is_select=False)
         # QUERY is set to return the primary key assigned to a created value
 
+        self.team_seasons = [0, TeamSeason(self)] if region != "Labyrinth" else [0,0,TeamSeason(self)]
+
         for player in self.players:
             player.team = self.name
         self.wins = 0
@@ -481,10 +482,10 @@ class Team:
         self.seed = -1
         self.previous_seed = -1
         self.region_seed = "None"
-        self.history = {key: "" for key in range(50)}
+        self.history = {key: "" for key in range(150)}
         #self.seed_dict = {'RegionRegular' : -1, 'RegionPlayoffs' : -1, 'UniPlayIn' : -1, 'UniGroup' : -1, 'UniRegular' : -1}
         self.group = "None"
-        self.played_region = {key: "" for key in range(50)} # dictionary of the leagues a team played in. keys
+        self.played_region = {key: "" for key in range(150)} # dictionary of the leagues a team played in. keys
                                                             # are season_count, vals a string assigned in  league_season
 
         self.margin = 0
@@ -541,7 +542,7 @@ class Team:
     def print_team_name(self, season_count):
         if self.mine:
             with open('my_teams', 'a') as m:
-                m.write(f"S{season_count}_{self.name}\n")
+                m.write(f"S{season_count}_{self.name} (xWAR: {self.get_team_xWAR()})\n")
         with open('history', 'a') as h:
             h.write(f"S{season_count}_{self.name} (xWAR: {self.get_team_xWAR()})\n")
 
@@ -573,7 +574,9 @@ class Team:
         return round((total_stat / 30), 2)
 
     def get_team_xWAR(self):
-        return sum(player.xWAR for player in self.players)
+        player_total_xWAR = round(sum(player.xWAR for player in self.players), 2)
+        total_xWAR = player_total_xWAR + self.captain.get_captain_xWAR()
+        return total_xWAR
         #list for the amount of time which each slot plays for each coach lineup modifier,
         # and therefore what their xWAR should be multiplied by in the final calculation
         #slot_mult_dict = { 'NC' : [9,7,6,6,4,4] ,
@@ -600,16 +603,17 @@ class Team:
 
         if self.mine:
             with open('my_teams', 'a') as h:
-                if season_count != 1:
-                    for s in range(1, season_count + 1):
-                        h.write(f"Season {s}: {self.history[s]}\n")
-                else:
-                    h.write(f"Season 1: {self.history[1]}\n")
+                for s in range(1, season_count + 1):
+                    h.write(f"Season {s}: {self.history[s]}\n")
                 h.write('--------------\n\n')
         with open('history', 'a') as h:
             if season_count != 1:
-                for s in range(1, season_count + 1):
-                    h.write(f"Season {s}: {self.history[s]}\n")
+                if season_count > 4:
+                    for s in range(season_count - 4, season_count + 1):
+                        h.write(f"Season {s}: {self.history[s]}\n")
+                else:
+                    for s in range(1, season_count + 1):
+                        h.write(f"Season {s}: {self.history[s]}\n")
             else:
                 h.write(f"Season 1: {self.history[1]}\n")
             h.write('--------------\n\n')
@@ -935,6 +939,8 @@ def choose_perks(team):
                     team.captain = new_cap_5
                 elif new_capt_choice in ["F", "f"]:
                     team.captain = new_cap_6
+                else:
+                    print("Current captain retained.")
             elif slot_choice in ['B', 'b']:
                 available_breakout = [0,1,2,3,4,5]
                 for _ in range(2):
@@ -1012,7 +1018,38 @@ def choose_perks(team):
                 team.captain = new_cap_2
             elif new_capt_choice in ["C", "c"]:
                 team.captain = new_cap_2
+            else:
+                print("Current captain retained.")
 
 
 
 
+class TeamSeason: #this class is almost entirely for SQL purposes
+    # for last_stand, pre_qualifying, and uni_qualifying, there are four possibilities (exclude no. 3 for uni_qualifying obviously)
+    # 0 - failed to qualify
+    # 1 - qualified, failed to advance
+    # 2 - qualified, advanced
+    # 3 - advanced with a bye
+    # playoff_seed, both regional and universal, includes the standing of the teams which did not make the playoffs
+    def __init__(self, team):
+        connect = sqlite3.connect("ControlDataBase.db")
+
+        self.team_season_id = QUERY(
+            """
+            INSERT INTO TeamSeason(team_id, coach_id, team_name, season_count, region_started, xWAR, started_universal_league,
+             slot_0_season_id, slot_1_season_id, slot_2_season_id, slot_3_season_id, slot_4_season_id, slot_5_season_id,
+             regional_playoff_seed, regional_final_seed, last_stand, pre_qualifying, uni_qualifying, ended_universal_league, uni_playoff_seed, uni_final_seed)
+            VALUES(?, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0) 
+            """, connect=connect, params=(team.team_id,)
+
+        )
+        self.region_started = "None"
+        self.started_universal_league = 0 #0 for False, 1 for True
+        self.regional_playoff_seed = 0 #0 for N/A, int for everything else
+        self.regional_final_seed = 0 #same as above
+        self.last_stand = 0
+        self.pre_qualifying = 0
+        self.uni_qualifying = 0
+        self.ended_universal_league = 0 #0 for False, 1 for True
+        self.uni_playoff_seed = 0 #0 if N/A, int for everything else
+        self.uni_final_seed = 0 #0 if N/A, int for everything else

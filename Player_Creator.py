@@ -14,22 +14,27 @@ def new_trait_roll(tier, fixed=("NotNone", "NotNone")):
     primary_tag = "None"
     secondary_tag = "None"
     multiplier = {}
-    primary_tag_possibilities = ['$l', 'R#', 'Hn', 'Fl', 'Sp', 'X+']
+    primary_tag_possibilities = ['R#', 'Hn', 'Fl', 'Sp', 'X+','R#', 'Fl',
+                                 'Sp', 'X+','R#', 'Hn', 'Fl', 'Sp', 'X+'] #Healer is 1 in 7, everything else 3 in 14
+    if choice([True,False,False,False,False,False,False,False,False,False]):
+        primary_tag_possibilities.remove("Hn")
+    if choice([True,False,False,False,False,False,False,False,False,False]):
+        primary_tag_possibilities.remove("Fl")
     secondary_tag_possibilities = ['Pp', 'C%', 'I*', 'Tx', 'U-', 'V.']
     #this function will roll traits in accordance to the new primary/secondary split
     #a player will have a 40% chance to gain one of 6 primary traits and a 75% chance to gain one of 6 secondary traits
     #trait_mult = {'Prim' : mult, 'Secondary' : mult}. As usual, mult can be a list.
-    clutch_lower_bound = 1.05
-    inc_lower_bound = 0.11
-    pp_lower_bound = 0.2
-    explode_lower_bound = 45 #now does raw damage instead of being linked to attack damage
-    undead_lower_bound = 0.18
-    reflector_lower_bound = 0.10
-    splitter_lower_bound = 0.14
-    vampire_lower_bound = 0.375
-    heal_nova_possibilities = [x for x in range(48, 72) if x % 12 == 0]
-    heal_tick_possibilities = [13, 13, 12, 12, 11, 11, 10]
-    stun_tick_possibilities = [10, 10, 11, 11, 12, 12, 13]
+    clutch_lower_bound = 1.1
+    inc_lower_bound = 0.05
+    pp_lower_bound = 0.3
+    explode_lower_bound = 40 #now does raw damage instead of being linked to attack damage
+    undead_lower_bound = 0.25
+    reflector_lower_bound = 0.1
+    splitter_lower_bound = 0.3
+    vampire_lower_bound = 0.4
+    heal_nova_possibilities = [36, 42, 48, 54]
+    heal_tick_possibilities = [13, 13, 12, 12, 11, 11]
+    stun_tick_possibilities = [10, 10, 11] #will never hit two attacks
     if tier == 'S':
         heal_nova_possibilities.pop()
         heal_tick_possibilities.pop()
@@ -42,64 +47,64 @@ def new_trait_roll(tier, fixed=("NotNone", "NotNone")):
     # multipliers for Toxic, Healer, Flasher, have to be selected a different way
     def toxic_mult(upper_bound):
         return [round(uniform(0.25, upper_bound), 2),
-                [choice([8, 8, 9, 9, 10]), choice([6, 7, 7, 7, 8, 8])]]  # chance, damage, time
+                [choice([10, 11, 12, 13]), choice([6, 7, 7, 7, 8, 8])]]  # chance, damage, time
 
     def healer_mult():
         return [choice(heal_tick_possibilities), choice(heal_nova_possibilities), False]
 
     def flasher_mult(upper_bound):
-        return [round(uniform(0.15, upper_bound), 2), choice(stun_tick_possibilities)]
+        return [round(uniform(0.075, upper_bound), 2), choice(stun_tick_possibilities)]
 
     if tier == 'S':
-        clutch_upperbound = 1.2
-        inc_upperbound = 0.125
-        pp_upperbound = 0.4
+        clutch_upperbound = 1.3
+        inc_upperbound = 0.15
+        pp_upperbound = 0.5
         explode_upperbound = 60
-        undead_upperbound = 0.315
-        reflector_upperbound = 0.17
-        splitter_upper_bound = 0.155
-        vampire_upper_bound = 0.52
-        toxic_upper_bound = 0.29
-        flasher_upper_bound = 0.225
+        undead_upperbound = 0.35
+        reflector_upperbound = 0.15
+        splitter_upper_bound = 0.35
+        vampire_upper_bound = 0.55
+        toxic_upper_bound = 0.33
+        flasher_upper_bound = 0.115
     elif tier == 'A':
-        clutch_upperbound = 1.25
+        clutch_upperbound = 1.28
         inc_upperbound = 0.14
         pp_upperbound = 0.45
-        explode_upperbound = 61
-        undead_upperbound = 0.32
-        reflector_upperbound = 0.18
-        splitter_upper_bound = 0.16
-        vampire_upper_bound = 0.53
-        toxic_upper_bound = 0.295
-        flasher_upper_bound = 0.235
-    elif tier == 'B':
-        clutch_upperbound = 1.275
-        inc_upperbound = 0.165
-        pp_upperbound = 0.5
-        explode_upperbound = 62
-        undead_upperbound = 0.325
-        reflector_upperbound = 0.19
-        splitter_upper_bound = 0.17
+        explode_upperbound = 59
+        undead_upperbound = 0.34
+        reflector_upperbound = 0.14
+        splitter_upper_bound = 0.34
         vampire_upper_bound = 0.54
-        toxic_upper_bound = 0.3
-        flasher_upper_bound = 0.245
-    elif tier == 'C':
-        clutch_upperbound = 1.2875
-        inc_upperbound = 0.18
-        pp_upperbound = 0.6
-        explode_upperbound = 63
-        undead_upperbound = 0.35
-        reflector_upperbound = 0.2
-        splitter_upper_bound = 0.18
-        vampire_upper_bound = 0.55
+        toxic_upper_bound = 0.32
+        flasher_upper_bound = 0.11
+    elif tier == 'B':
+        clutch_upperbound = 1.26
+        inc_upperbound = 0.13
+        pp_upperbound = 0.425
+        explode_upperbound = 58
+        undead_upperbound = 0.33
+        reflector_upperbound = 0.13
+        splitter_upper_bound = 0.33
+        vampire_upper_bound = 0.53
         toxic_upper_bound = 0.31
-        flasher_upper_bound = 0.25
+        flasher_upper_bound = 0.105
+    elif tier == 'C':
+        clutch_upperbound = 1.25
+        inc_upperbound = 0.12
+        pp_upperbound = 0.4
+        explode_upperbound = 57
+        undead_upperbound = 0.32
+        reflector_upperbound = 0.12
+        splitter_upper_bound = 0.32
+        vampire_upper_bound = 0.52
+        toxic_upper_bound = 0.3
+        flasher_upper_bound = 0.10
     else:
         # Error handling block; this should never happen
         clutch_upperbound = 1.3
         inc_upperbound = 0.1
         pp_upperbound = 0.14
-        explode_upperbound = 1.55
+        explode_upperbound = 55
         undead_upperbound = 0.5
         reflector_upperbound = 0.5
         splitter_upper_bound = 0.15
@@ -109,21 +114,17 @@ def new_trait_roll(tier, fixed=("NotNone", "NotNone")):
 
 
     #PRIMARY ROLL
-    if fixed[0] not in ['$l', 'R#', 'Hn', 'Fl', 'Sp', 'X+']: #only roll for trait if player is not already assigned a primary trait
+    if fixed[0] not in ['R#', 'Hn', 'Fl', 'Sp', 'X+', 'None']: #only roll for trait if player is not already assigned a primary trait
         if uniform(0,1) <= 0.4:
             primary_tag = choice(primary_tag_possibilities)
     else:
-        primary_tag = fixed
+        primary_tag = fixed[0]
 
-    if fixed[1] not in ['Pp', 'C%', 'I*', 'Tx', 'U-', 'V.']:
-        if uniform(0,1) <= 0.75 and primary_tag != 'Fl': #Flashers are too good to have any other trait.
-            if primary_tag == '$l' or primary_tag == 'Sp':
-                secondary_tag_possibilities.remove("Tx")
+    if fixed[1] not in ['Pp', 'C%', 'I*', 'Tx', 'U-', 'V.', 'None']:
+        if uniform(0,1) <= 0.7 and primary_tag != "Hn": #Healers are too strong to have another trait.
             secondary_tag = choice(secondary_tag_possibilities)
     else:
-        secondary_tag = fixed
-
-    #todo NEXT: add trait multiplier rolls. Figuring out how to do it with Toxin and Healer might be difficult.
+        secondary_tag = fixed[1]
 
     #primary_tag_possibilities = ['$l', 'R#', 'Hn', 'Fl', 'Sp', 'X+']
     #secondary_tag_possibilities = ['Pp', 'C%', 'I*', 'Tx', 'U-', 'V.']
@@ -163,212 +164,6 @@ def new_trait_roll(tier, fixed=("NotNone", "NotNone")):
     # multiplier = dict with
     #   key = tag
     #   value = mult
-
-
-
-
-
-
-
-
-
-
-def additional_trait_roll(tier, fixed="None",amp=0,pre_reflect=0):
-    #amp is no longer being used because of mathematical issues
-    clutch_lower_bound = 1.05
-    inc_lower_bound = 0.11
-    pp_lower_bound = 0.2
-    explode_lower_bound = 0.65
-    undead_lower_bound = 0.18
-    reflector_lower_bound = 0.10
-    splitter_lower_bound = 0.14
-    vampire_lower_bound = 0.375
-    heal_nova_possibilities = [x for x in range(36, 84) if x % 12 == 0]
-    heal_tick_possibilities = [13,12,12,11,11,10,10]
-    stun_tick_possibilities = [10,10,11,11,12,12,13]
-    if tier == 'S':
-        heal_nova_possibilities.pop()
-        heal_tick_possibilities.pop()
-        stun_tick_possibilities.pop()
-    if tier == 'A' and choice([True,False]):
-        heal_nova_possibilities.pop()
-        heal_tick_possibilities.pop()
-        stun_tick_possibilities.pop()
-#multipliers for Toxic, Healer, Flasher, have to be selected a different way
-    def toxic_mult(upper_bound):
-        return [round(uniform(0.25, upper_bound), 2), [choice([8,8,9,9,10]), choice([6,7,7,7,8,8])]] #chance, damage, time
-    def healer_mult():
-        return [choice(heal_tick_possibilities), choice(heal_nova_possibilities), False]
-    def flasher_mult(upper_bound):
-        return [round(uniform(0.15, upper_bound), 2), choice(stun_tick_possibilities)]
-
-
-    if tier == 'S':
-        clutch_upperbound = 1.2
-        inc_upperbound = 0.125
-        pp_upperbound = 0.4
-        explode_upperbound = 0.98
-        undead_upperbound = 0.315
-        reflector_upperbound = 0.17
-        splitter_upper_bound = 0.155
-        vampire_upper_bound = 0.52
-        toxic_upper_bound = 0.29
-        flasher_upper_bound = 0.225
-    elif tier == 'A':
-        clutch_upperbound = 1.25
-        inc_upperbound = 0.14
-        pp_upperbound = 0.45
-        explode_upperbound = 0.9
-        undead_upperbound = 0.32
-        reflector_upperbound = 0.18
-        splitter_upper_bound = 0.16
-        vampire_upper_bound = 0.53
-        toxic_upper_bound = 0.295
-        flasher_upper_bound = 0.235
-    elif tier == 'B':
-        clutch_upperbound = 1.275
-        inc_upperbound = 0.165
-        pp_upperbound = 0.5
-        explode_upperbound = 0.95
-        undead_upperbound = 0.325
-        reflector_upperbound = 0.19
-        splitter_upper_bound = 0.17
-        vampire_upper_bound = 0.54
-        toxic_upper_bound = 0.3
-        flasher_upper_bound = 0.245
-    elif tier == 'C':
-        clutch_upperbound = 1.2875
-        inc_upperbound = 0.18
-        pp_upperbound = 0.6
-        explode_upperbound = 0.99
-        undead_upperbound = 0.35
-        reflector_upperbound = 0.2
-        splitter_upper_bound = 0.18
-        vampire_upper_bound = 0.55
-        toxic_upper_bound = 0.31
-        flasher_upper_bound = 0.25
-    elif tier == '$l':
-        return ["None",0]
-    else:
-        #Error handling block; this should never happen
-        clutch_upperbound = 1.3
-        inc_upperbound = 0.1
-        pp_upperbound = 0.14
-        explode_upperbound = 1.55
-        undead_upperbound = 0.5
-        reflector_upperbound = 0.5
-        splitter_upper_bound = 0.15
-        vampire_upper_bound = 0.5
-        toxic_upper_bound = 0.35
-        flasher_upper_bound = 0.21
-
-    if fixed != "None" and fixed != 'NotNone':
-        if fixed == 'C%':
-            return ['C%', round(uniform(clutch_lower_bound,clutch_upperbound),2)]
-        elif fixed == 'I*':
-            return ['I*', round(uniform(inc_lower_bound,inc_upperbound),2)]
-        elif fixed == 'Pp':
-            return ['Pp', round(uniform(pp_lower_bound,pp_upperbound),2)]
-        elif fixed == 'X+':
-            return ['X+', [round(uniform(explode_lower_bound, explode_upperbound), 2), 1]]
-        elif fixed == 'U-':
-            return ['U-', round(uniform(undead_lower_bound, undead_upperbound), 2)]
-        elif fixed == 'R#':
-            return ['R#', uniform(reflector_lower_bound, reflector_upperbound)]
-        elif fixed == 'Tx':
-            return ['Tx', toxic_mult(toxic_upper_bound)]
-        elif fixed == 'Hn':
-            return ['Hn', healer_mult()]
-        elif fixed == 'Fl':
-            return ['Fl', flasher_mult(flasher_upper_bound)]
-        elif fixed == 'V.':
-            return ['V.', round(uniform(vampire_lower_bound, vampire_upper_bound), 2)]
-        elif fixed == 'Sp':
-            return ['Sp', round(uniform(splitter_lower_bound, splitter_upper_bound), 2)]
-        else:
-            return ["None",0]
-    else:
-        reflect_chance = 0.0585
-        clutch_chance = 0.06
-        inconsistent_chance = 0.06
-        pp_chance = 0.06
-        explode_chance = 0.04
-        undead_chance = 0.05
-        splitter_chance = 0.0575
-        vampire_chance = 0.058
-        toxic_chance = 0.057
-        flasher_chance = 0.055
-        healer_chance = 0.049
-
-        reflect_odds = [0, reflect_chance]
-        clutch_odds = [reflect_odds[1], reflect_chance + clutch_chance]
-        inconsistent_odds = [clutch_odds[1], clutch_odds[1] + inconsistent_chance]
-        pp_odds = [inconsistent_odds[1], inconsistent_odds[1] + pp_chance]
-        explode_odds = [pp_odds[1], pp_odds[1] + explode_chance]
-        undead_odds = [explode_odds[1], explode_odds[1] + undead_chance]
-        splitter_odds = [undead_odds[1], undead_odds[1] + splitter_chance]
-        vampire_odds = [splitter_odds[1], splitter_odds[1] + vampire_chance]
-        toxic_odds = [vampire_odds[1], vampire_odds[1] + toxic_chance]
-        flasher_odds = [toxic_odds[1], toxic_odds[1] + flasher_chance]
-        healer_odds = [flasher_odds[1], flasher_odds[1] + healer_chance]
-
-        trait_roll = randint(0,1000) / 1000 if fixed != 'NotNone' else randint(0,490) / 1000
-        # Clutch 5% // Inconsistent 7.5% // Playoff Performer 7.5% // Reflector 4% // Exploder 4% // Undead 4%
-        #
-        # Total: 32% chance of trait
-        if pre_reflect == 1:
-            #positive values not equal to 1 should do nothing now that reflector is a normal trait and not separate from the others
-            return ['R#', uniform(reflector_lower_bound, reflector_upperbound)]
-
-        elif np.logical_and(clutch_odds[0] <= trait_roll, trait_roll <= clutch_odds[1]):
-            return ['C%', round(uniform(clutch_lower_bound,clutch_upperbound),2)]
-
-        elif np.logical_and(inconsistent_odds[0] < trait_roll, trait_roll <= inconsistent_odds[1]):
-            return ['I*', round(uniform(inc_lower_bound,inc_upperbound),2)]
-
-        elif np.logical_and(pp_odds[0] < trait_roll, trait_roll <= pp_odds[1]):
-            return ['Pp', round(uniform(pp_lower_bound,pp_upperbound),2)]
-
-        elif np.logical_and(reflect_odds[0] < trait_roll, trait_roll <= reflect_odds[1]):
-            return ['R#', uniform(reflector_lower_bound, reflector_upperbound)]
-
-        elif np.logical_and(explode_odds[0] < trait_roll, trait_roll <= explode_odds[1]):
-            return ['X+', [round(uniform(explode_lower_bound, explode_upperbound), 2), 1]]
-
-        elif np.logical_and(undead_odds[0] < trait_roll, trait_roll <= undead_odds[1]):
-            return ['U-', round(uniform(undead_lower_bound,undead_upperbound),2)]
-
-        elif np.logical_and(splitter_odds[0] < trait_roll, trait_roll <= splitter_odds[1]):
-            return ['Sp', round(uniform(splitter_lower_bound, splitter_upper_bound), 2)]
-
-        elif np.logical_and(vampire_odds[0] < trait_roll, trait_roll <= vampire_odds[1]):
-            return ['V.', round(uniform(vampire_lower_bound, vampire_upper_bound), 2)]
-
-        elif np.logical_and(toxic_odds[0] < trait_roll, trait_roll <= toxic_odds[1]):
-            return ['Tx', toxic_mult(toxic_upper_bound)]
-            # reflectors do not have a multiplier
-
-        elif np.logical_and(flasher_odds[0] < trait_roll, trait_roll <= flasher_odds[1]):
-            return ['Fl', flasher_mult(flasher_upper_bound)]
-
-        elif np.logical_and(healer_odds[0] < trait_roll, trait_roll <= healer_odds[1]):
-            return ['Hn', healer_mult()]
-
-        else:
-            return ["None",0]
-
-
-def slasher(amp=0, season_count=-1):
-    #Slasher tier removed, now replaced with fixed slasher trait to avoid removing every instance
-    tier = choice(['S','A','B','C'])
-    if tier == 'S':
-        return s_tier(fixed='$l')
-    elif tier == 'A':
-        return a_tier(fixed='$l')
-    elif tier == 'B':
-        return b_tier(fixed='$l')
-    else:
-        return c_tier(fixed='$l')
 
 def s_tier(amp=0, season_count=-1, pre_reflect=0, trait_amp=0, fixed='None'):
 
@@ -477,10 +272,6 @@ def a_tier(amp=0, season_count=-1, pre_reflect=0, trait_amp=0, fixed='None'):
 
 
 def b_tier(amp=0, season_count=-1, pre_reflect=0, trait_amp=0, fixed='None'):
-    slasher_roll = randint(0, (500 - int(amp)))
-    if slasher_roll % 380 == 0:
-        add = round(uniform(-150, 50 + int(amp)))
-        return slasher(amp=((slasher_roll + add) / 100), season_count=season_count)
 
     atk_dmg = randint(50, 61) + int(amp*1.5)
     atk_spd = randint(6, 9)
@@ -528,10 +319,6 @@ def b_tier(amp=0, season_count=-1, pre_reflect=0, trait_amp=0, fixed='None'):
                   trait_tag=tag, trait_multiplier=mult)
 
 def c_tier(amp=0, season_count=-1, pre_reflect=0, trait_amp=0, fixed='None'):
-    slasher_roll = randint(0, (600 - int(amp*2.5)))
-    if slasher_roll % 480 == 0:
-        add = round(uniform(-200, 10 + int(amp)))
-        return slasher(amp=((slasher_roll + add) / 100), season_count=season_count)
 
     atk_dmg = randint(49, 60)
     atk_spd = randint(7,9)

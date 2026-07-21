@@ -1,32 +1,24 @@
 import numpy as np
 import pandas as pd
-from Teams import Team, generate_lineups_six_to_four, Coach, choose_perks
+from Teams import Team, generate_lineups_six_to_four, Coach, choose_perks, TeamSeason, Captain
 from contests import round_robin, alter_lineup
-from colorama import Fore, Style
-from dump_pickle import dump_pkl
-from load_pickle import season_wipe, load_pkl
+from colorama import Fore
+from season_wipe import season_wipe
 import time
 from random import choice, shuffle, uniform, randint
-from leagues import league_season, user_draft, player_changes, grade_players, double_elim_12, caps
+from leagues import league_season, user_draft, player_changes, grade_players, double_elim_12, caps, captain_changes, coach_changes, the_cup
 from Games import best_of, enablePrint
-import concurrent.futures
-from stat_functions import season_stats, best_of_stats, region_mvp, QUERY, initiate_databases, finalize_series_data
+from stat_functions import QUERY, initiate_databases, finalize_series_data, clear_all_databases
 from statistics import mean, stdev
 from collections import OrderedDict, defaultdict
 import re
 from openpyxl import load_workbook, Workbook
 import sqlite3
+from switches import SEASONS, cup_frequency, activate_perks
+from Players import Player
 
 
 #main begins on line 387, and the first season begins on line 468
-#to change manual/auto team sorting, line 480 change manual=
-#line 1200 contains variable to toggle rosters being written jj
-#NO_SQL is in Players.py
-
-#to give more time to choose perks or coaching decisions, go to the top of Team and change timeout= in timed_input
-
-#GLOBAL VARIABLES
-avg_stats_df = pd.DataFrame(columns=['Kills', 'Deaths', 'Damage', 'Effect', 'Overkill', 'Mitigated'])
 
 
 def weighted_averages(team):  # takes in a team and calculates weighted average of each stat, returns a dataframe
@@ -74,22 +66,6 @@ def weighted_averages(team):  # takes in a team and calculates weighted average 
 
     return pd.DataFrame([final_dict])
 
-def team_season_dataframe(teams, season_no):
-    #writes the average team player innate stats and their season record to a file
-    #despite the name, this takes in a list of teams and writes them out after making a DF
-
-    team_stats_df = pd.DataFrame(columns=['Team', 'Power', 'Attack Damage', 'Attack Speed', 'Critical %', 'Critical X',
-                                              'Health', 'Spawn Time', 'Lineup Wins', 'Lineup Losses',
-                                              'Match Wins', 'Match Losses', 'Match Draws'])
-    for team in teams:
-        team_stats_df = pd.concat([team_stats_df, weighted_averages(team)])
-
-    path = "ControlAverageStats.xlsx"
-
-    with pd.ExcelWriter(path, engine='openpyxl') as writer:
-        team_stats_df.to_excel(writer, sheet_name='TeamWeightedAverages', index=False)
-
-
 def sort_players_by_xWAR(team):
     team.players.sort(key=lambda pl: pl.xWAR, reverse=True)
 
@@ -97,7 +73,6 @@ def sort_all_players(leagues, manual):
     #teams have a boolean called mine
     def move_player(old, new, swap_team):
         swap_team.players[old], swap_team.players[new] = swap_team.players[new], swap_team.players[old]
-
 
     for league in leagues:
         for team in league:
@@ -200,60 +175,6 @@ def format_champion_line(line):
             # If the input string doesn't match the expected format, return the original string
             return line.strip()
 
-def sort_champions_by_seed(file_path='champs'):
-    with open(file_path, 'r') as file:
-        lines = file.readlines()
-
-    # Create a list to store tuples (seed, champion_info)
-    champions = []
-    regional_seed_data = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0}
-    uni_seed_data = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0,
-                     9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0}
-
-
-    index = 0
-    for line in lines:
-
-        if line.startswith('Entered playoffs as'):
-            parts = line.split()
-            seed = int(parts[-2])
-            champion_info = lines[index-1].strip()
-            champion_info = format_champion_line(champion_info)
-            champions.append((seed, champion_info))
-
-        index += 1
-
-    # Sort the champions list in descending order based on seed
-    champions.sort(reverse=True, key=lambda x: x[0])
-
-    # Print the sorted champions
-    clean_file(file_path)
-    with open(file_path, 'a') as file:
-        file.write('\n')
-        x = y = 0
-        for champion in champions:
-            x += 1
-            file.write(f"{champion[1]} Entered playoffs as {champion[0]} seed.\n")
-            if "Regional" in champion[1]:
-                regional_seed_data[champion[0]] += 1
-            else:
-                uni_seed_data[champion[0]] += 1
-            if x == 10:
-                file.write('\n')
-                y = 1
-                x = 0
-            if y == 1 and x == 9:
-                file.write('\n')
-                x = 0
-        file.write('\n\n')
-        #for i in range(1,9):
-        #    file.write(f"{i} Seed: {regional_seed_data[i]} Regional Champs ({round(100*regional_seed_data[i]/len(regional_seed_data),2)}%)"
-        #               f" {uni_seed_data[i]} Universal Champs ({round(100*uni_seed_data[i]/len(uni_seed_data),2)}%)")
-        #below_8_seed_champs = sum(uni_seed_data[key] for key in range(9, 17))
-        #file.write(f"9-16 Seeds: {uni_seed_data[i]} Universal Champs ({round(100*below_8_seed_champs/len(uni_seed_data),2)}%)")
-
-
-
 def remove_duplicates_ordered(upl_standings):
     seen_teams = OrderedDict()
     unique_standings = []
@@ -265,79 +186,10 @@ def remove_duplicates_ordered(upl_standings):
 
     return unique_standings
 
-
 def extract_high_seed(text):
     int_values = [int(match.group()) for match in re.finditer(r'\b\d+\b', text)][:2]
     high_seed = min(int_values)
     return high_seed
-
-def get_upsets(upset_list, upset_count):
-    #upset[0]: a string of the upset ex: "12(Universal_Draconians) def. 6(Web-of-Nations_Oni) by a score of 547-504 (R2L Universal Playoffs)"
-    #upset[1]: integer, difference between seeds
-    #upset[2]: integer, highest seed in the match (the seed which was upset)
-
-
-    clear_file('upsets')
-    seed_diff_list = []
-    non_rel_upsets = []
-    uni_upsets = []
-    high_seed_dict = {}
-
-    for upset in upset_list:
-        high_seed_dict[upset] = extract_high_seed(upset[0])
-        seed_diff_list.append(upset[1])
-        if "Relegation" not in upset[0]:
-            non_rel_upsets.append(upset)
-            if "Universal Playoffs:" in upset[0]:
-                uni_upsets.append(upset)
-    seed_diff_avg = mean(seed_diff_list)
-
-    with open('upsets', 'a') as u:
-        u.write(f"So far, there have been {len(upset_list)} upsets, with an average seed differential of {seed_diff_avg:.3f}.\n\n")
-        upset_list.sort(key=lambda l: (l[1], -(high_seed_dict[l])), reverse=True)
-        non_rel_upsets.sort(key=lambda l: (l[1], -(high_seed_dict[l])), reverse=True)
-        uni_upsets.sort(key=lambda l: (l[1], -(high_seed_dict[l])), reverse=True)
-
-        if len(uni_upsets) >= 5:
-            u.write("\n5 Largest Universal League Upsets\n")
-            for i in range(5):
-                u.write(f"{uni_upsets[i][0]}\n")
-        else:
-            u.write(f"\n{len(uni_upsets)} Largest Universal League Upsets\n")
-            for i in range(len(uni_upsets)):
-                u.write(f"{uni_upsets[i][0]}\n")
-
-        if len(non_rel_upsets) >= 5:
-            u.write("\n5 Largest Upsets (not incl. Universal Relegation)\n")
-            for i in range(5):
-                u.write(f"{non_rel_upsets[i][0]}\n")
-        else:
-            u.write(f"\n{len(non_rel_upsets)} Largest Upsets (not incl. Universal Relegation)\n")
-            for i in range(len(non_rel_upsets)):
-                u.write(f"{non_rel_upsets[i][0]}\n")
-        if len(upset_list) >= 3:
-            u.write("\n3 Largest Overall Upsets\n")
-            for i in range(3):
-                u.write(f"{upset_list[i][0]}\n")
-        else:
-            u.write(f"\n{len(upset_list)} Largest Overall Upsets\n")
-            for i in range(len(upset_list)):
-                u.write(f"{upset_list[i][0]}\n")
-
-        u.write("\nAll Upsets:\n")
-        for t in upset_list:
-            u.write(f"{t[0]}\n")
-
-
-
-GENERAL_OUTPUT = False
-
-
-# try def __print__(): to get rid of colorama
-
-def recreate_excel_file(filename):
-    wb = Workbook()
-    wb.save(filename)
 
 
 def clear_file(filename, excel=False,sheets='all'):
@@ -361,14 +213,15 @@ def clear_file(filename, excel=False,sheets='all'):
         # Save the cleared workbook
         workbook.save(filename)
 
-def create_teams(count,region='None',season_count=0):
+def create_teams(count,region='None',season_count=0, draft=True, allow_duplicate_names=False):
     TEAMS = []
     for i in range(count):
-        temp = Team(region,season_count=season_count)
+        temp = Team(region,season_count=season_count,allow_duplicate_names=allow_duplicate_names)
         TEAMS.append(temp)
-    user_draft(TEAMS, season_count, is_regional=True, draft_name=f"{region} Preliminary Draft - Round 1")
-    user_draft(TEAMS, season_count, is_regional=True, draft_name=f"{region} Preliminary Draft - Round 2")
-    user_draft(TEAMS, season_count, is_regional=True, draft_name=f"{region} Preliminary Draft - Round 3")
+    if draft:
+        user_draft(TEAMS, season_count, is_regional=True, draft_name=f"{region} Preliminary Draft - Round 1")
+        user_draft(TEAMS, season_count, is_regional=True, draft_name=f"{region} Preliminary Draft - Round 2")
+        user_draft(TEAMS, season_count, is_regional=True, draft_name=f"{region} Preliminary Draft - Round 3")
     return TEAMS
 
 def ordinal_string(n: int) -> str:
@@ -379,91 +232,36 @@ def ordinal_string(n: int) -> str:
     return f"{n}{suffix}"
 
 def main():
-    from switches import jackson_playing
+    from switches import jackson_playing, use_saved
 
     import warnings
     warnings.simplefilter(action='ignore', category=FutureWarning)
 
     start = time.time()
     # file clearing:
-    clear_file(['my_teams', 'region_mvp.txt','region_mvp.txt','champs', 'error_output', 'upsets', 'draft_list', 'draft_history',
-                'player_trait_data', 'team_coach_data', 'execution_time', 'playerstats', 'off_season_report', 'my_team_playerstats',
-                'my_team_results', 'std_devs', 'cumulative_avg_std_devs', 'comebacks', 'cap_fallback', 'xWAR_tests'])
+    clear_file(['my_teams', 'error_output', 'upsets',
+                 'team_coach_data', 'execution_time', 'playerstats', 'off_season_report', 'my_team_playerstats',
+                'my_team_results', 'comebacks', 'xWAR_tests', 'captain_off_season_report'])
 
-    #try:
-    #    clear_file('PlayerSeasons.xlsx', excel=True)
-    #except KeyError:
-    #    recreate_excel_file('PlayerSeasons.xlsx')
-    #try:
-    #    clear_file("ControlAverageStats.xlsx", excel=True)
-    #except KeyError:
-    #    recreate_excel_file("ControlAverageStats.xlsx")
-    #try:
-    #    clear_file("ControlPlayerStats.xlsx", excel=True)
-    #except FileNotFoundError:
-    #    recreate_excel_file("ControlPlayerStats.xlsx")
-    #try:
-    #    clear_file("ChampStats.xlsx", excel=True,sheets='Sheet1')
-    #except KeyError:
-    #    clear_file("ChampStats.xlsx",sheets='Sheet1')
-
-    my_team_count = 5
-    franchise_mode = False #f r a n c h i s e
-
-    SEASONS = 75
-    end_season_times = [float(0) for _ in range(SEASONS+1)]
-
-    season_stats_list = {}
-    champ_list = []
 
 
     all_teams = []
     #this is the only list which should contain every single season list, from every single season, period
 
-    uni_stats_list = {}
-    dw_stats_list = {}
-    sc_stats_list = {}
-    ds_stats_list = {}
-    wof_stats_list = {}
-    iw_stats_list = {}
-    cl_stats_list = {}
-    hc_stats_list = {}
-    sh_stats_list = {}
 
-    upset_list = []
-    upset_count = 0
-
-    for i in range(SEASONS+1):
-        uni_stats_list[i] = list()
-        dw_stats_list[i] = list()
-        sc_stats_list[i] = list()
-        ds_stats_list[i] = list()
-        wof_stats_list[i] = list()
-        iw_stats_list[i] = list()
-        cl_stats_list[i] = list()
-        hc_stats_list[i] = list()
-        sh_stats_list[i] = list()
-    s0_stats_list = list()
-
-    use_saved = False
-    #this should work as of 11/02/2024
-
-
+    my_teams = []
+    jackson_teams = []
 
     if use_saved:
-        try:
-            upl_standings, dw_teams, sc_teams, ds_teams, wof_teams, iw_teams, cl_teams, hc_teams, sh_teams, season_count = load_pkl()
-            uni_teams = upl_standings
-        except ValueError:
-            use_saved = False
-            print(Fore.RED + "Failed to save values, starting new iteration.")
+        print(Fore.RED + "This feature does not work. Starting new iteration.")
+        use_saved = False
     if not use_saved:
         season_count = 0
         uni_teams = create_teams(26, "Universal", season_count=season_count)
 
         for team in uni_teams:
             team.history[season_count] = ""
-        upl_standings = league_season(uni_teams, use_saved=False, season_count=0,upset_list=upset_list,upset_count=upset_count, region="Universal",stats_list=s0_stats_list)
+        upl_standings = league_season(uni_teams, use_saved=False, season_count=0, region="Universal")
         dw_sc = choice([True, False])
         ds_wof = choice([True, False])
         iw_cl = choice([True, False])
@@ -545,7 +343,7 @@ def main():
                 hc_teams.append(jackson_team4)
             jackson_teams = [jackson_team1,jackson_team2,jackson_team3,jackson_team4]
 
-        my_teams = [my_team1,my_team2,my_team3,my_team4]
+        my_teams.extend([my_team1,my_team2,my_team3,my_team4])
 
 
         for i in range((len(my_teams))):
@@ -575,49 +373,51 @@ def main():
 
         print(Fore.RESET)
 
-    def regional_leagues(dw_teams,sc_teams,ds_teams,wof_teams,iw_teams,cl_teams,hc_teams,sh_teams,season_count,champ_list,franchise_mode=False):
+    end_season_times = [float(0) for _ in range(season_count + SEASONS + 1)]
+
+    def regional_leagues(dw_teams,sc_teams,ds_teams,wof_teams,iw_teams,cl_teams,hc_teams,sh_teams,season_count):
             pre_qualif_tournament = []
             last_stand_tournament = {'5 Seeds' : [], '6 Seeds' : [], '7 Seeds' : [], '8 Seeds' : []}
 
             print(Fore.GREEN + "DARKWING REGION, " + Fore.RESET, end='')
             dw_teams = league_season(dw_teams, False, season_count=season_count, final_reversed=False,
-                                     region='Darkwing Regional', stats_list=dw_stats_list,upset_list=upset_list,upset_count=upset_count, champ_list=champ_list,franchise_mode=franchise_mode)
+                                     region='Darkwing Regional')
             dw_qualified = dw_teams[:8]
 
 
             print(Fore.GREEN + "SHINING CORE REGION, " + Fore.RESET, end='')
             sc_teams = league_season(sc_teams, False, season_count=season_count, final_reversed=False,
-                                     region='Shining-Core Regional', stats_list=sc_stats_list,upset_list=upset_list,upset_count=upset_count, champ_list=champ_list,franchise_mode=franchise_mode)
+                                     region='Shining-Core Regional')
             sc_qualified = sc_teams[:8]
 
             print(Fore.GREEN + "DIAMOND SEA REGION, " + Fore.RESET, end='')
             ds_teams = league_season(ds_teams, False, season_count=season_count, final_reversed=False,
-                                     region='Diamond-Sea Regional', stats_list=ds_stats_list,upset_list=upset_list,upset_count=upset_count, champ_list=champ_list,franchise_mode=franchise_mode)
+                                     region='Diamond-Sea Regional')
             ds_qualified = ds_teams[:8]
 
             print(Fore.GREEN + "WEB OF NATIONS, " + Fore.RESET, end='')
             wof_teams = league_season(wof_teams, False, season_count=season_count, final_reversed=False,
-                                      region='Web-of-Nations Regional', stats_list=wof_stats_list,upset_list=upset_list,upset_count=upset_count, champ_list=champ_list,franchise_mode=franchise_mode)
+                                      region='Web-of-Nations Regional')
             wof_qualified = wof_teams[:8]
 
             print(Fore.GREEN + "ICE WALL REGION, " + Fore.RESET, end='')
             iw_teams = league_season(iw_teams, False, season_count=season_count, final_reversed=False,
-                                     region='Ice-Wall Regional', stats_list=iw_stats_list,upset_list=upset_list,upset_count=upset_count, champ_list=champ_list,franchise_mode=franchise_mode)
+                                     region='Ice-Wall Regional')
             iw_qualified = iw_teams[:8]
 
             print(Fore.GREEN + "CANDYLAND REGION, " + Fore.RESET, end='')
             cl_teams = league_season(cl_teams, False, season_count=season_count, final_reversed=False,
-                                     region='Candyland Regional', stats_list=cl_stats_list,upset_list=upset_list,upset_count=upset_count, champ_list=champ_list,franchise_mode=franchise_mode)
+                                     region='Candyland Regional')
             cl_qualified = cl_teams[:8]
 
             print(Fore.GREEN + "HELL'S CIRCLE, " + Fore.RESET, end='')
             hc_teams = league_season(hc_teams, False, season_count=season_count, final_reversed=False,
-                                     region="Hell's-Circle Regional", stats_list=hc_stats_list,upset_list=upset_list,upset_count=upset_count, champ_list=champ_list,franchise_mode=franchise_mode)
+                                     region="Hell's-Circle Regional")
             hc_qualified = hc_teams[:8]
 
             print(Fore.GREEN + "STEEL HEART REGION, " + Fore.RESET, end='')
             sh_teams = league_season(sh_teams, False, season_count=season_count, final_reversed=False,
-                                     region="Steel-Heart Regional", stats_list=sh_stats_list,upset_list=upset_list,upset_count=upset_count, champ_list=champ_list,franchise_mode=franchise_mode)
+                                     region="Steel-Heart Regional")
             sh_qualified = sh_teams[:8]
 
             dw_champ = dw_qualified[0]
@@ -687,11 +487,12 @@ def main():
             write_to_file(filename='my_team_results', words="\n",
                           mode='a', error=False)
 
-        for team in my_teams:
-            choose_perks(team)
-        if jackson_playing:
-            for team in jackson_teams:
+        if activate_perks:
+            for team in my_teams:
                 choose_perks(team)
+            if jackson_playing:
+                for team in jackson_teams:
+                    choose_perks(team)
 
         season_count += 1
 
@@ -721,34 +522,7 @@ def main():
 
                         all_players.append(player)
             grade_players(all_players, is_team=True)
-            stats = ["power", "dps", "crit_pct", "crit_x", "max_health", "spawn_time"]
-            std_devs = {"power": 0, "dps": 0, "crit_pct": 0, "crit_dmg": 0, "max_health": 0, "spawn_time": 0}
-            global_std_devs = {"power": 0, "dps": 0, "crit_pct": 0, "crit_dmg": 0, "max_health": 0, "spawn_time": 0}
-        for stat in stats:
-            values = [getattr(p, stat) for p in all_players]  # or p[stat] if using dicts
-            std_devs[stat] = stdev(values)
-        with open('std_devs', 'a') as file:
-            file.write(f"SEASON {season_count}\n\n")
-            for stat in stats:
-                file.write(f"S{season_count} {stat} standard deviation: {std_devs[stat]}\n")
 
-        stats_data = defaultdict(list)
-
-        if season_count <= 10:
-
-            pattern = re.compile(r'^S\d+ (\w+) standard deviation: ([\d.]+)')
-
-            with open('std_devs', 'r') as file:
-                for line in file:
-                    match = pattern.match(line)
-                    if match:
-                        stat, value = match.groups()
-                        stats_data[stat].append(float(value))
-            with open('cumulative_avg_std_devs', 'w') as file:
-                file.write("\nCumulative Average Standard Deviations (first 5 seasons only):\n")
-                for stat, values in stats_data.items():
-                    avg = sum(values) / len(values)
-                    file.write(f"{stat}: {avg}\n")
 
         relegated[season_count] = []
         promoted[season_count] = []
@@ -761,8 +535,6 @@ def main():
             season_wipe(league)
             for team in league:
                 team.fired_coach_this_season = False
-                if franchise_mode and team.mine:
-                    alter_lineup(team)
                 team.history[season_count] = ""
 
                 if team.mine or team.jackson:
@@ -776,7 +548,15 @@ def main():
         uni_qualif_g2 = []
         regional_champs = []
         last_stand = []
-        regional_champs, pqt, last_stand = regional_leagues(dw_teams,sc_teams,ds_teams,wof_teams,iw_teams,cl_teams,hc_teams,sh_teams,season_count=season_count,champ_list=champ_list,franchise_mode=franchise_mode)
+        regional_champs, pqt, last_stand = regional_leagues(dw_teams,sc_teams,ds_teams,wof_teams,iw_teams,cl_teams,hc_teams,sh_teams,season_count=season_count)
+
+        cup_teams = []
+        if season_count % cup_frequency == 0:
+            for league in [dw_teams, sc_teams, ds_teams, wof_teams, iw_teams, cl_teams, hc_teams, sh_teams, upl_standings]:
+                for team in league:
+                    cup_teams.append(team)
+            the_cup(cup_teams)
+
 
         last_stand_groups = {key: [] for key in range(8)}
         shuffle(last_stand['5 Seeds'])
@@ -849,17 +629,21 @@ def main():
             print(Fore.GREEN + f"LAST STAND, GROUP {ls_group_names[index]}: " + Fore.RESET, end='')
             index+=1
             temp_standings = round_robin(last_stand_groups[key], 24, 4, print_region_seed=True,cyan_seeds=[0,1],
-                                                       red_seeds=[2,3])
+                                                       red_seeds=[2,3], print_by_round=False)
 
             temp_standings[0].history[season_count] += f" 1st in Last Stand Group {key} -> Pre-Qualifying Group."
             pqt.append(temp_standings[0])
+            temp_standings[0].team_seasons[season_count].last_stand = 2
 
             temp_standings[1].history[season_count] += f" 2nd in Last Stand Group {key} -> Pre-Qualifying Group."
             pqt.append(temp_standings[1])
+            temp_standings[1].team_seasons[season_count].last_stand = 2
 
             temp_standings[2].history[season_count] += f" Eliminated from Last Stand. (3rd in Group {key})"
+            temp_standings[2].team_seasons[season_count].last_stand = 1
 
             temp_standings[3].history[season_count] += f" Eliminated from Last Stand. (4th in Group {key})"
+            temp_standings[3].team_seasons[season_count].last_stand = 1
 
             season_wipe(temp_standings)
         last_stand_end_time = time.time()
@@ -885,11 +669,13 @@ def main():
                 region, seed = parse_region_seed(pq_team)
                 if seed == 2:
                     team_by_seed[2].append(pq_team)
-
+                    pq_team.team_seasons[season_count].last_stand = 3
                 elif seed == 3:
                     team_by_seed[3].append(pq_team)
+                    pq_team.team_seasons[season_count].last_stand = 3
                 elif seed == 4:
                     team_by_seed[4].append(pq_team)
+                    pq_team.team_seasons[season_count].last_stand = 3
                 elif seed in [5,6,7,8]:
                     team_by_seed["Last-Stand"].append(pq_team)
 
@@ -973,19 +759,19 @@ def main():
 
         print(Fore.GREEN + "PRE-QUALIFYING, GROUP ONE: " + Fore.RESET, end='')
         group_one_standings = round_robin(group_one, r=15, qualify_range=len(group_one), print_region_seed=True,
-                                        cyan_seeds=[0,1,2,3,4,5], red_seeds=[6,7,8,9])
+                                        cyan_seeds=[0,1,2,3,4,5], red_seeds=[6,7,8,9], print_by_round=False)
         group_one_qualif = group_one_standings[:6]
         print(Fore.GREEN + "PRE-QUALIFYING, GROUP TWO: " + Fore.RESET, end='')
         group_two_standings = round_robin(group_two, r=15, qualify_range=len(group_two), print_region_seed=True,
-                                        cyan_seeds=[0,1,2,3,4,5], red_seeds=[6,7,8,9])
+                                        cyan_seeds=[0,1,2,3,4,5], red_seeds=[6,7,8,9], print_by_round=False)
         group_two_qualif = group_two_standings[:6]
         print(Fore.GREEN + "PRE-QUALIFYING, GROUP THREE: " + Fore.RESET, end='')
         group_three_standings = round_robin(group_three, r=15, qualify_range=len(group_three), print_region_seed=True,
-                                        cyan_seeds=[0,1,2,3,4,5], red_seeds=[6,7,8,9])
+                                        cyan_seeds=[0,1,2,3,4,5], red_seeds=[6,7,8,9], print_by_round=False)
         group_three_qualif = group_three_standings[:6]
         print(Fore.GREEN + "PRE-QUALIFYING, GROUP FOUR: " + Fore.RESET, end='')
         group_four_standings = round_robin(group_four, r=15, qualify_range=len(group_four), print_region_seed=True,
-                                        cyan_seeds=[0,1,2,3,4,5], red_seeds=[6,7,8,9])
+                                        cyan_seeds=[0,1,2,3,4,5], red_seeds=[6,7,8,9], print_by_round=False)
         group_four_qualif = group_four_standings[:6]
 
         i=0
@@ -993,45 +779,53 @@ def main():
             i += 1
             if competitor in group_one_qualif:
                 uni_qualif_g1.append(competitor)
+                competitor.team_seasons[season_count].pre_qualifying = 2
                 if i == 1:
                     competitor.history[season_count] += f"Won PQ Group One -> UNI Qualifying."
                 else:
                     competitor.history[season_count] += f"{ordinal_string(i)} in PQ Group One -> UNI Qualifying."
             else:
                 competitor.history[season_count] += f"Eliminated in PQ ({ordinal_string(i)} in Group One)"
+                competitor.team_seasons[season_count].pre_qualifying = 1
         i = 0
         for competitor in group_two:
             i += 1
             if competitor in group_two_qualif:
                 uni_qualif_g1.append(competitor)
+                competitor.team_seasons[season_count].pre_qualifying = 2
                 if i == 1:
                     competitor.history[season_count] += f"Won PQ Group Two -> UNI Qualifying."
                 else:
                     competitor.history[season_count] += f"{ordinal_string(i)} in PQ Group Two -> UNI Qualifying."
             else:
                 competitor.history[season_count] += f"Eliminated in PQ ({ordinal_string(i)} in Group Two)"
+                competitor.team_seasons[season_count].pre_qualifying = 1
         i = 0
         for competitor in group_three:
             i += 1
             if competitor in group_three_qualif:
                 uni_qualif_g2.append(competitor)
+                competitor.team_seasons[season_count].pre_qualifying = 2
                 if i == 1:
                     competitor.history[season_count] += f"Won PQ Group Three -> UNI Qualifying."
                 else:
                     competitor.history[season_count] += f"{ordinal_string(i)} in PQ Group Three -> UNI Qualifying."
             else:
                 competitor.history[season_count] += f"Eliminated in PQ ({ordinal_string(i)} in Group Three)"
+                competitor.team_seasons[season_count].pre_qualifying = 1
         i = 0
         for competitor in group_four:
             i+=1
             if competitor in group_four_qualif:
                 uni_qualif_g2.append(competitor)
+                competitor.team_seasons[season_count].pre_qualifying = 2
                 if i == 1:
                     competitor.history[season_count] += f"Won PQ Group Four -> UNI Qualifying."
                 else:
                     competitor.history[season_count] += f"{ordinal_string(i)} in PQ Group Four -> UNI Qualifying."
             else:
                 competitor.history[season_count] += f"Eliminated in PQ ({ordinal_string(i)} in Group Four)"
+                competitor.team_seasons[season_count].pre_qualifying = 1
 
 
 
@@ -1046,11 +840,13 @@ def main():
             uni_qualif_g1.append(upl_standings[i])
             uni_teams.remove(upl_standings[i])
             relegated[season_count].append(upl_standings[i])
+            upl_standings[i].team_seasons[season_count].region_started = "Universal Qualifying"
 
         for i in drop_range2:
             uni_qualif_g2.append(upl_standings[i])
             uni_teams.remove(upl_standings[i])
             relegated[season_count].append(upl_standings[i])
+            upl_standings[i].team_seasons[season_count].region_started = "Universal Qualifying"
 
         for team in uni_qualif_g1:
             team.accolades['Universal-Qualifying'] += 1
@@ -1068,9 +864,9 @@ def main():
             season_wipe(group)
 
         print(Fore.GREEN + "GROUP 1 QUALIFYING ROUND, " + Fore.RESET, end='')
-        g1_pre_advance = round_robin(uni_qualif_g1, 6, len(uni_qualif_g1), franchise_mode=True, cyan_seeds=[0,1,2,3,4,5], yellow_seeds=[6,7,8,9], red_seeds=[r for r in range(10,len(uni_qualif_g1))])
+        g1_pre_advance = round_robin(uni_qualif_g1, 6, len(uni_qualif_g1), cyan_seeds=[0,1,2,3,4,5], yellow_seeds=[6,7,8,9], red_seeds=[r for r in range(10,len(uni_qualif_g1))])
         print(Fore.GREEN + "GROUP 2 QUALIFYING ROUND, " + Fore.RESET, end='')
-        g2_pre_advance = round_robin(uni_qualif_g2, 6, len(uni_qualif_g2), franchise_mode=True, cyan_seeds=[0,1,2,3,4,5], yellow_seeds=[6,7,8,9], red_seeds=[r for r in range(10,len(uni_qualif_g2))])
+        g2_pre_advance = round_robin(uni_qualif_g2, 6, len(uni_qualif_g2), cyan_seeds=[0,1,2,3,4,5], yellow_seeds=[6,7,8,9], red_seeds=[r for r in range(10,len(uni_qualif_g2))])
         uni_teams.reverse()
         g1_advance = [None for _ in range(24)]
         g2_advance = [None for _ in range(24)]
@@ -1080,10 +876,12 @@ def main():
         for i in range(6): #seeds 1 through 6 who clinch universal league
             g1_advance[i] = g1_pre_advance[i]
             uni_teams.append(g1_advance[i])
+            g1_advance[i].team_seasons[season_count].uni_qualifying = 2
             g1_pre_advance[i].history[season_count] += f" {ordinal_string(i+1)} in Group 1 Qualifying. -> UNI League."
 
             g2_advance[i] = g2_pre_advance[i]
             uni_teams.append(g2_advance[i])
+            g2_advance[i].team_seasons[season_count].uni_qualifying = 2
             g2_pre_advance[i].history[season_count] += f" {ordinal_string(i+1)} in Group 2 Qualifying. -> UNI League."
         for i in [6,7,8,9]: #7, 8, 9, 10, seeds going to play-in
             g1_advance[i] = g1_pre_advance[i]
@@ -1098,7 +896,10 @@ def main():
             void_draft.append(g2_pre_advance[i])
 
             g1_pre_advance[i].history[season_count] += f" {ordinal_string(i+1)} in Group 1 Qualifying. Failed to qualify."
+            g1_pre_advance[i].team_seasons[season_count].uni_qualifying = 1
+
             g2_pre_advance[i].history[season_count] += f" {ordinal_string(i+1)} in Group 2 Qualifying. Failed to qualify."
+            g2_pre_advance[i].team_seasons[season_count].uni_qualifying = 1
 
             g1_pre_advance[i].second_pick = 3 #1 in 3 chance for second round pick
             g2_pre_advance[i].second_pick = 3
@@ -1128,7 +929,7 @@ def main():
         print(Fore.BLUE + "(Game 1) Group 1 no. 7 vs Group 2 no. 10, winner advances, loser eliminated")
         upi_g1W, upi_g1L = best_of(g1_advance[6], g2_advance[9],
                                    thresh=180, win_by=25,
-                                   both_return=True, upset_list=upset_list, upset_count=upset_count,
+                                   both_return=True,
                                    context=f"S{season_count} Universal Play-In Game 1",advantage=6)
         advanced_play_in.append(upi_g1W)
         elim_play_in.append(upi_g1L)
@@ -1137,7 +938,7 @@ def main():
         print(Fore.BLUE + "(Game 2) Group 2 no. 7 vs Group 1 no. 10, winner advances, loser eliminated")
         upi_g2W, upi_g2L = best_of(g2_advance[6], g1_advance[9],
                                    thresh=180, win_by=25,
-                                   both_return=True, upset_list=upset_list, upset_count=upset_count,
+                                   both_return=True,
                                    context=f"S{season_count} Universal Play-In Game 1",advantage=6)
         advanced_play_in.append(upi_g2W)
         elim_play_in.append(upi_g2L)
@@ -1146,7 +947,7 @@ def main():
         print(Fore.BLUE + "(Game 3) Group 1 no. 8 vs Group 2 no. 9, winner advances, loser eliminated")
         upi_g3W, upi_g3L = best_of(g1_advance[7], g2_advance[8],
                                    thresh=180, win_by=25,
-                                   both_return=True, upset_list=upset_list, upset_count=upset_count,
+                                   both_return=True,
                                    context=f"S{season_count} Universal Play-In Game 1",advantage=3)
         advanced_play_in.append(upi_g3W)
         elim_play_in.append(upi_g3L)
@@ -1155,7 +956,7 @@ def main():
         print(Fore.BLUE + "(Game 4) Group 2 no. 8 vs Group 1 no. 9, winner advances, loser eliminated")
         upi_g4W, upi_g4L = best_of(g2_advance[7], g1_advance[8],
                                    thresh=180, win_by=25,
-                                   both_return=True, upset_list=upset_list, upset_count=upset_count,
+                                   both_return=True,
                                    context=f"S{season_count} Universal Play-In Game 1",advantage=3)
         advanced_play_in.append(upi_g4W)
         elim_play_in.append(upi_g4L)
@@ -1177,19 +978,21 @@ def main():
 
         for team in advanced_play_in:
             uni_teams.append(team)
+            team.team_seasons[season_count].uni_qualifying = 2
             if team in relegated[season_count]:
                 relegated[season_count].remove(team)
             else:
                 promoted[season_count].append(team)
             team.history[season_count] += "Advanced from Universal Play-In -> UNI League. "
         for team in elim_play_in:
+            team.team_seasons[season_count].uni_qualifying = 1
             team.history[season_count] += "Failed to advance from Universal Play-In. "
             void_draft.append(team)
             team.second_pick = 2 #2 in 3 chance for second round pick
 
         season_wipe(uni_teams)
         uni_teams = list(set(uni_teams))
-        upl_standings = league_season(uni_teams, use_saved=False, season_count=season_count, stats_list=uni_stats_list,upset_list=upset_list,upset_count=upset_count, region="Universal",franchise_mode=franchise_mode)
+        upl_standings = league_season(uni_teams, use_saved=False, season_count=season_count, region="Universal")
 
         for team in promoted[season_count]:
             print(f"{team.name} PROMOTED.")
@@ -1200,7 +1003,6 @@ def main():
 
         clear_file('history')
         clear_file('my_teams')
-        clear_file('best_stats')
 
         reverse_upl_standings = list(reversed(upl_standings))
 
@@ -1209,9 +1011,6 @@ def main():
         #to make MVP specific to regional regular season stats, DO NOT run the season_stats function on each region
         #instead, the stats will be generated in the league_season function following the regular season,
         #and the MVP can be determined by running those stats through the region_mvp function
-
-
-        get_upsets(upset_list, upset_count)
 
         second_draft_g1 = []
         second_draft_g2 = []
@@ -1274,13 +1073,6 @@ def main():
         shuffle(second_draft_g2)
         shuffle(second_draft_g3)
         second_draft_full = second_draft_g1 + second_draft_g2 + second_draft_g3
-
-        #season_stats_list[season_count] = season_stats(all_teams, season_count, season_stats_list)
-        #print(Fore.CYAN + f"season_stats_list[season_count] contains {len(season_stats_list[season_count])} season objects.")
-        #best_of_stats(season_stats_list[season_count], season_count)
-        sort_champions_by_seed()
-
-        #REMINDER: season_stats_list is a DICTIONARY with integer keys for the season number, and the values are a LIST OF PLAYER SEASONS
 
 
         if True:
@@ -1447,7 +1239,18 @@ def main():
             for league in [uni_teams, dw_teams, sc_teams, ds_teams, wof_teams, iw_teams, cl_teams, hc_teams, sh_teams]:
                 other_all_teams.extend(league)
 
+            if season_count == 1:
+                played_this_season = [
+                    team for team in other_all_teams
+                    if "Labyrinth" not in team.name
+                ]
+            else:
+                played_this_season = other_all_teams
+
+            season_wipe(played_this_season, end_of_full_season=True, season_count=season_count) #this enters player season data into SQL and sets it all to 0
             player_changes(other_all_teams, season_count=season_count)
+            captain_changes(other_all_teams, season_count=season_count)
+            coach_changes(other_all_teams, season_count=season_count)
 
             for team in reverse_upl_standings[20:]:
                 void_draft.append(team)
@@ -1465,14 +1268,14 @@ def main():
             sh_draft = [team for team in sh_teams if team not in void_draft]
 
 
-            user_draft(dw_draft, season_count, is_regional=True, draft_name="Darkwing Regional draft", league_season_stats=dw_stats_list)
-            user_draft(sc_draft, season_count, is_regional=True, draft_name="Shining-Core Regional draft", league_season_stats=sc_stats_list)
-            user_draft(ds_draft, season_count, is_regional=True, draft_name="Diamond-Sea Regional draft", league_season_stats=ds_stats_list)
-            user_draft(wof_draft, season_count, is_regional=True, draft_name="Web-of-Nations Regional draft", league_season_stats=wof_stats_list)
-            user_draft(iw_draft, season_count,  is_regional=True, draft_name="Ice-Wall Regional draft", league_season_stats=iw_stats_list)
-            user_draft(cl_draft, season_count, is_regional=True, draft_name="Candyland Regional draft", league_season_stats=cl_stats_list)
-            user_draft(hc_draft, season_count,  is_regional=True, draft_name="Hell's-Circle Regional draft", league_season_stats=hc_stats_list)
-            user_draft(sh_draft, season_count, is_regional=True, draft_name="Steel-Heart Regional draft", league_season_stats=sh_stats_list)
+            user_draft(dw_draft, season_count, is_regional=True, draft_name="Darkwing Regional draft")
+            user_draft(sc_draft, season_count, is_regional=True, draft_name="Shining-Core Regional draft")
+            user_draft(ds_draft, season_count, is_regional=True, draft_name="Diamond-Sea Regional draft")
+            user_draft(wof_draft, season_count, is_regional=True, draft_name="Web-of-Nations Regional draft")
+            user_draft(iw_draft, season_count,  is_regional=True, draft_name="Ice-Wall Regional draft")
+            user_draft(cl_draft, season_count, is_regional=True, draft_name="Candyland Regional draft")
+            user_draft(hc_draft, season_count,  is_regional=True, draft_name="Hell's-Circle Regional draft")
+            user_draft(sh_draft, season_count, is_regional=True, draft_name="Steel-Heart Regional draft")
 
             user_draft(second_draft_full, season_count, second=True, draft_name="Secondary draft") #1 in 3 for eliminated in Universal Qualifying Group Stage
                                                                                                    #2 in 3 for eliminated Universal play-in
@@ -1490,35 +1293,13 @@ def main():
             upl_draft = remove_duplicates_ordered(upl_draft)
 
 
-            user_draft(upl_draft, season_count, draft_name='Universal-Draft', league_season_stats=season_stats_list,write_draft=True)
+            user_draft(upl_draft, season_count, draft_name='Universal-Draft',write_draft=True)
             user_draft(void_draft, season_count, void=True, draft_name='Void-Draft')
 
-            slasher_count = undead_count = reflector_count = clutch_count = inc_count = pp_count = total_player_count = exploder_count = splitter_count = vampire_count = toxic_count = healer_count = flasher_count =  normal_player_count = 0
-            coach_lineup_mod_count = {'NC' : 0, '1C' : 0, '2C' : 0, '3C' : 0, '4C' : 0, '5C' : 0, 'Error' : 0}
-            coach_slots_amped_count = {
-                (0,) : 0, (1,) : 0, (2,) : 0, (3,) : 0, (4,) : 0, (5,) : 0,
-                (0, 5) : 0, (1, 4) : 0, (2, 3) : 0, (3, 5) : 0, (3, 4) : 0, (0, 4) : 0, (1, 3) : 0, (2, 5) : 0,
-                (0, 4, 5) : 0, (1, 4, 5) : 0, (1, 3, 5) : 0, (2, 3, 4) : 0, (2, 3, 5) : 0, (3, 4, 5) : 0, (2,4,5) : 0
-            }
-            coach_attribute_amped_count = {"Power" : [0,0], "Attack Damage" : [0,0], "Critical Chance" : [0,0]} #list values: [count of coaches whom affect this trait, total multiplier value]
-            coach_trait_amped_count = {'Pp' : [0,0], 'R#' : [0,0], 'C%' : [0,0], 'I*' : [0,0], 'U-' : [0,0], 'X+' : [0,0], 'Hn' : [0,0], 'Tx' : [0,0], '$l' : [0,0]}
-            total_team_count = 0
-            slasher_list = []
-            undead_list = []
-            reflector_list = []
-            clutch_list = []
-            inc_list = []
-            pp_list = []
-            exploder_list = []
-            splitter_list = []
-            vampire_list = []
-            toxic_list = []
-            healer_list = []
-            flasher_list = []
             all_teams_lists = [uni_teams, dw_teams, sc_teams, ds_teams, wof_teams, iw_teams, cl_teams, hc_teams, sh_teams]
 
             def percent_within_thresholds(numbers, lim, std_dev):
-                thresholds = [100, 250, 500, 1000, std_dev, round(lim/2)]
+                thresholds = [2, 5, 8, 10, 12, 15, std_dev, round(lim/2)]
                 total = len(numbers)
 
                 results = {
@@ -1531,6 +1312,10 @@ def main():
             xwar_array = np.array([team.get_team_xWAR() for team_list in all_teams_lists for team in team_list])
             xwar_std = xwar_array.std()
             xwar_mean = xwar_array.mean()
+
+            cap_xwar_array = np.array([team.captain.get_captain_xWAR() for team_list in all_teams_lists for team in team_list])
+            cap_xwar_mean = cap_xwar_array.mean()
+
             cap = caps[season_count]
             above_cap = xwar_array[xwar_array > cap]
             below_cap = xwar_array[xwar_array <= cap]
@@ -1540,164 +1325,80 @@ def main():
                 history.write(f"Average Team xWAR: {xwar_array.mean()}, xWAR Cap: {cap}\n")
             cap_mode = 'a' if season_count > 1 else 'w'
             with open('salary-cap-calculator', cap_mode) as cap_file:
-                cap_file.write(f"S{season_count} Average Team xWAR: {xwar_mean} (Per Player: {xwar_mean/6})\nxWAR Cap: {cap}\nStd Dev: {xwar_std}\nAverage Diff Below Cap: {avg_diff_below_cap}\nAverage Diff Above Cap: {avg_diff_above_cap}\n")
+                cap_file.write(f"S{season_count} Average Team xWAR: {xwar_mean}\nPer Captain: {cap_xwar_mean}\nPer Player: {(xwar_mean - cap_xwar_mean)/6})\nxWAR Cap: {cap}\nStd Dev: {xwar_std}\nAverage Diff Below Cap: {avg_diff_below_cap}\nAverage Diff Above Cap: {avg_diff_above_cap}\n")
                 pct_thresh = percent_within_thresholds(xwar_array, cap, xwar_std)
                 cap_file.write(f"% of teams OVER the cap: {round((100 * sum(x > cap for x in list(xwar_array)) / len(xwar_array)), 2)}\n")
                 cap_file.write(f"% of teams UNDER the cap: {round((100 * sum(cap > x for x in list(xwar_array)) / len(xwar_array)), 2)}\n")
                 for thresh in pct_thresh.keys():
-                    if thresh%50==0:
+                    if thresh in [2, 5, 8, 10, 12, 15]:
                         cap_file.write(f"% of teams within {thresh} xWAR of cap: {pct_thresh[thresh]}\n")
                     elif thresh == round(cap/2):
                         cap_file.write(f"% of teams over 1/2 cap value: {pct_thresh[thresh]}\n\n")
                     else:
                         cap_file.write(f"% of teams within one standard deviation of cap: {pct_thresh[thresh]}\n")
 
+            #BIG LOOP FOR CHANGES APPLICABLE TO EVERY TEAM
             for league in [uni_teams, dw_teams, sc_teams, ds_teams, wof_teams, iw_teams, cl_teams, hc_teams,
                            sh_teams]:
+
+
                 for team in league:
-                    total_team_count += 1
-                    coach_slots_amped_count[tuple(team.team_coach.slot_effect[0])] += 1
-                    coach_attribute_amped_count[team.team_coach.slot_effect[1]][0] += 1
-                    coach_attribute_amped_count[team.team_coach.slot_effect[1]][1] += team.team_coach.slot_effect[2]
-                    coach_trait_amped_count[team.team_coach.trait_effect[0]][0] += 1
-                    coach_trait_amped_count[team.team_coach.trait_effect[0]][1] += team.team_coach.trait_effect[1]
 
-                    if team.team_coach.lineup_modifier in ['NC', '1C', '2C', '3C', '4C', '5C']:
-                        coach_lineup_mod_count[team.team_coach.lineup_modifier] += 1
-                    else:
-                        coach_lineup_mod_count['Error'] += 1
-                    for idk in team.players:
-                        total_player_count += 1
-                        if idk.trait_tag == '$l':
-                            slasher_count += 1
-                            slasher_list.append(idk)
-                        elif idk.trait_tag == 'U-':
-                            undead_count += 1
-                            undead_list.append(idk)
-                        elif idk.trait_tag == 'R#':
-                            reflector_count += 1
-                            reflector_list.append(idk)
-                        elif idk.trait_tag == 'C%':
-                            clutch_count += 1
-                            clutch_list.append(idk)
-                        elif idk.trait_tag == 'I*':
-                            inc_count += 1
-                            inc_list.append(idk)
-                        elif idk.trait_tag == 'Pp':
-                            pp_count += 1
-                            pp_list.append(idk)
-                        elif idk.trait_tag == 'X+':
-                            exploder_count += 1
-                            exploder_list.append(idk)
-                        elif idk.trait_tag == 'Sp':
-                            splitter_count += 1
-                            splitter_list.append(idk)
-                        elif idk.trait_tag == 'V.':
-                            vampire_count += 1
-                            vampire_list.append(idk)
-                        elif idk.trait_tag == 'Tx':
-                            toxic_count += 1
-                            toxic_list.append(idk)
-                        elif idk.trait_tag == 'Hn':
-                            healer_count += 1
-                            healer_list.append(idk)
-                        elif idk.trait_tag == 'Fl':
-                            flasher_count += 1
-                            flasher_list.append(idk)
-                        normal_player_count += 1 if idk.trait_tag == 'None' else 0
-
+                    #PART 1 - PRINTING HISTORY
                     team.print_team_name(season_count)
                     team.print_accolades()
                     team.print_history(season_count)
                     if team.mine:
                         print("\n" + Fore.RED + f"{team.name}\n" + Fore.BLUE + team.history[season_count] + Fore.RESET)
+                    #PART 2 - SQL
+                    if not ("Labyrinth" in team.name and season_count == 1):
+                        team_season_params = (
+                            team.team_id,
+                            team.team_coach.coach_id,
+                            team.name,
+                            season_count,
+                            team.team_seasons[season_count].region_started,
+                            team.get_team_xWAR(),
+                            team.team_seasons[season_count].started_universal_league,
+                            team.team_seasons[season_count].regional_playoff_seed,
+                            team.team_seasons[season_count].regional_final_seed,
+                            team.team_seasons[season_count].last_stand,
+                            team.team_seasons[season_count].pre_qualifying,
+                            team.team_seasons[season_count].uni_qualifying,
+                            team.team_seasons[season_count].ended_universal_league,
+                            team.team_seasons[season_count].uni_playoff_seed,
+                            team.team_seasons[season_count].uni_final_seed,
+                            team.team_seasons[season_count].team_season_id
+                        )
 
-                #for amped_slots in [(0,), (1,), (2,), (3,), (4,), (5,),
-                #(0, 5), (1, 4), (2, 3), (3, 5), (3, 4), (0, 4), (1, 3), (2, 5),
-                #(0, 4, 5), (1, 4, 5), (1, 3, 5), (2, 3, 4), (2, 3, 5), (3, 4, 5), (2,4,5)]:
-                #    file.write(f"{list(amped_slots)}: {coach_slots_amped_count[amped_slots]} "
-                #               f"({round((100 * coach_slots_amped_count[amped_slots] / total_team_count), 2)}%)\n")
-                #file.write(f"--Attributes Affected--\n"
-                #           f"""Power: {coach_attribute_amped_count["Power"][0]} """
-                #           f"""({round((100 * coach_attribute_amped_count["Power"][0] / total_team_count), 2)}%)\n"""
-                 #          f"""\tAverage Amp: {round((coach_attribute_amped_count["Power"][1] / coach_attribute_amped_count["Power"][0]), 2)}\n"""
-                  #         f"""Attack Damage: {coach_attribute_amped_count["Attack Damage"][0]} """
-                   #        f"""({round((100 * coach_attribute_amped_count["Attack Damage"][0] / total_team_count), 2)}%)\n"""
-                    #       f"""\tAverage Amp: {round((coach_attribute_amped_count["Attack Damage"][1] / coach_attribute_amped_count["Attack Damage"][0]), 2)}\n"""
-                     #      f"""Critical Chance: {coach_attribute_amped_count["Critical Chance"][0]} """
-                      #     f"""({round((100 * coach_attribute_amped_count["Critical Chance"][0] / total_team_count), 2)}%)\n"""
-                       #    f"""\tAverage Amp: {round((coach_attribute_amped_count["Critical Chance"][1] / coach_attribute_amped_count["Critical Chance"][0]), 2)}\n""")
-                #file.write("--Traits Affected--\n")
-                #for trait in ['Pp', 'R#', 'C%', 'I*', 'U-', 'X+']:
-                #    file.write(f"""{trait}: {coach_trait_amped_count[trait][0]} """
-                #               f"""({round((100 * coach_trait_amped_count[trait][0] / total_team_count), 2)}%)\n"""
-                #               f"""\tAverage Amp: ({round((coach_trait_amped_count[trait][1] / total_team_count), 2)})\n""")
+                        team_season_sql = """
+                        UPDATE TeamSeason
+                        SET
+                            team_id = ?,
+                            coach_id = ?,
+                            team_name = ?,
+                            season_count = ?,
+                            region_started = ?,
+                            xWAR = ?,
+                            started_universal_league = ?,
+                            regional_playoff_seed = ?,
+                            regional_final_seed = ?,
+                            last_stand = ?,
+                            pre_qualifying = ?,
+                            uni_qualifying = ?,
+                            ended_universal_league = ?,
+                            uni_playoff_seed = ?,
+                            uni_final_seed = ?
+                        WHERE team_season_id = ?
+                        """
+
+                        QUERY(team_season_sql, params=team_season_params, is_select=False)
 
 
+                        team.team_seasons.append(TeamSeason(team))
 
-
-
-            with open('player_trait_data','a') as file:
-                file.write(f"Season No. {season_count}, Total Players: {total_player_count}\n")
-
-                if len(slasher_list) > 0:
-                    file.write(f"Slashers: {slasher_count} ({round((100*slasher_count/total_player_count),2)}%)\n")
-                    file.write(f"\tAverage Instant Kill %: {round(mean([100*player.insta_kill_pct for player in slasher_list]),3)}\n")
-
-                if len(undead_list) > 0:
-                    file.write(f"Undead: {undead_count} ({round((100*undead_count/total_player_count),2)}%)\n")
-                    file.write(f"\tAverage Revive Chance: {round(mean([100*player.trait_multiplier for player in undead_list]),3)}%\n")
-                    file.write(f"\tAverage Health on Revive: {round(mean([200 * player.trait_multiplier for player in undead_list]), 3)}%\n")
-
-                if len(reflector_list) > 0:
-                    file.write(f"Reflectors: {reflector_count} ({round((100*reflector_count/total_player_count),2)}%)\n")
-                    file.write(f"\tAverage Reflect Chance: {round(mean([100*player.trait_multiplier for player in reflector_list]), 3)}%\n")
-
-                if len(clutch_list) > 0:
-                    file.write(f"Clutch Players: {clutch_count} ({round((100*clutch_count/total_player_count),2)}%)\n")
-                    file.write(f"\tAverage Clutch Multiplier: {round(mean([player.trait_multiplier for player in clutch_list]), 3)}x Attack Damage and Power in Clutch-Time\n")
-
-                if len(inc_list) > 0:
-                    file.write(f"Inconsistent Players: {inc_count} ({round((100*inc_count/total_player_count),2)}%)\n")
-                    file.write(f"\tAverage Inconsistent Multiplier: {round(mean([200*player.trait_multiplier for player in inc_list]), 2)}% chance for abnormal stats\n")
-
-                if len(pp_list) > 0:
-                    file.write(f"Playoff Performers: {pp_count} ({round((100*pp_count/total_player_count),2)}%)\n")
-                    file.write(f"\tAverage Playoff Performer Multiplier: {round(mean([100*player.trait_multiplier for player in pp_list]), 2)}% chance to add extra +4 Power in Playoff games.\n")
-
-                if len(exploder_list) > 0:
-                    file.write(f"Exploders: {exploder_count} ({round((100*exploder_count / total_player_count), 2)}%)\n")
-                    file.write(f"\tAverage Explosion Damage: {round(mean([player.trait_multiplier[0]*player.atk_dmg for player in exploder_list]), 2)} to ALL enemies upon death.\n")
-
-                if len(splitter_list) > 0:
-                    file.write(f"Splitters: {splitter_count} ({round((100 * splitter_count / total_player_count), 2)}%)\n")
-                    file.write(
-                        f"\tAverage Splitter Multiplier: {round(mean([100 * player.trait_multiplier for player in splitter_list]), 2)}% chance to attack a second time.\n")
-
-                if len(vampire_list) > 0:
-                    file.write(f"Vampires: {vampire_count} ({round((100 * vampire_count / total_player_count), 2)}%)\n")
-                    file.write(
-                        f"\tAverage Vampire Multiplier: {round(mean([100 * player.trait_multiplier for player in vampire_list]), 2)}% chance to self-heal for between 1/2 and 4/5 of dealt attack damage.\n")
-
-                if len(toxic_list) > 0:
-                    file.write(f"Toxic Players: {toxic_count} ({round((100 * toxic_count / total_player_count), 2)}%)\n")
-                    file.write(
-                        f"\tAverage Toxic Multiplier: {round(mean([100 * player.trait_multiplier[0] for player in toxic_list]), 2)}% chance to inflict {round(mean([player.trait_multiplier[1][1] for player in toxic_list]), 1)} toxin damage for {round(mean([player.trait_multiplier[1][0] for player in toxic_list]), 1)} ticks.\n")
-
-                if len(flasher_list) > 0:
-                    file.write(f"Flashers: {flasher_count} ({round((100 * flasher_count / total_player_count), 2)}%)\n")
-                    file.write(
-                        f"\tAverage Flasher Multiplier: {round(mean([100 * player.trait_multiplier[0] for player in flasher_list]), 2)}% chance to inflict stun for {round(mean([player.trait_multiplier[1] for player in flasher_list]), 1)} ticks.\n")
-
-                if len(healer_list) > 0:
-                    file.write(f"Healers: {healer_count} ({round((100 * healer_count / total_player_count), 2)}%)\n")
-                    file.write(
-                        f"\tAverage Healer Multiplier: Heal for {round(mean([player.trait_multiplier[1] for player in healer_list]), 2)} every {round(mean([player.trait_multiplier[0] for player in healer_list]), 2)} ticks.\n")
-
-                file.write(f"Normal Players (no traits): {normal_player_count} ({round((100*normal_player_count / total_player_count), 2)}%)\n\n")
             finalize_series_data()
-            system = [upl_standings,dw_teams,sc_teams,ds_teams,wof_teams,iw_teams,cl_teams,hc_teams,sh_teams,season_count]
-            dump_pkl(system)
+
 
             end_season_times[season_count] = time.time()
             if season_count == 1:
@@ -1715,292 +1416,9 @@ def main():
     end = time.time()
     print(f"\nTotal Execution Time: {round((end-start)/60)} minutes, {round(((end-start)%60),2)} seconds.")
 
-def test_main():
-    import numpy as np
-
-
-
-    def generate_list(target_total, min_value, max_value, round_to=0):
-        final_list = []
-
-        coefficients = np.array([9, 7, 6, 6, 4, 4])
-
-        num_lists = 1
-
-        valid_list_found = False
-
-        while not valid_list_found:
-
-            if round_to == 0:
-                initial_values = np.random.randint(min_value, max_value + 1, size=5)
-            else:
-                initial_values = np.round(np.random.uniform(min_value, max_value, size=5), round_to)
-
-            partial_sum = np.dot(coefficients[:-1], initial_values)
-            remaining_value = (target_total - partial_sum) / coefficients[-1]
-
-            if min_value <= remaining_value <= max_value:
-                valid_list_found = True
-
-                final_list = np.append(initial_values, remaining_value)
-
-
-        return final_list
-
-
-    model_teams = create_teams(32, 'Test')
-    model_teams[0].name = "Test_CLONES"
-    for pxyr in model_teams[0].players:
-        pxyr.power  = 60
-        pxyr.atk_dmg = 45
-        pxyr.atk_spd = 9
-        pxyr.crit_pct = 0.045
-        pxyr.crit_x = 10.7
-        pxyr.max_health = 540
-        pxyr.spawn_time = 11
-
-    total_power_target = 2160 #round to 0
-    total_atk_dmg_target = 1620 #round to 0
-    total_atk_spd_target = 324 #round to 0
-    total_crit_pct_target = 1.62 #round to 4
-    total_crit_x_target = 386 #round to 2
-    total_health_target = 19440 #round to 2
-    total_spawn_target = 396 #round to 0
-
-
-    for i in range(1,32): #create model teams 1 through 31
-        idx = 0
-        gen_power_list = generate_list(total_power_target, 49, 60, 0)
-        gen_atk_dmg_list = generate_list(total_atk_dmg_target, 40, 65, 0)
-        gen_atk_spd_list = generate_list(total_atk_spd_target, 5, 10, 0)
-        gen_crit_pct_list = generate_list(total_crit_pct_target, 0.045, 0.11, 4)
-        gen_crit_x_list = generate_list(total_crit_x_target, 8, 14, 2)
-        gen_health_list = generate_list(total_health_target, 170, 260, 2)
-        gen_spawn_list = generate_list(total_spawn_target, 6, 12, 0)
-        for plxr in model_teams[i].players:
-            plxr.power = gen_power_list[idx]
-            plxr.atk_dmg = gen_atk_dmg_list[idx]
-            plxr.atk_spd = gen_atk_spd_list[idx]
-            plxr.crit_pct = gen_crit_pct_list[idx]
-            plxr.crit_x = gen_crit_x_list[idx]
-            plxr.max_health = gen_health_list[idx]
-            plxr.spawn_time = gen_spawn_list[idx]
-            idx += 1
-
-
-
-    all_teams = []
-
-    shuffle(model_teams)
-
-    # Split the list into 6 equal parts
-    model_groups = [model_teams[i:i + 5] for i in range(0, len(model_teams), 5)]
-
-    dw_teams = create_teams(100, "Darkwing")
-    dw_teams = dw_teams + model_groups[0]
-    round_robin(dw_teams, 3, len(dw_teams), is_test=True)
-
-    sc_teams = create_teams(100, "Shining-Core")
-    sc_teams = sc_teams + model_groups[1]
-    round_robin(sc_teams, 3, len(sc_teams), is_test=True)
-
-    ds_teams = create_teams(100, "Diamond-Sea")
-    ds_teams = ds_teams + model_groups[2]
-    round_robin(ds_teams, 3, len(ds_teams), is_test=True)
-
-    wof_teams = create_teams(100, "Web-of-Nations")
-    wof_teams = wof_teams + model_groups[3]
-    round_robin(wof_teams, 3, len(wof_teams), is_test=True)
-
-    iw_teams = create_teams(100, "Ice-Wall")
-    iw_teams = iw_teams + model_groups[4]
-    round_robin(iw_teams, 3, len(iw_teams), is_test=True)
-
-    cl_teams = create_teams(100, "Candyland")
-    cl_teams = cl_teams + model_groups[5]
-    round_robin(cl_teams, 3, len(cl_teams), is_test=True)
-
-    for group in [dw_teams, sc_teams, ds_teams, wof_teams, iw_teams, cl_teams]:
-        for team in group:
-            all_teams.append(team)
-
-    team_season_dataframe(all_teams, 0)
-
-
-
-    upset_list = []
-    champ_list = []
-    clear_file('error_output')
-    season_count = 0
-    season_stats_list = {}
-
-    #league_season(test_teams, season_count=1, region="Test", upset_count=0, upset_list=upset_list, champ_list=champ_list)
-    #season_stats_list[season_count] = season_stats(test_teams, season_count, season_stats_list)
-    #region_mvp(season_stats_list, season_count=season_count, region='Test')
-    #best_of_stats(season_stats_list, season_count=season_count)
-
-def another_test():
-
-    teams = create_teams(22,region='Darkwing')
-    league_season(teams,region='Darkwing')
-
-
-
 def flush_database(db='C:/Users/carte/ControlDataBase.db'):
     with sqlite3.connect(db):
         pass
-
-def coach_testing():
-    clear_file('coach_test_stats')
-    clear_file('team_coach_data')
-    def write_coach_standings(coach_list,round_no=-1,write_all=False):
-        coach_list.sort(key=lambda x: (x.coach_record["Game Wins"], x.coach_record["Match Wins"]), reverse=True)
-        with open("coach_test_stats", 'a') as file:
-            if write_all:
-                file.write(f"FINAL STANDINGS\n")
-                for c in coach_list:
-                    file.write(f"""{str(c)}: {c.coach_record["Game Wins"]}-{c.coach_record["Game Losses"]}\n""")
-            else:
-                file.write(f"--Round {round_no + 1} of {len(coach_list)-1}--\n")
-                for c in coach_list[:7]:
-                    file.write(f"""{str(c)}: {c.coach_record["Game Wins"]}-{c.coach_record["Game Losses"]}\n""")
-                file.write("...\n")
-                for c in coach_list[-7:]:
-                    file.write(f"""{str(c)}: {c.coach_record["Game Wins"]}-{c.coach_record["Game Losses"]}\n""")
-                file.write("\n")
-
-
-    from random import uniform, randint
-    from Teams import Coach
-    from itertools import cycle
-
-    lineup_modifiers = cycle(["NC", "1C", "2C", "3C", "4C", "5C"])
-    slots_amped_possibilities = [ [0], [1], [2], [3], [4], [5],
-            [0,5], [1,4], [2,3], [3,5], [3,4], [0,1], [0,4], [1,3], [2,5],
-            [0,1,2], [0,2,4], [1,3,5], [2,4,5]
-        ]
-
-
-    coaches = []
-    num_coaches = len(slots_amped_possibilities)*6
-
-
-    for slot_list in slots_amped_possibilities:
-
-        for i in range(6):
-            if len(slot_list) == 3:
-                slot_amp_possibilities = [
-                    ["Power", round(uniform(0.549, 0.929), 2)],
-                    ["Attack Damage", randint(2, 5)],
-                    ["Critical Chance", round(uniform(0.02, 0.04), 2)]
-                ]
-            elif len(slot_list) == 2:
-                slot_amp_possibilities = [
-                    ["Power", round(uniform(0.59, 0.95), 2)],
-                    ["Attack Damage", randint(3, 6)],
-                    ["Critical Chance", round(uniform(0.0225, 0.0433), 2)]
-                ]
-            else:
-                slot_amp_possibilities = [
-                    ["Power", round(uniform(0.69, 0.99), 2)],  # % chance to add power
-                    ["Attack Damage", randint(5, 9)],  # raw increment
-                    ["Critical Chance", round(uniform(0.025, 0.05), 2)],  # raw increment
-                ]
-            trait_effects = [
-                ["Pp", 1], ['R#', round(uniform(1.25, 1.5), 2)],
-                ['C%', round(uniform(1.1, 1.25), 2)], ['I*', round(uniform(0.025, 0.5), 2)],
-                ['U-', round(uniform(1.05, 1.1), 2)], ['X+', randint(2, 8)]
-            ]
-
-
-            fixed_slot_effect = [slot_list] + slot_amp_possibilities[i%3]
-            fixed_trait_effect = trait_effects[i]
-
-            coach = Coach("Delirium", fixed_lineup_modifier=next(lineup_modifiers), fixed_slot_effect=fixed_slot_effect, fixed_trait_effect=fixed_trait_effect)
-            coaches.append(coach)
-
-    teams = [Team("") for _ in range(num_coaches)]
-    sorted_teams = sorted(teams, key=lambda t: t.name)
-    sorted_coaches = sorted(coaches,key=lambda c: c.name)
-    index = 0
-
-    for team in sorted_teams:
-        team.change_coach(sorted_coaches[index])
-        sorted_coaches[index].teams_coached.append(team.name)
-        index+=1
-
-    coach_lineup_mod_count = {'NC': 0, '1C': 0, '2C': 0, '3C': 0, '4C': 0, '5C': 0, 'Error': 0}
-    coach_slots_amped_count = {
-        (0,): 0, (1,): 0, (2,): 0, (3,): 0, (4,): 0, (5,): 0,
-        (0, 5): 0, (1, 4): 0, (2, 3): 0, (3, 5): 0, (3, 4): 0, (0, 1): 0, (0,4) : 0, (1,3) : 0, (2,5) : 0,
-        (0, 1, 2): 0, (0, 2, 4): 0, (1, 3, 5): 0, (2, 4, 5): 0
-    }
-    coach_attribute_amped_count = {"Power": [0, 0], "Attack Damage": [0, 0], "Critical Chance": [0,0]}  # list values: [count of coaches whom affect this trait, total multiplier value]
-    coach_trait_amped_count = {'Pp': [0, 0], 'R#': [0, 0], 'C%': [0, 0], 'I*': [0, 0], 'U-': [0, 0], 'X+': [0, 0]}
-    total_team_count = 0
-    for team in teams:
-        total_team_count += 1
-        coach_lineup_mod_count[team.team_coach.lineup_modifier] += 1
-        coach_slots_amped_count[tuple(team.team_coach.slot_effect[0])] += 1
-        coach_attribute_amped_count[team.team_coach.slot_effect[1]][0] += 1
-        coach_attribute_amped_count[team.team_coach.slot_effect[1]][1] += team.team_coach.slot_effect[2]
-        coach_trait_amped_count[team.team_coach.trait_effect[0]][0] += 1
-        coach_trait_amped_count[team.team_coach.trait_effect[0]][1] += team.team_coach.trait_effect[1]
-
-    with open('team_coach_data', 'a') as file:
-        for amped_slots in [(0,), (1,), (2,), (3,), (4,), (5,),
-        (0, 5), (1, 4), (2, 3), (3, 5), (3, 4), (0, 1), (0,4), (1,3), (2,5),
-        (0, 1, 2), (0, 2, 4), (1, 3, 5), (2, 4, 5)]:
-            file.write(f"{list(amped_slots)}: {coach_slots_amped_count[amped_slots]} "
-                       f"({round((100 * coach_slots_amped_count[amped_slots] / total_team_count), 2)}%)\n")
-        file.write(f"--Attributes Affected--\n"
-                   f"""Power: {coach_attribute_amped_count["Power"][0]} """
-                   f"""({round((100 * coach_attribute_amped_count["Power"][0] / total_team_count), 2)}%)\n"""
-                   f"""\tAverage Amp: {round((coach_attribute_amped_count["Power"][1] / coach_attribute_amped_count["Power"][0]), 2)}\n"""
-                   f"""Attack Damage: {coach_attribute_amped_count["Attack Damage"][0]} """
-                   f"""({round((100 * coach_attribute_amped_count["Attack Damage"][0] / total_team_count), 2)}%)\n"""
-                   f"""\tAverage Amp: {round((coach_attribute_amped_count["Attack Damage"][1] / coach_attribute_amped_count["Attack Damage"][0]), 2)}\n"""
-                   f"""Critical Chance: {coach_attribute_amped_count["Critical Chance"][0]} """
-                   f"""({round((100 * coach_attribute_amped_count["Critical Chance"][0] / total_team_count), 2)}%)\n"""
-                   f"""\tAverage Amp: {round((coach_attribute_amped_count["Critical Chance"][1] / coach_attribute_amped_count["Critical Chance"][0]), 2)}\n""")
-        file.write("--Traits Affected--\n")
-        for trait in ['Pp', 'R#', 'C%', 'I*', 'U-', 'X+']:
-            file.write(f"""{trait}: {coach_trait_amped_count[trait][0]} """
-                       f"""({round((100 * coach_trait_amped_count[trait][0] / total_team_count), 2)}%)\n"""
-                       f"""\tAverage Amp: {round((coach_trait_amped_count[trait][1] / coach_trait_amped_count[trait][0]), 2)}\n""")
-
-
-
-    for round_count in range(num_coaches-1):
-        round_robin(teams,1,0,is_test=True)
-        write_coach_standings(coaches,round_no=round_count)
-        index = round_count+1
-        if round_count != (num_coaches-2):
-            if round_count % 10 == 9:
-                with open('coach_test_stats', 'a') as file:
-                    ex_coach1 = choice(coaches)
-                    ex_coach2 = choice(coaches)
-                    dupl1 = "NO Duplicates" if len(ex_coach1.teams_coached) == len(set(ex_coach1.teams_coached)) else "DUPLICATES PRESENT"
-                    dupl2 = "NO Duplicates" if len(ex_coach2.teams_coached) == len(set(ex_coach2.teams_coached)) else "DUPLICATES PRESENT"
-                    file.write(f"{ex_coach1.name} has coached {len(ex_coach1.teams_coached)} teams with {dupl1}: {ex_coach1.teams_coached}\n")
-                    file.write(f"{ex_coach2.name} has coached {len(ex_coach2.teams_coached)} teams with {dupl2}: {ex_coach2.teams_coached}\n\n")
-            for team in sorted_teams:
-                if index <= (num_coaches-1):
-                    team.change_coach(sorted_coaches[index])
-                    sorted_coaches[index].teams_coached.append(team.name)
-                else:
-                    team.change_coach(sorted_coaches[(index-num_coaches)])
-                    sorted_coaches[index-num_coaches].teams_coached.append(team.name)
-                index+=1
-    write_coach_standings(coaches,write_all=True)
-    for ex_coach in sorted_coaches:
-        dupl = "NO Duplicates" if len(ex_coach.teams_coached) == len(set(ex_coach.teams_coached)) else "DUPLICATES PRESENT"
-        with open('coach_test_stats','a') as file:
-            file.write(f"{ex_coach.name} has coached {len(ex_coach.teams_coached)} teams with {dupl}: {ex_coach.teams_coached}\n")
-
-
-
-from stat_functions import clear_all_databases
 
 def test():
 
@@ -2009,10 +1427,1159 @@ def test():
         for player in team.players:
             print(str(player))
 
+def real_war_calculator():
+    #the previous iteration of this was onto something, but I need to make the results independent of team systems.
+    #I can accomplish this by taking a single player and calculating their rWAR in five different team situations and taking the average.
+    #One iteration of this function will include a player of each tier being tested in five different team situations for a total of 20 seasons.
+    replacement_player = Player(tier="R", atk_dmg=57.3, atk_spd=8, crit_pct=0.0633, crit_x=7.914, mit_pct=0.0501,
+                                defense_pct=0.044, defense_abs=4, health=218.05, power=54.6, spawn_time=7,
+                                crit_dmg=453.47, name="Player R")
+    TEAMS = create_teams(count=50, region="Test", draft=False, allow_duplicate_names=True)
+    real_war_team_alpha = Team(region="Test", mine=True, pre_name="Team Alpha", season_count=0)
+    TEAMS.insert(0, real_war_team_alpha)
+
+    s_tier_player_x = next(p for p in real_war_team_alpha.players if p.tier == "S")
+
+    round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha, replacement_player=s_tier_player_x)
+
+    s_tier_player_x_winrate = round(
+        100 * (s_tier_player_x.game_wins / (s_tier_player_x.game_wins + s_tier_player_x.game_losses)), 2)
+
+    replacement_player.xWAR = s_tier_player_x.xWAR
+    real_war_team_alpha.players.remove(s_tier_player_x)
+    real_war_team_alpha.players.append(replacement_player)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    s_tier_replacement_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                             replacement_player=replacement_player, replacing=s_tier_player_x.name)
+
+    s_tier_rWAR_1 = s_tier_player_x_winrate - s_tier_replacement_winrate
+
+    #S Tier, Phase 2
+
+    TEAMS = create_teams(count=50, region="Test", draft=False, allow_duplicate_names=True)
+    real_war_team_alpha = Team(region="Test", mine=True, pre_name="Team Alpha", season_count=0)
+    TEAMS.insert(0, real_war_team_alpha)
+
+    s_tier_to_remove = next(p for p in real_war_team_alpha.players if p.tier == "S") #We will replace this player with the S Tier Player X
+    real_war_team_alpha.players.remove(s_tier_to_remove)
+    real_war_team_alpha.players.append(s_tier_player_x)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha, replacement_player=s_tier_player_x)
+
+    s_tier_player_x_winrate = round(
+        100 * (s_tier_player_x.game_wins / (s_tier_player_x.game_wins + s_tier_player_x.game_losses)), 2)
+
+    replacement_player.xWAR = s_tier_player_x.xWAR
+    real_war_team_alpha.players.remove(s_tier_player_x)
+    real_war_team_alpha.players.append(replacement_player)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    s_tier_replacement_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                             replacement_player=replacement_player, replacing=s_tier_player_x.name)
+
+    s_tier_rWAR_2 = s_tier_player_x_winrate - s_tier_replacement_winrate
+
+    # S Tier, Phase 3
+
+    TEAMS = create_teams(count=50, region="Test", draft=False, allow_duplicate_names=True)
+    real_war_team_alpha = Team(region="Test", mine=True, pre_name="Team Alpha", season_count=0)
+    TEAMS.insert(0, real_war_team_alpha)
+
+    s_tier_to_remove = next(
+        p for p in real_war_team_alpha.players if p.tier == "S")  # We will replace this player with the S Tier Player X
+    real_war_team_alpha.players.remove(s_tier_to_remove)
+    real_war_team_alpha.players.append(s_tier_player_x)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha, replacement_player=s_tier_player_x)
+
+    s_tier_player_x_winrate = round(
+        100 * (s_tier_player_x.game_wins / (s_tier_player_x.game_wins + s_tier_player_x.game_losses)), 2)
+
+    replacement_player.xWAR = s_tier_player_x.xWAR
+    real_war_team_alpha.players.remove(s_tier_player_x)
+    real_war_team_alpha.players.append(replacement_player)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    s_tier_replacement_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                             replacement_player=replacement_player, replacing=s_tier_player_x.name)
+
+    s_tier_rWAR_3 = s_tier_player_x_winrate - s_tier_replacement_winrate
+
+    # S Tier, Phase 4
+
+    TEAMS = create_teams(count=50, region="Test", draft=False, allow_duplicate_names=True)
+    real_war_team_alpha = Team(region="Test", mine=True, pre_name="Team Alpha", season_count=0)
+    TEAMS.insert(0, real_war_team_alpha)
+
+    s_tier_to_remove = next(
+        p for p in real_war_team_alpha.players if p.tier == "S")  # We will replace this player with the S Tier Player X
+    real_war_team_alpha.players.remove(s_tier_to_remove)
+    real_war_team_alpha.players.append(s_tier_player_x)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha, replacement_player=s_tier_player_x)
+
+    s_tier_player_x_winrate = round(
+        100 * (s_tier_player_x.game_wins / (s_tier_player_x.game_wins + s_tier_player_x.game_losses)), 2)
+
+    replacement_player.xWAR = s_tier_player_x.xWAR
+    real_war_team_alpha.players.remove(s_tier_player_x)
+    real_war_team_alpha.players.append(replacement_player)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    s_tier_replacement_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                             replacement_player=replacement_player, replacing=s_tier_player_x.name)
+
+    s_tier_rWAR_4 = s_tier_player_x_winrate - s_tier_replacement_winrate
+
+    # S Tier, Phase 5
+
+    TEAMS = create_teams(count=50, region="Test", draft=False, allow_duplicate_names=True)
+    real_war_team_alpha = Team(region="Test", mine=True, pre_name="Team Alpha", season_count=0)
+    TEAMS.insert(0, real_war_team_alpha)
+
+    s_tier_to_remove = next(
+        p for p in real_war_team_alpha.players if p.tier == "S")  # We will replace this player with the S Tier Player X
+    real_war_team_alpha.players.remove(s_tier_to_remove)
+    real_war_team_alpha.players.append(s_tier_player_x)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha, replacement_player=s_tier_player_x)
+
+    s_tier_player_x_winrate = round(
+        100 * (s_tier_player_x.game_wins / (s_tier_player_x.game_wins + s_tier_player_x.game_losses)), 2)
+
+    replacement_player.xWAR = s_tier_player_x.xWAR
+    real_war_team_alpha.players.remove(s_tier_player_x)
+    real_war_team_alpha.players.append(replacement_player)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    s_tier_replacement_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                             replacement_player=replacement_player, replacing=s_tier_player_x.name)
+
+    s_tier_rWAR_5 = s_tier_player_x_winrate - s_tier_replacement_winrate
+
+    s_tier_rWAR_mean = mean([s_tier_rWAR_1, s_tier_rWAR_2, s_tier_rWAR_3, s_tier_rWAR_4, s_tier_rWAR_5])
+
+    print(f"Phase 1 S Tier rWAR: {s_tier_rWAR_1:.3f}\nPhase 2 S Tier rWAR: {s_tier_rWAR_2:.3f}\nPhase 3 S Tier rWAR: {s_tier_rWAR_3:.3f}"
+          f"\nPhase 4 S Tier rWAR: {s_tier_rWAR_4:.3f}\nPhase 5 S Tier rWAR: {s_tier_rWAR_5:.3f}\nMean rWAR: {s_tier_rWAR_mean:.3f}\n")
 
 
+    #A Tier, Phase 1
+
+    TEAMS = create_teams(count=50, region="Test", draft=False, allow_duplicate_names=True)
+    real_war_team_alpha = Team(region="Test", mine=True, pre_name="Team Alpha", season_count=0)
+    TEAMS.insert(0, real_war_team_alpha)
+
+    a_tier_player_x = next(p for p in real_war_team_alpha.players if p.tier == "A")
+
+    round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha, replacement_player=a_tier_player_x)
+
+    a_tier_player_x_winrate = round(
+        100 * (a_tier_player_x.game_wins / (a_tier_player_x.game_wins + a_tier_player_x.game_losses)), 2)
+
+    replacement_player.xWAR = a_tier_player_x.xWAR
+    real_war_team_alpha.players.remove(a_tier_player_x)
+    real_war_team_alpha.players.append(replacement_player)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    a_tier_replacement_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                             replacement_player=replacement_player, replacing=a_tier_player_x.name)
+
+    a_tier_rWAR_1 = a_tier_player_x_winrate - a_tier_replacement_winrate
+
+    # A Tier, Phase 2
+
+    TEAMS = create_teams(count=50, region="Test", draft=False, allow_duplicate_names=True)
+    real_war_team_alpha = Team(region="Test", mine=True, pre_name="Team Alpha", season_count=0)
+    TEAMS.insert(0, real_war_team_alpha)
+
+    a_tier_to_remove = next(
+        p for p in real_war_team_alpha.players if p.tier == "A")  # We will replace this player with the S Tier Player X
+    real_war_team_alpha.players.remove(a_tier_to_remove)
+    real_war_team_alpha.players.append(a_tier_player_x)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha, replacement_player=a_tier_player_x)
+
+    a_tier_player_x_winrate = round(
+        100 * (a_tier_player_x.game_wins / (a_tier_player_x.game_wins + a_tier_player_x.game_losses)), 2)
+
+    replacement_player.xWAR = a_tier_player_x.xWAR
+    real_war_team_alpha.players.remove(a_tier_player_x)
+    real_war_team_alpha.players.append(replacement_player)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    a_tier_replacement_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                             replacement_player=replacement_player, replacing=a_tier_player_x.name)
+
+    a_tier_rWAR_2 = a_tier_player_x_winrate - a_tier_replacement_winrate
+
+    # A Tier, Phase 3
+
+    TEAMS = create_teams(count=50, region="Test", draft=False, allow_duplicate_names=True)
+    real_war_team_alpha = Team(region="Test", mine=True, pre_name="Team Alpha", season_count=0)
+    TEAMS.insert(0, real_war_team_alpha)
+
+    a_tier_to_remove = next(
+        p for p in real_war_team_alpha.players if p.tier == "A")  # We will replace this player with the S Tier Player X
+    real_war_team_alpha.players.remove(a_tier_to_remove)
+    real_war_team_alpha.players.append(a_tier_player_x)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha, replacement_player=a_tier_player_x)
+
+    a_tier_player_x_winrate = round(
+        100 * (a_tier_player_x.game_wins / (a_tier_player_x.game_wins + a_tier_player_x.game_losses)), 2)
+
+    replacement_player.xWAR = a_tier_player_x.xWAR
+    real_war_team_alpha.players.remove(a_tier_player_x)
+    real_war_team_alpha.players.append(replacement_player)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    a_tier_replacement_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                             replacement_player=replacement_player, replacing=a_tier_player_x.name)
+
+    a_tier_rWAR_3 = a_tier_player_x_winrate - a_tier_replacement_winrate
+
+    # A Tier, Phase 4
+
+    TEAMS = create_teams(count=50, region="Test", draft=False, allow_duplicate_names=True)
+    real_war_team_alpha = Team(region="Test", mine=True, pre_name="Team Alpha", season_count=0)
+    TEAMS.insert(0, real_war_team_alpha)
+
+    a_tier_to_remove = next(
+        p for p in real_war_team_alpha.players if p.tier == "A")  # We will replace this player with the S Tier Player X
+    real_war_team_alpha.players.remove(a_tier_to_remove)
+    real_war_team_alpha.players.append(a_tier_player_x)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha, replacement_player=a_tier_player_x)
+
+    a_tier_player_x_winrate = round(
+        100 * (a_tier_player_x.game_wins / (a_tier_player_x.game_wins + a_tier_player_x.game_losses)), 2)
+
+    replacement_player.xWAR = a_tier_player_x.xWAR
+    real_war_team_alpha.players.remove(a_tier_player_x)
+    real_war_team_alpha.players.append(replacement_player)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    a_tier_replacement_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                             replacement_player=replacement_player, replacing=a_tier_player_x.name)
+
+    a_tier_rWAR_4 = a_tier_player_x_winrate - a_tier_replacement_winrate
+
+    # A Tier, Phase 5
+
+    TEAMS = create_teams(count=50, region="Test", draft=False, allow_duplicate_names=True)
+    real_war_team_alpha = Team(region="Test", mine=True, pre_name="Team Alpha", season_count=0)
+    TEAMS.insert(0, real_war_team_alpha)
+
+    a_tier_to_remove = next(
+        p for p in real_war_team_alpha.players if p.tier == "A")  # We will replace this player with the S Tier Player X
+    real_war_team_alpha.players.remove(a_tier_to_remove)
+    real_war_team_alpha.players.append(a_tier_player_x)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha, replacement_player=a_tier_player_x)
+
+    a_tier_player_x_winrate = round(
+        100 * (a_tier_player_x.game_wins / (a_tier_player_x.game_wins + a_tier_player_x.game_losses)), 2)
+
+    replacement_player.xWAR = a_tier_player_x.xWAR
+    real_war_team_alpha.players.remove(a_tier_player_x)
+    real_war_team_alpha.players.append(replacement_player)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    a_tier_replacement_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                             replacement_player=replacement_player, replacing=a_tier_player_x.name)
+
+    a_tier_rWAR_5 = a_tier_player_x_winrate - a_tier_replacement_winrate
+
+    a_tier_rWAR_mean = mean([a_tier_rWAR_1, a_tier_rWAR_2, a_tier_rWAR_3, a_tier_rWAR_4, a_tier_rWAR_5])
+
+    print(
+        f"Phase 1 A Tier rWAR: {a_tier_rWAR_1:.3f}\nPhase 2 A Tier rWAR: {a_tier_rWAR_2:.3f}\nPhase 3 A Tier rWAR: {a_tier_rWAR_3:.3f}"
+        f"\nPhase 4 A Tier rWAR: {a_tier_rWAR_4:.3f}\nPhase 5 A Tier rWAR: {a_tier_rWAR_5:.3f}\nMean rWAR: {a_tier_rWAR_mean:.3f}\n")
+
+
+    #B Tier, Phase 1
+
+    TEAMS = create_teams(count=50, region="Test", draft=False, allow_duplicate_names=True)
+    real_war_team_alpha = Team(region="Test", mine=True, pre_name="Team Alpha", season_count=0)
+    TEAMS.insert(0, real_war_team_alpha)
+
+    b_tier_player_x = next(p for p in real_war_team_alpha.players if p.tier == "B")
+
+    round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha, replacement_player=b_tier_player_x)
+
+    b_tier_player_x_winrate = round(
+        100 * (b_tier_player_x.game_wins / (b_tier_player_x.game_wins + b_tier_player_x.game_losses)), 2)
+
+    replacement_player.xWAR = b_tier_player_x.xWAR
+    real_war_team_alpha.players.remove(b_tier_player_x)
+    real_war_team_alpha.players.append(replacement_player)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    b_tier_replacement_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                             replacement_player=replacement_player, replacing=b_tier_player_x.name)
+
+    b_tier_rWAR_1 = b_tier_player_x_winrate - b_tier_replacement_winrate
+
+    #B Tier, Phase 2
+
+    TEAMS = create_teams(count=50, region="Test", draft=False, allow_duplicate_names=True)
+    real_war_team_alpha = Team(region="Test", mine=True, pre_name="Team Alpha", season_count=0)
+    TEAMS.insert(0, real_war_team_alpha)
+
+    b_tier_to_remove = next(
+        p for p in real_war_team_alpha.players if p.tier == "B")  # We will replace this player with the S Tier Player X
+    real_war_team_alpha.players.remove(b_tier_to_remove)
+    real_war_team_alpha.players.append(b_tier_player_x)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha, replacement_player=b_tier_player_x)
+
+    b_tier_player_x_winrate = round(
+        100 * (b_tier_player_x.game_wins / (b_tier_player_x.game_wins + b_tier_player_x.game_losses)), 2)
+
+    replacement_player.xWAR = b_tier_player_x.xWAR
+    real_war_team_alpha.players.remove(b_tier_player_x)
+    real_war_team_alpha.players.append(replacement_player)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    b_tier_replacement_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                             replacement_player=replacement_player, replacing=b_tier_player_x.name)
+
+    b_tier_rWAR_2 = b_tier_player_x_winrate - b_tier_replacement_winrate
+
+    #B Tier, Phase 3
+
+    TEAMS = create_teams(count=50, region="Test", draft=False, allow_duplicate_names=True)
+    real_war_team_alpha = Team(region="Test", mine=True, pre_name="Team Alpha", season_count=0)
+    TEAMS.insert(0, real_war_team_alpha)
+
+    b_tier_to_remove = next(
+        p for p in real_war_team_alpha.players if p.tier == "B")  # We will replace this player with the S Tier Player X
+    real_war_team_alpha.players.remove(b_tier_to_remove)
+    real_war_team_alpha.players.append(b_tier_player_x)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha, replacement_player=b_tier_player_x)
+
+    b_tier_player_x_winrate = round(
+        100 * (b_tier_player_x.game_wins / (b_tier_player_x.game_wins + b_tier_player_x.game_losses)), 2)
+
+    replacement_player.xWAR = b_tier_player_x.xWAR
+    real_war_team_alpha.players.remove(b_tier_player_x)
+    real_war_team_alpha.players.append(replacement_player)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    b_tier_replacement_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                             replacement_player=replacement_player, replacing=b_tier_player_x.name)
+
+    b_tier_rWAR_3 = b_tier_player_x_winrate - b_tier_replacement_winrate
+
+    #B Tier, Phase 4
+
+    TEAMS = create_teams(count=50, region="Test", draft=False, allow_duplicate_names=True)
+    real_war_team_alpha = Team(region="Test", mine=True, pre_name="Team Alpha", season_count=0)
+    TEAMS.insert(0, real_war_team_alpha)
+
+    b_tier_to_remove = next(
+        p for p in real_war_team_alpha.players if p.tier == "B")  # We will replace this player with the S Tier Player X
+    real_war_team_alpha.players.remove(b_tier_to_remove)
+    real_war_team_alpha.players.append(b_tier_player_x)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha, replacement_player=b_tier_player_x)
+
+    b_tier_player_x_winrate = round(
+        100 * (b_tier_player_x.game_wins / (b_tier_player_x.game_wins + b_tier_player_x.game_losses)), 2)
+
+    replacement_player.xWAR = b_tier_player_x.xWAR
+    real_war_team_alpha.players.remove(b_tier_player_x)
+    real_war_team_alpha.players.append(replacement_player)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    b_tier_replacement_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                             replacement_player=replacement_player, replacing=b_tier_player_x.name)
+
+    b_tier_rWAR_4 = b_tier_player_x_winrate - b_tier_replacement_winrate
+
+    #B Tier, Phase 5
+
+    TEAMS = create_teams(count=50, region="Test", draft=False, allow_duplicate_names=True)
+    real_war_team_alpha = Team(region="Test", mine=True, pre_name="Team Alpha", season_count=0)
+    TEAMS.insert(0, real_war_team_alpha)
+
+    b_tier_to_remove = next(
+        p for p in real_war_team_alpha.players if p.tier == "B")  # We will replace this player with the S Tier Player X
+    real_war_team_alpha.players.remove(b_tier_to_remove)
+    real_war_team_alpha.players.append(b_tier_player_x)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha, replacement_player=b_tier_player_x)
+
+    b_tier_player_x_winrate = round(
+        100 * (b_tier_player_x.game_wins / (b_tier_player_x.game_wins + b_tier_player_x.game_losses)), 2)
+
+    replacement_player.xWAR = b_tier_player_x.xWAR
+    real_war_team_alpha.players.remove(b_tier_player_x)
+    real_war_team_alpha.players.append(replacement_player)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    b_tier_replacement_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                             replacement_player=replacement_player, replacing=b_tier_player_x.name)
+
+    b_tier_rWAR_5 = b_tier_player_x_winrate - b_tier_replacement_winrate
+
+    b_tier_rWAR_mean = mean([b_tier_rWAR_1, b_tier_rWAR_2, b_tier_rWAR_3, b_tier_rWAR_4, b_tier_rWAR_5])
+
+    print(
+        f"Phase 1 B Tier rWAR: {b_tier_rWAR_1:.3f}\nPhase 2 B Tier rWAR: {b_tier_rWAR_2:.3f}\nPhase 3 B Tier rWAR: {b_tier_rWAR_3:.3f}"
+        f"\nPhase 4 B Tier rWAR: {b_tier_rWAR_4:.3f}\nPhase 5 B Tier rWAR: {b_tier_rWAR_5:.3f}\nMean rWAR: {b_tier_rWAR_mean:.3f}\n")
+
+    # C Tier, Phase 1
+
+    TEAMS = create_teams(count=50, region="Test", draft=False, allow_duplicate_names=True)
+    real_war_team_alpha = Team(region="Test", mine=True, pre_name="Team Alpha", season_count=0)
+    TEAMS.insert(0, real_war_team_alpha)
+
+    c_tier_player_x = next(p for p in real_war_team_alpha.players if p.tier == "C")
+
+    round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha, replacement_player=c_tier_player_x)
+
+    c_tier_player_x_winrate = round(
+        100 * (c_tier_player_x.game_wins / (c_tier_player_x.game_wins + c_tier_player_x.game_losses)), 2)
+
+    replacement_player.xWAR = c_tier_player_x.xWAR
+    real_war_team_alpha.players.remove(c_tier_player_x)
+    real_war_team_alpha.players.append(replacement_player)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    c_tier_replacement_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                             replacement_player=replacement_player, replacing=c_tier_player_x.name)
+
+    c_tier_rWAR_1 = c_tier_player_x_winrate - c_tier_replacement_winrate
+
+    # C Tier, Phase 2
+
+    TEAMS = create_teams(count=50, region="Test", draft=False, allow_duplicate_names=True)
+    real_war_team_alpha = Team(region="Test", mine=True, pre_name="Team Alpha", season_count=0)
+    TEAMS.insert(0, real_war_team_alpha)
+
+    c_tier_to_remove = next(
+        p for p in real_war_team_alpha.players if p.tier == "C")  # We will replace this player with the S Tier Player X
+    real_war_team_alpha.players.remove(c_tier_to_remove)
+    real_war_team_alpha.players.append(c_tier_player_x)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha, replacement_player=c_tier_player_x)
+
+    c_tier_player_x_winrate = round(
+        100 * (c_tier_player_x.game_wins / (c_tier_player_x.game_wins + c_tier_player_x.game_losses)), 2)
+
+    replacement_player.xWAR = c_tier_player_x.xWAR
+    real_war_team_alpha.players.remove(c_tier_player_x)
+    real_war_team_alpha.players.append(replacement_player)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    c_tier_replacement_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                             replacement_player=replacement_player, replacing=c_tier_player_x.name)
+
+    c_tier_rWAR_2 = c_tier_player_x_winrate - c_tier_replacement_winrate
+
+    # C Tier, Phase 3
+
+    TEAMS = create_teams(count=50, region="Test", draft=False, allow_duplicate_names=True)
+    real_war_team_alpha = Team(region="Test", mine=True, pre_name="Team Alpha", season_count=0)
+    TEAMS.insert(0, real_war_team_alpha)
+
+    c_tier_to_remove = next(
+        p for p in real_war_team_alpha.players if p.tier == "C")  # We will replace this player with the S Tier Player X
+    real_war_team_alpha.players.remove(c_tier_to_remove)
+    real_war_team_alpha.players.append(c_tier_player_x)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha, replacement_player=c_tier_player_x)
+
+    c_tier_player_x_winrate = round(
+        100 * (c_tier_player_x.game_wins / (c_tier_player_x.game_wins + c_tier_player_x.game_losses)), 2)
+
+    replacement_player.xWAR = c_tier_player_x.xWAR
+    real_war_team_alpha.players.remove(c_tier_player_x)
+    real_war_team_alpha.players.append(replacement_player)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    c_tier_replacement_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                             replacement_player=replacement_player, replacing=c_tier_player_x.name)
+
+    c_tier_rWAR_3 = c_tier_player_x_winrate - c_tier_replacement_winrate
+
+    # C Tier, Phase 4
+
+    TEAMS = create_teams(count=50, region="Test", draft=False, allow_duplicate_names=True)
+    real_war_team_alpha = Team(region="Test", mine=True, pre_name="Team Alpha", season_count=0)
+    TEAMS.insert(0, real_war_team_alpha)
+
+    c_tier_to_remove = next(
+        p for p in real_war_team_alpha.players if p.tier == "C")  # We will replace this player with the S Tier Player X
+    real_war_team_alpha.players.remove(c_tier_to_remove)
+    real_war_team_alpha.players.append(c_tier_player_x)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha, replacement_player=c_tier_player_x)
+
+    c_tier_player_x_winrate = round(
+        100 * (c_tier_player_x.game_wins / (c_tier_player_x.game_wins + c_tier_player_x.game_losses)), 2)
+
+    replacement_player.xWAR = c_tier_player_x.xWAR
+    real_war_team_alpha.players.remove(c_tier_player_x)
+    real_war_team_alpha.players.append(replacement_player)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    c_tier_replacement_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                             replacement_player=replacement_player, replacing=c_tier_player_x.name)
+
+    c_tier_rWAR_4 = c_tier_player_x_winrate - c_tier_replacement_winrate
+
+    # C Tier, Phase 5
+
+    TEAMS = create_teams(count=50, region="Test", draft=False, allow_duplicate_names=True)
+    real_war_team_alpha = Team(region="Test", mine=True, pre_name="Team Alpha", season_count=0)
+    TEAMS.insert(0, real_war_team_alpha)
+
+    c_tier_to_remove = next(
+        p for p in real_war_team_alpha.players if p.tier == "C")  # We will replace this player with the S Tier Player X
+    real_war_team_alpha.players.remove(c_tier_to_remove)
+    real_war_team_alpha.players.append(c_tier_player_x)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha, replacement_player=c_tier_player_x)
+
+    c_tier_player_x_winrate = round(
+        100 * (c_tier_player_x.game_wins / (c_tier_player_x.game_wins + c_tier_player_x.game_losses)), 2)
+
+    replacement_player.xWAR = c_tier_player_x.xWAR
+    real_war_team_alpha.players.remove(c_tier_player_x)
+    real_war_team_alpha.players.append(replacement_player)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    c_tier_replacement_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                             replacement_player=replacement_player, replacing=c_tier_player_x.name)
+
+    c_tier_rWAR_5 = c_tier_player_x_winrate - c_tier_replacement_winrate
+
+    c_tier_rWAR_mean = mean([c_tier_rWAR_1, c_tier_rWAR_2, c_tier_rWAR_3, c_tier_rWAR_4, c_tier_rWAR_5])
+
+    print(
+        f"Phase 1 C Tier rWAR: {c_tier_rWAR_1:.3f}\nPhase 2 C Tier rWAR: {c_tier_rWAR_2:.3f}\nPhase 3 C Tier rWAR: {c_tier_rWAR_3:.3f}"
+        f"\nPhase 4 C Tier rWAR: {c_tier_rWAR_4:.3f}\nPhase 5 C Tier rWAR: {c_tier_rWAR_5:.3f}\nMean rWAR: {c_tier_rWAR_mean:.3f}\n")
+
+
+    #D Tier, Phase 1
+
+    TEAMS = create_teams(count=50, region="Test", draft=False, allow_duplicate_names=True)
+    real_war_team_alpha = Team(region="Test", mine=True, pre_name="Team Alpha", season_count=0)
+    TEAMS.insert(0, real_war_team_alpha)
+
+
+    d_tier_crit_x=round(uniform(6.3,7.75), 3)
+    d_tier_atk_dmg = round(uniform(48,57), 1)
+    d_tier_crit_dmg = d_tier_crit_x*d_tier_atk_dmg
+    d_tier_player_x = Player(tier="D", atk_dmg=d_tier_atk_dmg, atk_spd=choice([8,9]), crit_pct=round(uniform(0.05,0.06), 4),
+                            crit_x=d_tier_crit_x, mit_pct=round(uniform(0.015,0.049), 4),
+                            defense_pct=round(uniform(0.029,0.04), 4), defense_abs=choice([2,3,4]), health=round(uniform(209,217), 2), power=choice([51,52,53,54]), spawn_time=choice([7,8]),
+                            crit_dmg=d_tier_crit_dmg, name="D Tier Test")
+
+    c_tier_to_remove = next(
+        p for p in real_war_team_alpha.players if p.tier == "C")  # We will replace this player with the "D" Tier Player
+    real_war_team_alpha.players.remove(c_tier_to_remove)
+    real_war_team_alpha.players.append(d_tier_player_x)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha, replacement_player=d_tier_player_x)
+
+    d_tier_player_x_winrate = round(
+        100 * (d_tier_player_x.game_wins / (d_tier_player_x.game_wins + d_tier_player_x.game_losses)), 2)
+
+    replacement_player.xWAR = d_tier_player_x.xWAR
+    real_war_team_alpha.players.remove(d_tier_player_x)
+    real_war_team_alpha.players.append(replacement_player)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    d_tier_replacement_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                             replacement_player=replacement_player, replacing=d_tier_player_x.name)
+
+    d_tier_rWAR_1 = d_tier_player_x_winrate - d_tier_replacement_winrate
+
+    # D Tier, Phase 2
+
+    TEAMS = create_teams(count=50, region="Test", draft=False, allow_duplicate_names=True)
+    real_war_team_alpha = Team(region="Test", mine=True, pre_name="Team Alpha", season_count=0)
+    TEAMS.insert(0, real_war_team_alpha)
+
+    c_tier_to_remove = next(
+        p for p in real_war_team_alpha.players if p.tier == "C")  # We will replace this player with the "D" Tier Player
+    real_war_team_alpha.players.remove(c_tier_to_remove)
+    real_war_team_alpha.players.append(d_tier_player_x)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha, replacement_player=d_tier_player_x)
+
+    d_tier_player_x_winrate = round(
+        100 * (d_tier_player_x.game_wins / (d_tier_player_x.game_wins + d_tier_player_x.game_losses)), 2)
+
+    replacement_player.xWAR = d_tier_player_x.xWAR
+    real_war_team_alpha.players.remove(d_tier_player_x)
+    real_war_team_alpha.players.append(replacement_player)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    d_tier_replacement_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                             replacement_player=replacement_player, replacing=d_tier_player_x.name)
+
+    d_tier_rWAR_2 = d_tier_player_x_winrate - d_tier_replacement_winrate
+
+    # D Tier, Phase 3
+
+    TEAMS = create_teams(count=50, region="Test", draft=False, allow_duplicate_names=True)
+    real_war_team_alpha = Team(region="Test", mine=True, pre_name="Team Alpha", season_count=0)
+    TEAMS.insert(0, real_war_team_alpha)
+
+    c_tier_to_remove = next(
+        p for p in real_war_team_alpha.players if p.tier == "C")  # We will replace this player with the "D" Tier Player
+    real_war_team_alpha.players.remove(c_tier_to_remove)
+    real_war_team_alpha.players.append(d_tier_player_x)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha, replacement_player=d_tier_player_x)
+
+    d_tier_player_x_winrate = round(
+        100 * (d_tier_player_x.game_wins / (d_tier_player_x.game_wins + d_tier_player_x.game_losses)), 2)
+
+    replacement_player.xWAR = d_tier_player_x.xWAR
+    real_war_team_alpha.players.remove(d_tier_player_x)
+    real_war_team_alpha.players.append(replacement_player)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    d_tier_replacement_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                             replacement_player=replacement_player, replacing=d_tier_player_x.name)
+
+    d_tier_rWAR_3 = d_tier_player_x_winrate - d_tier_replacement_winrate
+
+    # D Tier, Phase 4
+
+    TEAMS = create_teams(count=50, region="Test", draft=False, allow_duplicate_names=True)
+    real_war_team_alpha = Team(region="Test", mine=True, pre_name="Team Alpha", season_count=0)
+    TEAMS.insert(0, real_war_team_alpha)
+
+    c_tier_to_remove = next(
+        p for p in real_war_team_alpha.players if p.tier == "C")  # We will replace this player with the "D" Tier Player
+    real_war_team_alpha.players.remove(c_tier_to_remove)
+    real_war_team_alpha.players.append(d_tier_player_x)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha, replacement_player=d_tier_player_x)
+
+    d_tier_player_x_winrate = round(
+        100 * (d_tier_player_x.game_wins / (d_tier_player_x.game_wins + d_tier_player_x.game_losses)), 2)
+
+    replacement_player.xWAR = d_tier_player_x.xWAR
+    real_war_team_alpha.players.remove(d_tier_player_x)
+    real_war_team_alpha.players.append(replacement_player)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    d_tier_replacement_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                             replacement_player=replacement_player, replacing=d_tier_player_x.name)
+
+    d_tier_rWAR_4 = d_tier_player_x_winrate - d_tier_replacement_winrate
+
+    # D Tier, Phase 5
+
+    TEAMS = create_teams(count=50, region="Test", draft=False, allow_duplicate_names=True)
+    real_war_team_alpha = Team(region="Test", mine=True, pre_name="Team Alpha", season_count=0)
+    TEAMS.insert(0, real_war_team_alpha)
+
+    c_tier_to_remove = next(
+        p for p in real_war_team_alpha.players if p.tier == "C")  # We will replace this player with the "D" Tier Player
+    real_war_team_alpha.players.remove(c_tier_to_remove)
+    real_war_team_alpha.players.append(d_tier_player_x)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha, replacement_player=d_tier_player_x)
+
+    d_tier_player_x_winrate = round(
+        100 * (d_tier_player_x.game_wins / (d_tier_player_x.game_wins + d_tier_player_x.game_losses)), 2)
+
+    replacement_player.xWAR = d_tier_player_x.xWAR
+    real_war_team_alpha.players.remove(d_tier_player_x)
+    real_war_team_alpha.players.append(replacement_player)
+    real_war_team_alpha.lineups = generate_lineups_six_to_four(real_war_team_alpha.players,
+                                                               real_war_team_alpha.team_coach,
+                                                               real_war_team_alpha.team_id)
+
+    d_tier_replacement_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                             replacement_player=replacement_player, replacing=d_tier_player_x.name)
+
+    d_tier_rWAR_5 = d_tier_player_x_winrate - d_tier_replacement_winrate
+
+    d_tier_rWAR_mean = mean([d_tier_rWAR_1, d_tier_rWAR_2, d_tier_rWAR_3, d_tier_rWAR_4, d_tier_rWAR_5])
+
+    print(
+        f"Phase 1 D Tier rWAR: {d_tier_rWAR_1:.3f}\nPhase 2 D Tier rWAR: {d_tier_rWAR_2:.3f}\nPhase 3 D Tier rWAR: {d_tier_rWAR_3:.3f}"
+        f"\nPhase 4 D Tier rWAR: {d_tier_rWAR_4:.3f}\nPhase 5 D Tier rWAR: {d_tier_rWAR_5:.3f}\nMean rWAR: {d_tier_rWAR_mean:.3f}\n")
+
+
+
+
+    s_tier_rWAR_mean = round(s_tier_rWAR_mean, 3)
+    a_tier_rWAR_mean = round(a_tier_rWAR_mean, 3)
+    b_tier_rWAR_mean = round(b_tier_rWAR_mean, 3)
+    c_tier_rWAR_mean = round(c_tier_rWAR_mean, 3)
+    d_tier_rWAR_mean = round(d_tier_rWAR_mean, 3)
+
+
+
+
+    rows = [
+
+        {"Name": s_tier_player_x.name, "xWAR": s_tier_player_x.xWAR, "rWAR": s_tier_rWAR_mean,
+         "Attack Damage" : s_tier_player_x.atk_dmg, "Attack Speed" : s_tier_player_x.atk_spd,
+         "Critical Chance" : s_tier_player_x.crit_pct, "Critical Multiplier" : s_tier_player_x.crit_x,
+         "Defense %" : s_tier_player_x.defense_pct, "Defense Absolute" : s_tier_player_x.defense_abs,
+         "Mitigation Chance" : s_tier_player_x.mit_pct, "Max Health" : s_tier_player_x.max_health,
+         "Power" : s_tier_player_x.power, "Spawn Time" : s_tier_player_x.spawn_time,
+         "Primary Trait" : s_tier_player_x.trait_tag[0], "Secondary Trait" : s_tier_player_x.trait_tag[1]},
+
+        {"Name": a_tier_player_x.name, "xWAR": a_tier_player_x.xWAR, "rWAR": a_tier_rWAR_mean,
+         "Attack Damage": a_tier_player_x.atk_dmg, "Attack Speed": a_tier_player_x.atk_spd,
+         "Critical Chance": a_tier_player_x.crit_pct, "Critical Multiplier": a_tier_player_x.crit_x,
+         "Defense %": a_tier_player_x.defense_pct, "Defense Absolute": a_tier_player_x.defense_abs,
+         "Mitigation Chance": a_tier_player_x.mit_pct, "Max Health": a_tier_player_x.max_health,
+         "Power": a_tier_player_x.power, "Spawn Time": a_tier_player_x.spawn_time,
+         "Primary Trait": a_tier_player_x.trait_tag[0], "Secondary Trait": a_tier_player_x.trait_tag[1]},
+
+        {"Name": b_tier_player_x.name, "xWAR": b_tier_player_x.xWAR, "rWAR": b_tier_rWAR_mean,
+         "Attack Damage": b_tier_player_x.atk_dmg, "Attack Speed": b_tier_player_x.atk_spd,
+         "Critical Chance": b_tier_player_x.crit_pct, "Critical Multiplier": b_tier_player_x.crit_x,
+         "Defense %": b_tier_player_x.defense_pct, "Defense Absolute": b_tier_player_x.defense_abs,
+         "Mitigation Chance": b_tier_player_x.mit_pct, "Max Health": b_tier_player_x.max_health,
+         "Power": b_tier_player_x.power, "Spawn Time": b_tier_player_x.spawn_time,
+         "Primary Trait": b_tier_player_x.trait_tag[0], "Secondary Trait": b_tier_player_x.trait_tag[1]},
+
+        {"Name": c_tier_player_x.name, "xWAR": c_tier_player_x.xWAR, "rWAR": c_tier_rWAR_mean,
+         "Attack Damage": c_tier_player_x.atk_dmg, "Attack Speed": c_tier_player_x.atk_spd,
+         "Critical Chance": c_tier_player_x.crit_pct, "Critical Multiplier": c_tier_player_x.crit_x,
+         "Defense %": c_tier_player_x.defense_pct, "Defense Absolute": c_tier_player_x.defense_abs,
+         "Mitigation Chance": c_tier_player_x.mit_pct, "Max Health": c_tier_player_x.max_health,
+         "Power": c_tier_player_x.power, "Spawn Time": c_tier_player_x.spawn_time,
+         "Primary Trait": c_tier_player_x.trait_tag[0], "Secondary Trait": c_tier_player_x.trait_tag[1]},
+
+        {"Name": d_tier_player_x.name, "xWAR": d_tier_player_x.xWAR, "rWAR": d_tier_rWAR_mean,
+         "Attack Damage": d_tier_player_x.atk_dmg, "Attack Speed": d_tier_player_x.atk_spd,
+         "Critical Chance": d_tier_player_x.crit_pct, "Critical Multiplier": d_tier_player_x.crit_x,
+         "Defense %": d_tier_player_x.defense_pct, "Defense Absolute": d_tier_player_x.defense_abs,
+         "Mitigation Chance": d_tier_player_x.mit_pct, "Max Health": d_tier_player_x.max_health,
+         "Power": d_tier_player_x.power, "Spawn Time": d_tier_player_x.spawn_time,
+         "Primary Trait": d_tier_player_x.trait_tag[0], "Secondary Trait": d_tier_player_x.trait_tag[1]}
+
+    ]
+
+    file_path = "rWAR Data.xlsx"
+
+    # try to load existing data
+    try:
+        existing_df = pd.read_excel(file_path)
+    except FileNotFoundError:
+        existing_df = pd.DataFrame()
+
+    # new data
+    new_df = pd.DataFrame(rows)
+
+    # append
+    combined_df = pd.concat([existing_df, new_df], ignore_index=True)
+
+    # write back
+    combined_df.to_excel(file_path, index=False)
+
+
+#Average Captain:
+#damage_taken = 0.102167
+#max_health = 95.79
+#atk_dmg_bonus = 1.17618
+#crit_pct_bonus = 0
+#crit_x_bonus = 1.37442
+#power_bonus = 0.46402
+
+def captain_rWAR_calculator(rounds):
+    replacement_captain = Captain()
+    replacement_captain.name = "Captain R"
+    replacement_captain.damage_taken = 0.102167
+    replacement_captain.max_health = 95.79
+    replacement_captain.atk_dmg_bonus = 1.17618
+    replacement_captain.crit_x_bonus = 1.37442
+    replacement_captain.power_bonus = 0.46402
+
+    non_captain = Captain()
+    non_captain.name = "Non-Captain"
+    non_captain.damage_taken = 0
+    non_captain.max_health = 0
+    non_captain.atk_dmg_bonus = 1
+    non_captain.crit_x_bonus = 1
+    non_captain.power_bonus = 0
+
+    crazy_captain = Captain()
+    crazy_captain.name = "Immortal Captain w/ normal bonuses"
+    crazy_captain.damage_taken = 0
+    crazy_captain.max_health = 1
+    crazy_captain.atk_dmg_bonus = 1.25
+    crazy_captain.crit_x_bonus = 1.5
+    crazy_captain.power_bonus = 0.5
+
+
+
+    for _ in range(rounds):
+
+        #PHASE 1
+
+        TEAMS = create_teams(count=50, region="Test", draft=False, allow_duplicate_names=True)
+        real_war_team_alpha = Team(region="Test", mine=True, pre_name="Team Alpha", season_count=0)
+        TEAMS.insert(0, real_war_team_alpha)
+
+        baseline_captain = real_war_team_alpha.captain #This captain will be used for all five phases
+
+        baseline_captain_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha, replacement_player=baseline_captain)
+
+        #real_war_team_alpha.captain = crazy_captain
+
+        #crazy_captain_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha, replacement_player=crazy_captain, replacing=baseline_captain.name)
+
+        real_war_team_alpha.captain = replacement_captain
+
+        replacement_captain_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha, replacement_player=replacement_captain, replacing=baseline_captain.name)
+
+        #real_war_team_alpha.captain = non_captain
+
+        #non_captain_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha, replacement_player=non_captain, replacing=baseline_captain.name)
+
+        captain_rWAR1 = round((baseline_captain_winrate-replacement_captain_winrate), 2)
+
+        #PHASE 2
+
+        TEAMS = create_teams(count=50, region="Test", draft=False, allow_duplicate_names=True)
+        real_war_team_alpha = Team(region="Test", mine=True, pre_name="Team Alpha", season_count=0)
+        TEAMS.insert(0, real_war_team_alpha)
+
+        real_war_team_alpha.captain = baseline_captain
+
+        baseline_captain_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha, replacement_player=baseline_captain)
+
+        real_war_team_alpha.captain = replacement_captain
+
+        replacement_captain_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                                  replacement_player=replacement_captain,
+                                                  replacing=baseline_captain.name)
+
+        captain_rWAR2 = round((baseline_captain_winrate - replacement_captain_winrate), 2)
+
+        # PHASE 3
+
+        TEAMS = create_teams(count=50, region="Test", draft=False, allow_duplicate_names=True)
+        real_war_team_alpha = Team(region="Test", mine=True, pre_name="Team Alpha", season_count=0)
+        TEAMS.insert(0, real_war_team_alpha)
+
+        real_war_team_alpha.captain = baseline_captain
+
+        baseline_captain_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                               replacement_player=baseline_captain)
+
+        real_war_team_alpha.captain = replacement_captain
+
+        replacement_captain_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                                  replacement_player=replacement_captain,
+                                                  replacing=baseline_captain.name)
+
+        captain_rWAR3 = round((baseline_captain_winrate - replacement_captain_winrate), 2)
+
+        # PHASE 4
+
+        TEAMS = create_teams(count=50, region="Test", draft=False, allow_duplicate_names=True)
+        real_war_team_alpha = Team(region="Test", mine=True, pre_name="Team Alpha", season_count=0)
+        TEAMS.insert(0, real_war_team_alpha)
+
+        real_war_team_alpha.captain = baseline_captain
+
+        baseline_captain_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                               replacement_player=baseline_captain)
+
+        real_war_team_alpha.captain = replacement_captain
+
+        replacement_captain_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                                  replacement_player=replacement_captain,
+                                                  replacing=baseline_captain.name)
+
+        captain_rWAR4 = round((baseline_captain_winrate - replacement_captain_winrate), 2)
+
+        # PHASE 5
+
+        TEAMS = create_teams(count=50, region="Test", draft=False, allow_duplicate_names=True)
+        real_war_team_alpha = Team(region="Test", mine=True, pre_name="Team Alpha", season_count=0)
+        TEAMS.insert(0, real_war_team_alpha)
+
+        real_war_team_alpha.captain = baseline_captain
+
+        baseline_captain_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                               replacement_player=baseline_captain)
+
+        real_war_team_alpha.captain = replacement_captain
+
+        replacement_captain_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                                  replacement_player=replacement_captain,
+                                                  replacing=baseline_captain.name)
+
+        captain_rWAR5 = round((baseline_captain_winrate - replacement_captain_winrate), 2)
+
+        # PHASE 6
+
+        TEAMS = create_teams(count=50, region="Test", draft=False, allow_duplicate_names=True)
+        real_war_team_alpha = Team(region="Test", mine=True, pre_name="Team Alpha", season_count=0)
+        TEAMS.insert(0, real_war_team_alpha)
+
+        real_war_team_alpha.captain = baseline_captain
+
+        baseline_captain_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                               replacement_player=baseline_captain)
+
+        real_war_team_alpha.captain = replacement_captain
+
+        replacement_captain_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                                  replacement_player=replacement_captain,
+                                                  replacing=baseline_captain.name)
+
+        captain_rWAR6 = round((baseline_captain_winrate - replacement_captain_winrate), 2)
+
+        # PHASE 7
+
+        TEAMS = create_teams(count=50, region="Test", draft=False, allow_duplicate_names=True)
+        real_war_team_alpha = Team(region="Test", mine=True, pre_name="Team Alpha", season_count=0)
+        TEAMS.insert(0, real_war_team_alpha)
+
+        real_war_team_alpha.captain = baseline_captain
+
+        baseline_captain_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                               replacement_player=baseline_captain)
+
+        real_war_team_alpha.captain = replacement_captain
+
+        replacement_captain_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                                  replacement_player=replacement_captain,
+                                                  replacing=baseline_captain.name)
+
+        captain_rWAR7 = round((baseline_captain_winrate - replacement_captain_winrate), 2)
+
+        # PHASE 8
+
+        TEAMS = create_teams(count=50, region="Test", draft=False, allow_duplicate_names=True)
+        real_war_team_alpha = Team(region="Test", mine=True, pre_name="Team Alpha", season_count=0)
+        TEAMS.insert(0, real_war_team_alpha)
+
+        real_war_team_alpha.captain = baseline_captain
+
+        baseline_captain_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                               replacement_player=baseline_captain)
+
+        real_war_team_alpha.captain = replacement_captain
+
+        replacement_captain_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                                  replacement_player=replacement_captain,
+                                                  replacing=baseline_captain.name)
+
+        captain_rWAR8 = round((baseline_captain_winrate - replacement_captain_winrate), 2)
+
+        # PHASE 9
+
+        TEAMS = create_teams(count=50, region="Test", draft=False, allow_duplicate_names=True)
+        real_war_team_alpha = Team(region="Test", mine=True, pre_name="Team Alpha", season_count=0)
+        TEAMS.insert(0, real_war_team_alpha)
+
+        real_war_team_alpha.captain = baseline_captain
+
+        baseline_captain_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                               replacement_player=baseline_captain)
+
+        real_war_team_alpha.captain = replacement_captain
+
+        replacement_captain_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                                  replacement_player=replacement_captain,
+                                                  replacing=baseline_captain.name)
+
+        captain_rWAR9 = round((baseline_captain_winrate - replacement_captain_winrate), 2)
+
+        # PHASE 10
+
+        TEAMS = create_teams(count=50, region="Test", draft=False, allow_duplicate_names=True)
+        real_war_team_alpha = Team(region="Test", mine=True, pre_name="Team Alpha", season_count=0)
+        TEAMS.insert(0, real_war_team_alpha)
+
+        real_war_team_alpha.captain = baseline_captain
+
+        baseline_captain_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                               replacement_player=baseline_captain)
+
+        real_war_team_alpha.captain = replacement_captain
+
+        replacement_captain_winrate = round_robin(TEAMS, 10, 0, 4, real_war_team_alpha=real_war_team_alpha,
+                                                  replacement_player=replacement_captain,
+                                                  replacing=baseline_captain.name)
+
+        captain_rWAR10 = round((baseline_captain_winrate - replacement_captain_winrate), 2)
+
+        captain_rWAR_mean = round(mean([captain_rWAR1, captain_rWAR2, captain_rWAR3, captain_rWAR4, captain_rWAR5, captain_rWAR6, captain_rWAR7, captain_rWAR8, captain_rWAR9, captain_rWAR10]), 3)
+
+        row = [
+
+            {"Name" : baseline_captain.name, "rWAR" : captain_rWAR_mean,
+             "Damage Taken": baseline_captain.damage_taken,
+             "Max Health" : baseline_captain.max_health, "Base Damage Bonus" : baseline_captain.atk_dmg_bonus,
+             "Critical Damage Bonus" : baseline_captain.crit_x_bonus, "Power Bonus" : baseline_captain.power_bonus}
+
+        ]
+
+        file_path = "Captain rWAR Data.xlsx"
+
+        # try to load existing data
+        try:
+            existing_df = pd.read_excel(file_path)
+        except FileNotFoundError:
+            existing_df = pd.DataFrame()
+
+        # new data
+        new_df = pd.DataFrame(row)
+
+        # append
+        combined_df = pd.concat([existing_df, new_df], ignore_index=True)
+
+        # write back
+        combined_df.to_excel(file_path, index=False)
+
+
+def collect_data():
+    for i in range(500):
+        real_war_calculator()
+        if i % 2 == 0:
+            captain_rWAR_calculator(2)
+        else:
+            captain_rWAR_calculator(3)
+
+
+
+    #I need to upgrade this to give every single player 6 different rWAR values calculated in 6 different teams and against
+#6 different sets of opponents. These can be rWAR1 through rWAR6 and their final rWAR
+#It is also a problem that I am entering data for players on the same team
+#Instead of a phase system that goes through a whole team, I need to take one player from a team, find their winrate and subtract it by the winrate of a replacement player in the same slot.
+#Store this as rWAR1. Run it again with the same player but a totally new team and set of 50 opponents. This difference will be rWAR2. Do the same thing four more times and store each value as a new rWAR.
+#The average value of the 6 rWAR values is essentially their overall value and the two extremes show their potential. High variance players are more dependent on their systems to succeed, while low variance players
+#are more consistent. Perhaps I can call the final metric uWAR which takes the average rWAR and penalizes players with high variance.
 
 #clear_all_databases()
 #initiate_databases()
+#collect_data()
 main()
-#another_test()
+
+#for _ in range(1000):
+#    real_war_calculator()
+

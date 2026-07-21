@@ -1,0 +1,1487 @@
+Changes for R#-I*A^2.27_Freya
+Factor: 1.014000
+	Age Factor: 1.05
+	T_Factor: -0.036000
+		Trait Factor: 0
+		Tier Factor: -0.01
+		Random Factor: -0.026
+	X_Factor: 0
+Power: +1.00000
+Defense %: +0.00070
+Critical X: +0.09000
+New Stats: R#-I*A^2.27_Freya ({'R#': 0.12, 'I*': 0.1})
+	!-Ice-Wall_Raptors-!
+xWAR: 25.294 (Rank 24)
+Attack Damage: 56
+Attack Speed: 6
+Crit %: 0.06
+Mitigate %: 0.0281
+Defense Absolute: 6
+Defense %: 0.0481
+Crit X: 6.55
+Health: 238.35000000000002
+Power: 59
+Spawn Time: 7
+AGE: 0
+
+
+Changes for Hn-I*S^0.6_Lorelei
+Factor: 1.030000
+	Age Factor: 1.05
+	T_Factor: -0.020000
+		Trait Factor: -0.01
+		Tier Factor: -0.0075
+		Random Factor: -0.0025
+	X_Factor: 0
+Attack Damage: +1.00000
+Critical %: +0.00360
+Power: +1.00000
+New Stats: Hn-I*S^0.6_Lorelei ({'Hn': [12, 42, False], 'I*': 0.09})
+	!-Ice-Wall_Raptors-!
+xWAR: 22.345 (Rank 88)
+Attack Damage: 57
+Attack Speed: 8
+Crit %: 0.0636
+Mitigate %: 0.0314
+Defense Absolute: 7
+Defense %: 0.0277
+Crit X: 7.99
+Health: 226.34
+Power: 59
+Spawn Time: 7
+AGE: 0
+
+
+Changes for Sp-I*B^2.68_Yvette
+Factor: 1.014000
+	Age Factor: 1.05
+	T_Factor: -0.036000
+		Trait Factor: -0.015
+		Tier Factor: 0.005
+		Random Factor: -0.026
+	X_Factor: 0
+Attack Damage: 0.00000
+Power: +1.00000
+Mitigated %: +0.00060
+New Stats: Sp-I*B^2.68_Yvette ({'Sp': 0.3, 'I*': 0.12})
+	!-Ice-Wall_Raptors-!
+xWAR: 20.475 (Rank 154)
+Attack Damage: 63
+Attack Speed: 7
+Crit %: 0.058
+Mitigate %: 0.0447
+Defense Absolute: 4
+Defense %: 0.0447
+Crit X: 7.07
+Health: 217.2
+Power: 54
+Spawn Time: 6
+AGE: 0
+
+
+Changes for I*S^1.12_Gael
+Factor: 1.030500
+	Age Factor: 1.05
+	T_Factor: -0.019500
+		Trait Factor: 0
+		Tier Factor: -0.0075
+		Random Factor: -0.012
+	X_Factor: 0
+Max Health: +6.76000
+Attack Speed: -1.00000
+Spawn Time: +1.00000
+New Stats: I*S^1.12_Gael ({'I*': 0.11})
+	!-Ice-Wall_Raptors-!
+xWAR: 19.004 (Rank 224)
+Attack Damage: 60
+Attack Speed: 5
+Crit %: 0.056
+Mitigate %: 0.032
+Defense Absolute: 4
+Defense %: 0.0601
+Crit X: 7.72
+Health: 228.36
+Power: 55
+Spawn Time: 7
+AGE: 0
+
+
+Changes for I*S_Quest
+Factor: 1.037500
+	Age Factor: 1.05
+	T_Factor: -0.012500
+		Trait Factor: -0.005
+		Tier Factor: -0.0025
+		Random Factor: -0.005
+	X_Factor: 0
+Spawn Time: -1.00000
+Power: 0.00000
+New Stats: I*S_Quest ({'I*': 0.05})
+	!-Ice-Wall_Raptors-!
+xWAR: 13.997 (Rank 576)
+Attack Damage: 58
+Attack Speed: 7
+Crit %: 0.061
+Mitigate %: 0.0443
+Defense Absolute: 7
+Defense %: 0.0447
+Crit X: 6.87
+Health: 232.21
+Power: 54
+Spawn Time: 5
+AGE: 0
+
+
+I*S_Quest spawn time leveled out to 6.
+Changes for X+-C%B^-0.65_Iris
+Factor: 1.055000
+	Age Factor: 0.95
+	T_Factor: -0.020000
+		Trait Factor: -0.005
+		Tier Factor: -0.005
+		Random Factor: -0.01
+	X_Factor: 0.125
+Defense Absolute: +1.00000
+Attack Speed: -1.00000
+Defense %: +0.00200
+New Stats: X+-C%B^-0.65_Iris ({'X+': [43, 1], 'C%': 1.22})
+	!-Ice-Wall_Raptors-!
+xWAR: 3.449 (Rank 1243)
+Attack Damage: 52
+Attack Speed: 7
+Crit %: 0.059
+Mitigate %: 0.0314
+Defense Absolute: 3
+Defense %: 0.0387
+Crit X: 7.76
+Health: 206.04
+Power: 54
+Spawn Time: 8
+AGE: 0
+
+
+!-Ice-Wall_Raptors-! Old xWAR: 104.56400000000001
+New xWAR: 114.43200000000002
++9.86800000000001
+
+Changes for Hn-I*S^0.14_Yvette
+Factor: 1.021500
+	Age Factor: 1.05
+	T_Factor: -0.028500
+		Trait Factor: -0.015
+		Tier Factor: -0.0025
+		Random Factor: -0.011
+	X_Factor: 0
+Spawn Time: +1.00000
+Mitigated %: +0.00130
+New Stats: Hn-I*S^0.14_Yvette ({'Hn': [13, 42, False], 'I*': 0.13})
+	!-Darkwing_Spectrals-!
+xWAR: 24.643 (Rank 36)
+Attack Damage: 57
+Attack Speed: 6
+Crit %: 0.069
+Mitigate %: 0.0634
+Defense Absolute: 8
+Defense %: 0.0414
+Crit X: 8.67
+Health: 219.5
+Power: 53
+Spawn Time: 7
+AGE: 0
+
+
+Hn-I*S^0.14_Yvette defense absolute leveled out to 7.
+Changes for X+B^0.59_Sparrow
+Factor: 1.037500
+	Age Factor: 1.05
+	T_Factor: -0.012500
+		Trait Factor: -0.005
+		Tier Factor: -0.0025
+		Random Factor: -0.005
+	X_Factor: 0
+Critical %: +0.00510
+Max Health: +7.50000
+New Stats: X+B^0.59_Sparrow ({'X+': [55, 1]})
+	!-Darkwing_Spectrals-!
+xWAR: 17.558 (Rank 295)
+Attack Damage: 56
+Attack Speed: 6
+Crit %: 0.0731
+Mitigate %: 0.0714
+Defense Absolute: 5
+Defense %: 0.0393
+Crit X: 7.13
+Health: 207.56
+Power: 55
+Spawn Time: 6
+AGE: 0
+
+
+Changes for I*S_Dakota
+Factor: 0.940000
+	Age Factor: 0.95
+	T_Factor: -0.010000
+		Trait Factor: 0
+		Tier Factor: 0
+		Random Factor: -0.01
+	X_Factor: 0
+Defense %: -0.00280
+Power: -1.00000
+New Stats: I*S_Dakota ({'I*': 0.08})
+	!-Darkwing_Spectrals-!
+xWAR: 11.655 (Rank 825)
+Attack Damage: 56
+Attack Speed: 9
+Crit %: 0.059
+Mitigate %: 0.0376
+Defense Absolute: 4
+Defense %: 0.0432
+Crit X: 7.95
+Health: 236.75
+Power: 56
+Spawn Time: 6
+AGE: 0
+
+
+Changes for HnC^4.07_Zara
+Factor: 1.013000
+	Age Factor: 1.05
+	T_Factor: -0.037000
+		Trait Factor: -0.03
+		Tier Factor: 0.005
+		Random Factor: -0.012
+	X_Factor: 0
+Critical %: +0.00160
+Power: +1.00000
+Attack Speed: 0.00000
+New Stats: HnC^4.07_Zara ({'Hn': [12, 54, False]})
+	!-Darkwing_Spectrals-!
+xWAR: 10.01 (Rank 987)
+Attack Damage: 50
+Attack Speed: 9
+Crit %: 0.0616
+Mitigate %: 0.0551
+Defense Absolute: 4
+Defense %: 0.0425
+Crit X: 9.721
+Health: 224.12
+Power: 56
+Spawn Time: 6
+AGE: 0
+
+
+Changes for I*A^1.33_Reeve
+Factor: 0.935000
+	Age Factor: 0.96
+	T_Factor: -0.025000
+		Trait Factor: -0.01
+		Tier Factor: 0
+		Random Factor: -0.015
+	X_Factor: 0
+Defense Absolute: -1.00000
+Critical X: -0.43500
+New Stats: I*A^1.33_Reeve ({'I*': 0.12})
+	!-Darkwing_Spectrals-!
+xWAR: 5.32 (Rank 1217)
+Attack Damage: 53
+Attack Speed: 9
+Crit %: 0.06
+Mitigate %: 0.0557
+Defense Absolute: 2
+Defense %: 0.0592
+Crit X: 6.255
+Health: 223.54
+Power: 53
+Spawn Time: 6
+AGE: 0
+
+
+Changes for I*B^2.44_Xander
+Factor: 1.034000
+	Age Factor: 1.05
+	T_Factor: -0.016000
+		Trait Factor: -0.005
+		Tier Factor: 0
+		Random Factor: -0.011
+	X_Factor: 0
+Attack Damage: +1.00000
+Attack Speed: -1.00000
+Defense Absolute: 0.00000
+New Stats: I*B^2.44_Xander ({'I*': 0.1})
+	!-Darkwing_Spectrals-!
+xWAR: 2.462 (Rank 1250)
+Attack Damage: 60
+Attack Speed: 7
+Crit %: 0.066
+Mitigate %: 0.0384
+Defense Absolute: 4
+Defense %: 0.0476
+Crit X: 7.09
+Health: 224.83
+Power: 51
+Spawn Time: 7
+AGE: 0
+
+
+!-Darkwing_Spectrals-! Old xWAR: 71.64800000000001
+New xWAR: 75.259
++3.61099999999999
+
+Changes for Hn-I*S_Flynn
+Factor: 0.934500
+	Age Factor: 0.95
+	T_Factor: -0.015500
+		Trait Factor: 0
+		Tier Factor: -0.0025
+		Random Factor: -0.013
+	X_Factor: 0
+Defense Absolute: -1.00000
+Power: -1.00000
+Defense %: -0.00380
+New Stats: Hn-I*S_Flynn ({'Hn': [11, 42, False], 'I*': 0.15})
+	**Shining-Core_Rocs**
+xWAR: 26.467 (Rank 9)
+Attack Damage: 57
+Attack Speed: 7
+Crit %: 0.056
+Mitigate %: 0.0451
+Defense Absolute: 6
+Defense %: 0.0546
+Crit X: 8.53
+Health: 231.23
+Power: 56
+Spawn Time: 6
+AGE: 0
+
+
+Changes for Fl-U-A^1.8_Lorelei
+Factor: 1.029500
+	Age Factor: 1.05
+	T_Factor: -0.020500
+		Trait Factor: -0.0025
+		Tier Factor: -0.005
+		Random Factor: -0.013
+	X_Factor: 0
+Power: +1.00000
+Mitigated %: +0.00200
+New Stats: Fl-U-A^1.8_Lorelei ({'Fl': [0.08, 10], 'U-': 0.28})
+	**Shining-Core_Rocs**
+xWAR: 15.083 (Rank 479)
+Attack Damage: 53
+Attack Speed: 8
+Crit %: 0.065
+Mitigate %: 0.069
+Defense Absolute: 4
+Defense %: 0.0552
+Crit X: 6.44
+Health: 219.08999999999997
+Power: 56
+Spawn Time: 6
+AGE: 0
+
+
+Changes for R#-I*B^-0.63_Umberto
+Factor: 0.928500
+	Age Factor: 0.95
+	T_Factor: -0.021500
+		Trait Factor: 0
+		Tier Factor: -0.0075
+		Random Factor: -0.014
+	X_Factor: 0
+Critical X: -0.58300
+Mitigated %: -0.00500
+Attack Damage: -2.00000
+New Stats: R#-I*B^-0.63_Umberto ({'R#': 0.11, 'I*': 0.07})
+	**Shining-Core_Rocs**
+xWAR: 9.948 (Rank 991)
+Attack Damage: 58
+Attack Speed: 8
+Crit %: 0.052
+Mitigate %: 0.0649
+Defense Absolute: 4
+Defense %: 0.0431
+Crit X: 7.577
+Health: 226.97
+Power: 54
+Spawn Time: 8
+AGE: 0
+
+
+Changes for PpA^1.0_Marley
+Factor: 0.740000
+	Age Factor: 0.96
+	T_Factor: -0.220000
+		Trait Factor: -0.2
+		Tier Factor: -0.005
+		Random Factor: -0.015
+	X_Factor: 0
+Mitigated %: -0.01010
+Power: 0.00000
+Critical X: -2.07200
+New Stats: PpA^1.0_Marley ({'Pp': 0.35})
+	**Shining-Core_Rocs**
+xWAR: 8.924 (Rank 1083)
+Attack Damage: 62
+Attack Speed: 8
+Crit %: 0.057
+Mitigate %: 0.0286
+Defense Absolute: 5
+Defense %: 0.0469
+Crit X: 5.898
+Health: 232.09
+Power: 58
+Spawn Time: 6
+AGE: 0
+
+
+Changes for C^0.29_Ashton
+Factor: 0.950000
+	Age Factor: 0.96
+	T_Factor: -0.010000
+		Trait Factor: 0
+		Tier Factor: 0.01
+		Random Factor: -0.02
+	X_Factor: 0
+Critical X: -0.39400
+Mitigated %: -0.00270
+New Stats: C^0.29_Ashton ({})
+	**Shining-Core_Rocs**
+xWAR: 2.171 (Rank 1252)
+Attack Damage: 56
+Attack Speed: 7
+Crit %: 0.07
+Mitigate %: 0.0505
+Defense Absolute: 5
+Defense %: 0.0364
+Crit X: 7.483
+Health: 224.8
+Power: 53
+Spawn Time: 7
+AGE: 0
+
+
+Changes for A^2.5_Hadley
+Factor: 1.155000
+	Age Factor: 1.05
+	T_Factor: -0.020000
+		Trait Factor: 0
+		Tier Factor: -0.01
+		Random Factor: -0.01
+	X_Factor: 0.125
+Defense %: +0.00790
+Critical X: +1.07700
+Power: 0.00000
+New Stats: A^2.5_Hadley ({})
+	**Shining-Core_Rocs**
+xWAR: 1.444 (Rank 1255)
+Attack Damage: 61
+Attack Speed: 9
+Crit %: 0.058
+Mitigate %: 0.0732
+Defense Absolute: 6
+Defense %: 0.0587
+Crit X: 8.027
+Health: 241.38
+Power: 52
+Spawn Time: 6
+AGE: 0
+
+
+**Shining-Core_Rocs** Old xWAR: 64.03699999999999
+New xWAR: 63.647000000000006
+-0.38999999999998636
+
+Changes for Fl-I*S_Theo
+Factor: 1.027500
+	Age Factor: 1.05
+	T_Factor: -0.022500
+		Trait Factor: -0.01
+		Tier Factor: -0.005
+		Random Factor: -0.0075
+	X_Factor: 0
+Attack Speed: 0.00000
+Defense %: +0.00110
+New Stats: Fl-I*S_Theo ({'Fl': [0.1, 10], 'I*': 0.13})
+	**Diamond-Sea_Godkillers**
+xWAR: 25.595 (Rank 16)
+Attack Damage: 55
+Attack Speed: 6
+Crit %: 0.057
+Mitigate %: 0.0259
+Defense Absolute: 4
+Defense %: 0.0426
+Crit X: 8.97
+Health: 224.24
+Power: 57
+Spawn Time: 6
+AGE: 0
+
+
+Changes for R#-I*B^-0.03_Gia
+Factor: 0.914500
+	Age Factor: 0.95
+	T_Factor: -0.035500
+		Trait Factor: -0.005
+		Tier Factor: -0.0025
+		Random Factor: -0.028
+	X_Factor: 0
+Attack Speed: +1.00000
+Max Health: -17.36000
+New Stats: R#-I*B^-0.03_Gia ({'R#': 0.12, 'I*': 0.1})
+	**Diamond-Sea_Godkillers**
+xWAR: 18.337 (Rank 256)
+Attack Damage: 56
+Attack Speed: 7
+Crit %: 0.06
+Mitigate %: 0.0588
+Defense Absolute: 5
+Defense %: 0.0324
+Crit X: 7.71
+Health: 185.65
+Power: 54
+Spawn Time: 7
+AGE: 0
+
+
+Changes for Sp-V.B^-0.16_Zephyr
+Factor: 1.042500
+	Age Factor: 1.05
+	T_Factor: -0.007500
+		Trait Factor: -0.01
+		Tier Factor: 0.005
+		Random Factor: -0.0025
+	X_Factor: 0
+Mitigated %: +0.00270
+Attack Damage: +1.00000
+New Stats: Sp-V.B^-0.16_Zephyr ({'Sp': 0.31, 'V.': 0.45})
+	**Diamond-Sea_Godkillers**
+xWAR: 11.965 (Rank 797)
+Attack Damage: 59
+Attack Speed: 8
+Crit %: 0.067
+Mitigate %: 0.0654
+Defense Absolute: 5
+Defense %: 0.0479
+Crit X: 6.26
+Health: 214.23
+Power: 55
+Spawn Time: 8
+AGE: 0
+
+
+Changes for X+C^3.18_Darcy
+Factor: 1.025500
+	Age Factor: 1.05
+	T_Factor: -0.024500
+		Trait Factor: -0.02
+		Tier Factor: 0.0075
+		Random Factor: -0.012
+	X_Factor: 0
+Critical X: +0.21500
+Spawn Time: -1.00000
+Attack Damage: +1.00000
+New Stats: X+C^3.18_Darcy ({'X+': [57, 1]})
+	**Diamond-Sea_Godkillers**
+xWAR: 5.239 (Rank 1222)
+Attack Damage: 59
+Attack Speed: 9
+Crit %: 0.07
+Mitigate %: 0.0635
+Defense Absolute: 3
+Defense %: 0.0309
+Crit X: 8.639
+Health: 219.2
+Power: 53
+Spawn Time: 7
+AGE: 0
+
+
+Changes for PpA^0.48_Anya
+Factor: 0.914000
+	Age Factor: 0.96
+	T_Factor: -0.046000
+		Trait Factor: -0.025
+		Tier Factor: -0.01
+		Random Factor: -0.011
+	X_Factor: 0
+Critical X: -0.66800
+Attack Damage: -2.00000
+Mitigated %: -0.00210
+New Stats: PpA^0.48_Anya ({'Pp': 0.33})
+	**Diamond-Sea_Godkillers**
+xWAR: -0.057 (Rank 1260)
+Attack Damage: 50
+Attack Speed: 7
+Crit %: 0.066
+Mitigate %: 0.0225
+Defense Absolute: 3
+Defense %: 0.0456
+Crit X: 7.102
+Health: 233.14999999999998
+Power: 54
+Spawn Time: 7
+AGE: 0
+
+
+Changes for U-C^6.2_Verity
+Factor: 0.980000
+	Age Factor: 1.0
+	T_Factor: -0.020000
+		Trait Factor: -0.005
+		Tier Factor: -0.005
+		Random Factor: -0.01
+	X_Factor: 0
+Defense %: -0.00080
+Critical X: -0.18100
+Max Health: -4.57000
+New Stats: U-C^6.2_Verity ({'U-': 0.27})
+	**Diamond-Sea_Godkillers**
+xWAR: -2.052 (Rank 1268)
+Attack Damage: 58
+Attack Speed: 9
+Crit %: 0.06
+Mitigate %: 0.0583
+Defense Absolute: 4
+Defense %: 0.0392
+Crit X: 8.849
+Health: 223.82
+Power: 50
+Spawn Time: 7
+AGE: 0
+
+
+**Diamond-Sea_Godkillers** Old xWAR: 59.027
+New xWAR: 56.599999999999994
+-2.4270000000000067
+
+Changes for Fl-V.S^0.56_Phoenix
+Factor: 1.027500
+	Age Factor: 1.05
+	T_Factor: -0.022500
+		Trait Factor: 0
+		Tier Factor: -0.0125
+		Random Factor: -0.01
+	X_Factor: 0
+Defense Absolute: 0.00000
+Defense %: +0.00170
+Attack Damage: +1.00000
+New Stats: Fl-V.S^0.56_Phoenix ({'Fl': [0.11, 10], 'V.': 0.49})
+	!-Web-of-Nations_Thunderbirds-!
+xWAR: 13.32 (Rank 638)
+Attack Damage: 62
+Attack Speed: 9
+Crit %: 0.058
+Mitigate %: 0.0696
+Defense Absolute: 5
+Defense %: 0.062
+Crit X: 8.12
+Health: 218.22
+Power: 54
+Spawn Time: 6
+AGE: 0
+
+
+Changes for Hn-I*S_Iris
+Factor: 1.013500
+	Age Factor: 1.05
+	T_Factor: -0.036500
+		Trait Factor: -0.015
+		Tier Factor: -0.0075
+		Random Factor: -0.014
+	X_Factor: 0
+Attack Damage: 0.00000
+Critical X: +0.10500
+Defense %: +0.00040
+New Stats: Hn-I*S_Iris ({'Hn': [11, 42, False], 'I*': 0.15})
+	!-Web-of-Nations_Thunderbirds-!
+xWAR: 10.204 (Rank 968)
+Attack Damage: 53
+Attack Speed: 8
+Crit %: 0.052
+Mitigate %: 0.0716
+Defense Absolute: 6
+Defense %: 0.0307
+Crit X: 7.915
+Health: 224.49
+Power: 53
+Spawn Time: 8
+AGE: 0
+
+
+Changes for I*B^4.16_Xiomara
+Factor: 1.030000
+	Age Factor: 1.05
+	T_Factor: -0.020000
+		Trait Factor: -0.005
+		Tier Factor: 0.005
+		Random Factor: -0.02
+	X_Factor: 0
+Critical X: +0.20700
+Mitigated %: +0.00240
+New Stats: I*B^4.16_Xiomara ({'I*': 0.12})
+	!-Web-of-Nations_Thunderbirds-!
+xWAR: 5.046 (Rank 1225)
+Attack Damage: 63
+Attack Speed: 8
+Crit %: 0.06
+Mitigate %: 0.0822
+Defense Absolute: 3
+Defense %: 0.0472
+Crit X: 7.097
+Health: 218.29
+Power: 52
+Spawn Time: 8
+AGE: 0
+
+
+Changes for I*A^2.19_Dakota
+Factor: 0.960000
+	Age Factor: 0.97
+	T_Factor: -0.010000
+		Trait Factor: -0.005
+		Tier Factor: 0.0025
+		Random Factor: -0.0075
+	X_Factor: 0
+Defense Absolute: 0.00000
+Attack Speed: +1.00000
+Mitigated %: -0.00180
+New Stats: I*A^2.19_Dakota ({'I*': 0.07})
+	!-Web-of-Nations_Thunderbirds-!
+xWAR: 4.933 (Rank 1226)
+Attack Damage: 57
+Attack Speed: 10
+Crit %: 0.069
+Mitigate %: 0.0436
+Defense Absolute: 3
+Defense %: 0.0362
+Crit X: 8.18
+Health: 228.23999999999998
+Power: 54
+Spawn Time: 7
+AGE: 0
+
+
+Changes for TxC^-1.85_Naya
+Factor: 0.933000
+	Age Factor: 0.95
+	T_Factor: -0.017000
+		Trait Factor: 0
+		Tier Factor: 0.005
+		Random Factor: -0.022
+	X_Factor: 0
+Mitigated %: -0.00130
+Attack Damage: -2.00000
+Spawn Time: -1.00000
+New Stats: TxC^-1.85_Naya ({'Tx': [0.28, [10, 8]]})
+	!-Web-of-Nations_Thunderbirds-!
+xWAR: 4.565 (Rank 1234)
+Attack Damage: 53
+Attack Speed: 7
+Crit %: 0.05
+Mitigate %: 0.0181
+Defense Absolute: 4
+Defense %: 0.0312
+Crit X: 6.205
+Health: 210
+Power: 52
+Spawn Time: 7
+AGE: 0
+
+
+TxC^-1.85_Naya mitigate % leveled out to 0.02.
+Changes for A^1.76_Marley
+Factor: 1.040000
+	Age Factor: 1.05
+	T_Factor: -0.010000
+		Trait Factor: 0
+		Tier Factor: -0.0025
+		Random Factor: -0.0075
+	X_Factor: 0
+Critical X: +0.33000
+Attack Speed: 0.00000
+New Stats: A^1.76_Marley ({})
+	!-Web-of-Nations_Thunderbirds-!
+xWAR: -1.821 (Rank 1267)
+Attack Damage: 61
+Attack Speed: 8
+Crit %: 0.055
+Mitigate %: 0.071
+Defense Absolute: 3
+Defense %: 0.0422
+Crit X: 8.58
+Health: 222.75
+Power: 55
+Spawn Time: 8
+AGE: 0
+
+
+!-Web-of-Nations_Thunderbirds-! Old xWAR: 36.247
+New xWAR: 37.876999999999995
++1.6299999999999955
+
+Changes for R#-I*S_Tatum
+Factor: 0.912500
+	Age Factor: 0.95
+	T_Factor: -0.037500
+		Trait Factor: -0.015
+		Tier Factor: -0.0025
+		Random Factor: -0.02
+	X_Factor: 0
+Defense Absolute: 0.00000
+Spawn Time: +1.00000
+Defense %: -0.00230
+New Stats: R#-I*S_Tatum ({'R#': 0.11, 'I*': 0.11})
+	**Candyland_Succubi**
+xWAR: 19.421 (Rank 205)
+Attack Damage: 54
+Attack Speed: 8
+Crit %: 0.054
+Mitigate %: 0.0618
+Defense Absolute: 6
+Defense %: 0.0235
+Crit X: 7.58
+Health: 232.32
+Power: 59
+Spawn Time: 7
+AGE: 0
+
+
+Changes for HnA^1.01_Yvette
+Factor: 0.912500
+	Age Factor: 0.96
+	T_Factor: -0.047500
+		Trait Factor: -0.03
+		Tier Factor: -0.0075
+		Random Factor: -0.01
+	X_Factor: 0
+Max Health: -19.94000
+Attack Speed: 0.00000
+New Stats: HnA^1.01_Yvette ({'Hn': [12, 48, False]})
+	**Candyland_Succubi**
+xWAR: 16.854 (Rank 343)
+Attack Damage: 54
+Attack Speed: 8
+Crit %: 0.062
+Mitigate %: 0.0734
+Defense Absolute: 4
+Defense %: 0.0327
+Crit X: 8.6
+Health: 207.97
+Power: 58
+Spawn Time: 6
+AGE: 0
+
+
+Changes for Fl-TxA^0.18_Jordan
+Factor: 1.042500
+	Age Factor: 1.05
+	T_Factor: -0.007500
+		Trait Factor: 0
+		Tier Factor: 0.0025
+		Random Factor: -0.01
+	X_Factor: 0
+Defense Absolute: 0.00000
+Spawn Time: -1.00000
+Max Health: +8.61000
+New Stats: Fl-TxA^0.18_Jordan ({'Fl': [0.1, 10], 'Tx': [0.27, [13, 7]]})
+	**Candyland_Succubi**
+xWAR: 13.316 (Rank 640)
+Attack Damage: 51
+Attack Speed: 7
+Crit %: 0.056
+Mitigate %: 0.0491
+Defense Absolute: 3
+Defense %: 0.0377
+Crit X: 6.86
+Health: 211.16
+Power: 54
+Spawn Time: 5
+AGE: 0
+
+
+Fl-TxA^0.18_Jordan spawn time leveled out to 6.
+Changes for C%B^-0.54_Tate
+Factor: 0.927500
+	Age Factor: 0.95
+	T_Factor: -0.022500
+		Trait Factor: -0.01
+		Tier Factor: -0.0025
+		Random Factor: -0.01
+	X_Factor: 0
+Mitigated %: -0.00560
+Spawn Time: -1.00000
+New Stats: C%B^-0.54_Tate ({'C%': 1.12})
+	**Candyland_Succubi**
+xWAR: 0.846 (Rank 1257)
+Attack Damage: 57
+Attack Speed: 9
+Crit %: 0.052
+Mitigate %: 0.0713
+Defense Absolute: 4
+Defense %: 0.0335
+Crit X: 6.8
+Health: 209.75
+Power: 53
+Spawn Time: 7
+AGE: 0
+
+
+Changes for PpA^0.04_Rowan
+Factor: 0.834500
+	Age Factor: 1.05
+	T_Factor: -0.215500
+		Trait Factor: -0.2
+		Tier Factor: -0.0025
+		Random Factor: -0.013
+	X_Factor: 0
+Max Health: -38.76000
+Mitigated %: -0.01200
+Defense Absolute: 0.00000
+New Stats: PpA^0.04_Rowan ({'Pp': 0.39})
+	**Candyland_Succubi**
+xWAR: 0.008 (Rank 1259)
+Attack Damage: 51
+Attack Speed: 8
+Crit %: 0.062
+Mitigate %: 0.0605
+Defense Absolute: 5
+Defense %: 0.0428
+Crit X: 7.23
+Health: 195.46
+Power: 53
+Spawn Time: 6
+AGE: 0
+
+
+Changes for PpC^1.01_Zelda
+Factor: 1.009000
+	Age Factor: 1.05
+	T_Factor: -0.041000
+		Trait Factor: -0.025
+		Tier Factor: -0.005
+		Random Factor: -0.011
+	X_Factor: 0
+Max Health: +1.96000
+Attack Speed: -1.00000
+New Stats: PpC^1.01_Zelda ({'Pp': 0.31})
+	**Candyland_Succubi**
+xWAR: -8.688 (Rank 1271)
+Attack Damage: 52
+Attack Speed: 7
+Crit %: 0.06
+Mitigate %: 0.0365
+Defense Absolute: 3
+Defense %: 0.0424
+Crit X: 7.023
+Health: 219.62
+Power: 52
+Spawn Time: 8
+AGE: 0
+
+
+**Candyland_Succubi** Old xWAR: 41.757
+New xWAR: 39.31899999999999
+-2.4380000000000095
+
+Changes for HnC^0.03_Presley
+Factor: 1.027500
+	Age Factor: 1.05
+	T_Factor: -0.022500
+		Trait Factor: -0.01
+		Tier Factor: 0.0075
+		Random Factor: -0.02
+	X_Factor: 0
+Attack Damage: +1.00000
+Spawn Time: +1.00000
+New Stats: HnC^0.03_Presley ({'Hn': [11, 42, False]})
+	Labyrinth_Goblins
+xWAR: 13.583 (Rank 615)
+Attack Damage: 61
+Attack Speed: 9
+Crit %: 0.06
+Mitigate %: 0.0212
+Defense Absolute: 5
+Defense %: 0.0422
+Crit X: 8.099
+Health: 222.69
+Power: 57
+Spawn Time: 7
+AGE: 0
+
+
+Changes for HnB^1.08_Briar
+Factor: 0.912500
+	Age Factor: 0.96
+	T_Factor: -0.047500
+		Trait Factor: -0.04
+		Tier Factor: 0
+		Random Factor: -0.0075
+	X_Factor: 0
+Attack Damage: -3.00000
+Defense Absolute: 0.00000
+Critical X: -0.57500
+New Stats: HnB^1.08_Briar ({'Hn': [12, 36, False]})
+	Labyrinth_Goblins
+xWAR: 12.639 (Rank 714)
+Attack Damage: 57
+Attack Speed: 9
+Crit %: 0.057
+Mitigate %: 0.0277
+Defense Absolute: 5
+Defense %: 0.058
+Crit X: 5.995
+Health: 220.1
+Power: 57
+Spawn Time: 7
+AGE: 0
+
+
+Changes for I*A^1.04_Nova
+Factor: 0.937500
+	Age Factor: 0.96
+	T_Factor: -0.022500
+		Trait Factor: -0.005
+		Tier Factor: -0.0075
+		Random Factor: -0.01
+	X_Factor: 0
+Mitigated %: -0.00330
+Power: 0.00000
+Attack Speed: 0.00000
+New Stats: I*A^1.04_Nova ({'I*': 0.1})
+	Labyrinth_Goblins
+xWAR: 9.427 (Rank 1043)
+Attack Damage: 51
+Attack Speed: 9
+Crit %: 0.055
+Mitigate %: 0.0492
+Defense Absolute: 5
+Defense %: 0.0494
+Crit X: 6.86
+Health: 208.97
+Power: 58
+Spawn Time: 6
+AGE: 0
+
+
+Changes for C%S^1.43_Landon
+Factor: 1.025000
+	Age Factor: 1.05
+	T_Factor: -0.025000
+		Trait Factor: -0.01
+		Tier Factor: -0.01
+		Random Factor: -0.005
+	X_Factor: 0
+Power: +1.00000
+Critical X: +0.19300
+Defense Absolute: 0.00000
+New Stats: C%S^1.43_Landon ({'C%': 1.15})
+	Labyrinth_Goblins
+xWAR: 8.52 (Rank 1124)
+Attack Damage: 56
+Attack Speed: 9
+Crit %: 0.053
+Mitigate %: 0.0299
+Defense Absolute: 4
+Defense %: 0.0462
+Crit X: 7.923
+Health: 211.05
+Power: 59
+Spawn Time: 6
+AGE: 0
+
+
+Changes for TxA^1.42_Gunnar
+Factor: 0.952500
+	Age Factor: 0.96
+	T_Factor: -0.007500
+		Trait Factor: 0
+		Tier Factor: -0.0025
+		Random Factor: -0.005
+	X_Factor: 0
+Attack Damage: -1.00000
+Critical X: -0.33600
+Max Health: -11.23000
+New Stats: TxA^1.42_Gunnar ({'Tx': [0.27, [11, 7]]})
+	Labyrinth_Goblins
+xWAR: 7.917 (Rank 1160)
+Attack Damage: 51
+Attack Speed: 7
+Crit %: 0.068
+Mitigate %: 0.0755
+Defense Absolute: 3
+Defense %: 0.0437
+Crit X: 6.744
+Health: 225.28
+Power: 53
+Spawn Time: 7
+AGE: 0
+
+
+Changes for V.B^-0.09_Uriel
+Factor: 0.925000
+	Age Factor: 0.95
+	T_Factor: -0.025000
+		Trait Factor: -0.005
+		Tier Factor: -0.005
+		Random Factor: -0.015
+	X_Factor: 0
+Defense %: -0.00360
+Max Health: -16.92000
+New Stats: V.B^-0.09_Uriel ({'V.': 0.46})
+	Labyrinth_Goblins
+xWAR: 4.902 (Rank 1228)
+Attack Damage: 59
+Attack Speed: 9
+Crit %: 0.068
+Mitigate %: 0.0793
+Defense Absolute: 3
+Defense %: 0.0438
+Crit X: 6.95
+Health: 208.67
+Power: 56
+Spawn Time: 7
+AGE: 0
+
+
+#Labyrinth_Goblins# Old xWAR: 56.988
+New xWAR: 51.786
+-5.201999999999998
+
+Changes for Sp-I*S_Carter
+Factor: 0.920500
+	Age Factor: 0.95
+	T_Factor: -0.029500
+		Trait Factor: -0.005
+		Tier Factor: -0.0125
+		Random Factor: -0.012
+	X_Factor: 0
+Defense Absolute: -1.00000
+Defense %: -0.00430
+Max Health: -18.71000
+New Stats: Sp-I*S_Carter ({'Sp': 0.32, 'I*': 0.13})
+	**Hell's-Circle_Stone-Giants**
+xWAR: 17.064 (Rank 324)
+Attack Damage: 57
+Attack Speed: 9
+Crit %: 0.06
+Mitigate %: 0.051
+Defense Absolute: 6
+Defense %: 0.0499
+Crit X: 8.2
+Health: 216.62
+Power: 53
+Spawn Time: 6
+AGE: 0
+
+
+Changes for C%S^0.54_Vance
+Factor: 1.005000
+	Age Factor: 1.05
+	T_Factor: -0.045000
+		Trait Factor: -0.005
+		Tier Factor: -0.01
+		Random Factor: -0.03
+	X_Factor: 0
+Max Health: +1.15000
+Mitigated %: +0.00040
+Defense Absolute: +1.00000
+New Stats: C%S^0.54_Vance ({'C%': 1.23})
+	**Hell's-Circle_Stone-Giants**
+xWAR: 14.673 (Rank 513)
+Attack Damage: 63
+Attack Speed: 8
+Crit %: 0.064
+Mitigate %: 0.0733
+Defense Absolute: 7
+Defense %: 0.0587
+Crit X: 8.93
+Health: 230.86
+Power: 58
+Spawn Time: 8
+AGE: 0
+
+
+Changes for TxA^2.49_Lorelei
+Factor: 1.157500
+	Age Factor: 1.05
+	T_Factor: -0.042500
+		Trait Factor: 0
+		Tier Factor: -0.0125
+		Random Factor: -0.03
+	X_Factor: 0.15
+Max Health: +35.63000
+Critical X: +1.32600
+New Stats: TxA^2.49_Lorelei ({'Tx': [0.27, [13, 6]]})
+	**Hell's-Circle_Stone-Giants**
+xWAR: 8.787 (Rank 1098)
+Attack Damage: 54
+Attack Speed: 8
+Crit %: 0.057
+Mitigate %: 0.0454
+Defense Absolute: 2
+Defense %: 0.0305
+Crit X: 9.746
+Health: 261.88
+Power: 57
+Spawn Time: 7
+AGE: 0
+
+
+Changes for A^1.16_Sutton
+Factor: 1.023500
+	Age Factor: 1.05
+	T_Factor: -0.026500
+		Trait Factor: 0
+		Tier Factor: -0.0125
+		Random Factor: -0.014
+	X_Factor: 0
+Attack Speed: -1.00000
+Critical X: +0.16500
+New Stats: A^1.16_Sutton ({})
+	**Hell's-Circle_Stone-Giants**
+xWAR: 4.574 (Rank 1233)
+Attack Damage: 63
+Attack Speed: 6
+Crit %: 0.067
+Mitigate %: 0.0593
+Defense Absolute: 5
+Defense %: 0.0572
+Crit X: 7.205
+Health: 217.77999999999997
+Power: 52
+Spawn Time: 7
+AGE: 0
+
+
+Changes for PpA^0.37_Umberto
+Factor: 0.820000
+	Age Factor: 1.05
+	T_Factor: -0.230000
+		Trait Factor: -0.2
+		Tier Factor: 0
+		Random Factor: -0.03
+	X_Factor: 0
+Defense %: -0.00840
+Mitigated %: -0.01490
+New Stats: PpA^0.37_Umberto ({'Pp': 0.4})
+	**Hell's-Circle_Stone-Giants**
+xWAR: -0.402 (Rank 1261)
+Attack Damage: 51
+Attack Speed: 9
+Crit %: 0.065
+Mitigate %: 0.068
+Defense Absolute: 4
+Defense %: 0.0385
+Crit X: 7.22
+Health: 232.60999999999999
+Power: 59
+Spawn Time: 8
+AGE: 0
+
+
+Changes for C%B^-0.61_Orion
+Factor: 1.041000
+	Age Factor: 1.05
+	T_Factor: -0.009000
+		Trait Factor: 0
+		Tier Factor: 0.005
+		Random Factor: -0.014
+	X_Factor: 0
+Attack Speed: -1.00000
+Max Health: +8.88000
+Defense Absolute: 0.00000
+New Stats: C%B^-0.61_Orion ({'C%': 1.17})
+	**Hell's-Circle_Stone-Giants**
+xWAR: -3.66 (Rank 1270)
+Attack Damage: 54
+Attack Speed: 8
+Crit %: 0.063
+Mitigate %: 0.0372
+Defense Absolute: 3
+Defense %: 0.0328
+Crit X: 7.07
+Health: 225.41
+Power: 52
+Spawn Time: 8
+AGE: 0
+
+
+**Hell's-Circle_Stone-Giants** Old xWAR: 41.036
+New xWAR: 47.014
++5.9780000000000015
+
+Changes for X+-I*S_Dakota
+Factor: 1.013000
+	Age Factor: 1.05
+	T_Factor: -0.037000
+		Trait Factor: -0.005
+		Tier Factor: -0.01
+		Random Factor: -0.022
+	X_Factor: 0
+Spawn Time: -1.00000
+Power: +1.00000
+New Stats: X+-I*S_Dakota ({'X+': [41, 1], 'I*': 0.11})
+	!-Steel-Heart_Swashbucklers-!
+xWAR: 22.027 (Rank 100)
+Attack Damage: 56
+Attack Speed: 6
+Crit %: 0.074
+Mitigate %: 0.0299
+Defense Absolute: 6
+Defense %: 0.0674
+Crit X: 8.01
+Health: 226.28
+Power: 54
+Spawn Time: 6
+AGE: 0
+
+
+Changes for X+-TxB^-0.47_Ryder
+Factor: 1.027500
+	Age Factor: 1.05
+	T_Factor: -0.022500
+		Trait Factor: 0
+		Tier Factor: -0.0075
+		Random Factor: -0.015
+	X_Factor: 0
+Mitigated %: +0.00140
+Power: +1.00000
+New Stats: X+-TxB^-0.47_Ryder ({'X+': [53, 1], 'Tx': [0.28, [11, 7]]})
+	!-Steel-Heart_Swashbucklers-!
+xWAR: 19.134 (Rank 213)
+Attack Damage: 56
+Attack Speed: 6
+Crit %: 0.052
+Mitigate %: 0.0527
+Defense Absolute: 3
+Defense %: 0.0377
+Crit X: 6.73
+Health: 209.25
+Power: 54
+Spawn Time: 6
+AGE: 0
+
+
+Changes for HnC^5.71_Cassius
+Factor: 0.990000
+	Age Factor: 1.05
+	T_Factor: -0.060000
+		Trait Factor: -0.03
+		Tier Factor: 0
+		Random Factor: -0.03
+	X_Factor: 0
+Power: -1.00000
+Defense Absolute: -1.00000
+Attack Damage: 0.00000
+New Stats: HnC^5.71_Cassius ({'Hn': [13, 48, False]})
+	!-Steel-Heart_Swashbucklers-!
+xWAR: 13.94 (Rank 579)
+Attack Damage: 49
+Attack Speed: 8
+Crit %: 0.07
+Mitigate %: 0.02
+Defense Absolute: 3
+Defense %: 0.0437
+Crit X: 9.163
+Health: 229.68
+Power: 56
+Spawn Time: 7
+AGE: 0
+
+
+Changes for I*B^1.11_Paxton
+Factor: 0.920000
+	Age Factor: 0.96
+	T_Factor: -0.040000
+		Trait Factor: -0.015
+		Tier Factor: -0.01
+		Random Factor: -0.015
+	X_Factor: 0
+Mitigated %: -0.00220
+Attack Speed: 0.00000
+Max Health: -16.38000
+New Stats: I*B^1.11_Paxton ({'I*': 0.12})
+	!-Steel-Heart_Swashbucklers-!
+xWAR: 11.512 (Rank 834)
+Attack Damage: 60
+Attack Speed: 6
+Crit %: 0.052
+Mitigate %: 0.0253
+Defense Absolute: 3
+Defense %: 0.0341
+Crit X: 7.97
+Health: 188.35
+Power: 51
+Spawn Time: 6
+AGE: 0
+
+
+Changes for I*A^1.89_Sparrow
+Factor: 1.010000
+	Age Factor: 1.05
+	T_Factor: -0.040000
+		Trait Factor: -0.01
+		Tier Factor: 0
+		Random Factor: -0.03
+	X_Factor: 0
+Defense Absolute: +1.00000
+Attack Speed: -1.00000
+Critical X: +0.06400
+New Stats: I*A^1.89_Sparrow ({'I*': 0.11})
+	!-Steel-Heart_Swashbucklers-!
+xWAR: 11.489 (Rank 836)
+Attack Damage: 53
+Attack Speed: 8
+Crit %: 0.067
+Mitigate %: 0.0681
+Defense Absolute: 6
+Defense %: 0.0283
+Crit X: 6.464
+Health: 239.34
+Power: 57
+Spawn Time: 6
+AGE: 0
+
+
+Changes for C^3.31_Giselle
+Factor: 1.040500
+	Age Factor: 1.05
+	T_Factor: -0.009500
+		Trait Factor: 0
+		Tier Factor: -0.0025
+		Random Factor: -0.007
+	X_Factor: 0
+Mitigated %: +0.00280
+Critical %: +0.00850
+Spawn Time: +1.00000
+New Stats: C^3.31_Giselle ({})
+	!-Steel-Heart_Swashbucklers-!
+xWAR: -1.717 (Rank 1265)
+Attack Damage: 55
+Attack Speed: 8
+Crit %: 0.0785
+Mitigate %: 0.072
+Defense Absolute: 5
+Defense %: 0.0385
+Crit X: 9.303
+Health: 222.95
+Power: 51
+Spawn Time: 7
+AGE: 0
+
+
+!-Steel-Heart_Swashbucklers-! Old xWAR: 76.385
+New xWAR: 78.76899999999999
++2.383999999999986
+
+Season No. 1
+Average Player Change Factor: 1.016761202830188
+Of 1272 players receiving changes, 695 players improved, while 492 players got worse, and 85 did not change.
+Average PLAYER xWAR Increment: 0.2144
+Of 212 teams, 129 improved, while 83 got worse, and 0 did not change.
+Average TEAM xWAR Increment: 1.2863
+Average Attack Damage Increment: 0.4820 per player (305 total players affected).
+Average Health Increment: 2.8553 per player (315 total players affected).
+Average Critical % Increment: 0.0037 per player (305 total players affected).
+Average Critical X Increment: 0.1293 per player (333 total players affected).
+
