@@ -240,8 +240,8 @@ def main():
     start = time.time()
     # file clearing:
     clear_file(['my_teams', 'error_output', 'upsets',
-                 'team_coach_data', 'execution_time', 'playerstats', 'off_season_report', 'my_team_playerstats',
-                'my_team_results', 'comebacks', 'xWAR_tests', 'captain_off_season_report'])
+                 'team_coach_data', 'execution_time', 'off_season_report', 'my_team_playerstats',
+                'my_team_results', 'comebacks', 'captain_off_season_report'])
 
 
 
@@ -480,8 +480,6 @@ def main():
     promoted = {}
 
     for num in range(SEASONS):
-
-        clear_file('playerstats')
 
         if num >= 1:
             write_to_file(filename='my_team_results', words="\n",
@@ -1324,7 +1322,7 @@ def main():
             with open('history', 'w') as history:
                 history.write(f"Average Team xWAR: {xwar_array.mean()}, xWAR Cap: {cap}\n")
             cap_mode = 'a' if season_count > 1 else 'w'
-            with open('salary-cap-calculator', cap_mode) as cap_file:
+            with open('salary_cap_calculator', cap_mode) as cap_file:
                 cap_file.write(f"S{season_count} Average Team xWAR: {xwar_mean}\nPer Captain: {cap_xwar_mean}\nPer Player: {(xwar_mean - cap_xwar_mean)/6})\nxWAR Cap: {cap}\nStd Dev: {xwar_std}\nAverage Diff Below Cap: {avg_diff_below_cap}\nAverage Diff Above Cap: {avg_diff_above_cap}\n")
                 pct_thresh = percent_within_thresholds(xwar_array, cap, xwar_std)
                 cap_file.write(f"% of teams OVER the cap: {round((100 * sum(x > cap for x in list(xwar_array)) / len(xwar_array)), 2)}\n")
