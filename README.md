@@ -110,4 +110,52 @@ When the Universal League is over and a team is crowned a champion, a lot happen
 
 Firstly, players change between seasons. The formula is pretty complicated, so I won't go into it here, but the gist is that players generally get slightly better up until their 5th season in the league, after which they get slightly and then significantly worse before being forced to retire after their 10th season. Anomalies are built in, so sometimes a player will get significantly better or worse out of nowhere, but this happens less than 5% of the time. Captains also change in a similar way.  
 
-More importantly, teams are allowed to get rid of some of their players and replace them with new ones, either freshly created or from another team which got rid of them first. There are several different drafts, each one being different in its makeup of players and eligible teams.
+More importantly, teams are allowed to get rid of some of their players and replace them with new ones, either freshly created or from another team which got rid of them first. There are several different drafts, each one being different in its makeup of players and eligible teams. The teams which participate in each draft are as follows: 
+
+Universal Draft: 20 teams which will start in the Universal League the following season, going from 20th to 1st  
+Regional Drafts: teams which started the season in a regional league and did not make it to the Universal League. Each region has a separate draft.  
+Void Draft: 16 teams demoted from the Universal League which will start the following season in Universal Qualifying and the 32 teams which are eliminated in the Universal Qualifying stage (20 in season 1). Starts with the worst universal qualifying teams and ends with the 21st place Universal League team.  
+Second Round Draft: random order made up of an indeterminate number of teams - 1 in 3 chance for team eliminated in Universal Qualifying, 2 in 3 for team eliminated in Universal Play-In (7th-10th), and roughly 1 in 2 for a team which missed the regional playoffs.  
+Third Round Draft: semi-random order made up of an indeterminate number of teams - chance for regional teams ranking 5th to 22nd ranging from 8% to 30% based on finishing seed followed by all teams which finished 21st to 36th in the Universal League  
+Free Agent Draft: all teams who started in a regional league and did not play in the Universal League at an point during the season. Unlike the others, this draft class is made of all players below age 10 which were cut from a team.  
+
+It should be noted that, while Captains are not treated like players in any other sense, they can be drafted if it is the best option for a team.  
+
+But that raises the question: what exactly determines a good draft pick from a bad one? That brings us to the most important and coolest part of this entire code: **xWAR**.
+
+**What is xWAR?**
+
+xWAR, standing for Expected Wins Against Replacement, is a comprehensive player/captain metric which represents the percentage of games a team would win with this player in the lineup over and against a replacement-level player with all average stats. It was inspired by baseball's Wins Against Replacement stat, which tracks performance over the course of a player's season or career and estimates how many wins their team gained by having them instead of a replacement-level player. xWAR, though, doesn't use performance stats, it estimates it directly from the ten statistics making up a player object. Here's how I did it:  
+
+Take a random player, put him in a random team. The team plays 100 matches against 50 random opponents, and the % winrate of games (not matches) in which the selected player was in the lineup is stored as a variable. We then put a replacement-level player with no traits and all average stats into the same lineup, they play the same 100 matches against the same 50 opponents, and their % winrate is stored as another variable. Subtract the test player's winrate from the replacement-level player winrate, and we get a single instance of rWAR (Real Wins Against Replacement). However, some players are much better in certain team systems than others, so I do this five separate times for every player I test, then I enter the average rWAR along with the player's traits and stats into a database. I did this literally 2000 times, which took several days, before moving on.  
+
+I then took this massive dataset and trained a LightGBM model on it, with the features being the player's traits and stats, and the target being rWAR. Rather than picking random parameters for the model, I decided to use an Optuna test to run 100 trials with 100 different sets of parameters for the model and return the parameters of the model with the best R^2 value. I then trained the model on the dataset with the best parameters the Optuna test could find and imported the model to the project. Every time a player is created, and every time their stats change at the end of a season, I tell the model to predict their rWAR, and the value it returns is saved as the player's xWAR, which should represent the % game winrate a team will gain by having this player over a replacement-level player.  
+
+This is critical to the whole game. As mentioned earlier, teams set their lineups so that the best players play the most and the worst players play the least, and this statistic determines who those players are. (Note that there is one limitation: the most that one player can play is 5/6 lineups)  
+
+It also determines which players to draft and which ones to get rid of, which brings me to the next interesting thing: the xWAR cap, which is exactly what it sounds like: no team can draft a player which would bring them above 130 xWAR. While this very rarely is even in play, it forces teams close to the cap to either pick a player which is worse than the best remaining in the draft class or terminate a player which is better than their worst player. This is to prevent teams from dominating for too long, but again, with the way that the drafts are setup, this is rarely a problem.  
+
+**What else is there to know?**
+
+The above will explain just about everything. Once you go to a document like history or my_teams, you will see the process much more clearly and things will start to click into place. Keep in mind that teams with ** or !- in their name are "yours", so root for them to win!  
+
+The last semi-important thing that I have not explained are player names and traits. A player name has four portions: their trait tags (if applicable), their tier (S, A, B, or C, which determines the range in which their statistics can fall upon creation), an amp (amplifies different stats for different tiers; see Player_Creator.py for details), and a regular human name.  
+
+Traits, as mentioned above, are special abilities that certain players have. Players can have a primary trait, secondary trait, both, or neither. Each trait has a "multiplier", which is admittedly poorly named, which determines specific things for each trait as you will see below. The possibilities, and their respective tags which show in the name, are as follows:  
+
+**Primary Traits**
+
+Splitter (Sp): 30-35% chance to attack the next tick after attacking  
+Exploder (X+): Upon death, deals 40-60 damage to all enemies
+Healer (Hn): Every 11-13 ticks, heals the team for a total of 36-54 health divided equally among living players
+Flasher (Fl): Upon attacking, has a 7.5-11.5% chance to prevent the affected enemy from attacking for 10-11 ticks  
+Reflector (R#): Upon mitigating damage, the damage is dealt back to the enemy. If an enemy attack is NOT mitigated, there is an additional 5-10% chance to mitigate the damage and reflect it back to the enemy.  
+
+**Secondary Traits**
+
+Playoff Performer (Pp): minimum +2 power in the playoffs, 30-50% chance to gain an additional +2-+5  
+Clutch (C%): 1.1-1.3x power and attack damage after the 52nd tick, or after the 40th tick if the game is within 100 points  
+Inconsistent (I*): At the beginning of each game, 5-15% chance to have power and attack damage multiplied by 1.05-1.25 (random, not based on trait multiplier), same chance to have power and attack damage multiplied by 0.7 to 0.9 (also random)  
+Toxic (Tx): Upon attacking, has a 25-33% chance to apply Toxin to the enemy. Toxin damages the enemy for 10-13 damage every tick for 6-8 ticks.  
+Undead (U-): Upon death, has a 25-35% chance to revive with 56%-78% health (2.25 * trait multiplier)  
+Vampire (V.): Upon attacking, has a 40-55% chance to heal for 50-70% of damage dealt (random, not based on multiplier)
