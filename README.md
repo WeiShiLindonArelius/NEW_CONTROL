@@ -146,8 +146,8 @@ Traits, as mentioned above, are special abilities that certain players have. Pla
 **Primary Traits**
 
 Splitter (Sp): 30-35% chance to attack the next tick after attacking  
-Exploder (X+): Upon death, deals 40-60 damage to all enemies
-Healer (Hn): Every 11-13 ticks, heals the team for a total of 36-54 health divided equally among living players
+Exploder (X+): Upon death, deals 40-60 damage to all enemies  
+Healer (Hn): Every 11-13 ticks, heals the team for a total of 36-54 health divided equally among living players  
 Flasher (Fl): Upon attacking, has a 7.5-11.5% chance to prevent the affected enemy from attacking for 10-11 ticks  
 Reflector (R#): Upon mitigating damage, the damage is dealt back to the enemy. If an enemy attack is NOT mitigated, there is an additional 5-10% chance to mitigate the damage and reflect it back to the enemy.  
 
@@ -159,3 +159,20 @@ Inconsistent (I*): At the beginning of each game, 5-15% chance to have power and
 Toxic (Tx): Upon attacking, has a 25-33% chance to apply Toxin to the enemy. Toxin damages the enemy for 10-13 damage every tick for 6-8 ticks.  
 Undead (U-): Upon death, has a 25-35% chance to revive with 56%-78% health (2.25 * trait multiplier)  
 Vampire (V.): Upon attacking, has a 40-55% chance to heal for 50-70% of damage dealt (random, not based on multiplier)
+
+**Which traits are the best?**
+
+After training the xWAR model, I used SHAP analysis to see which traits affected xWAR the most. With the exception of Playoff Performer, which had no impact because none of the test games were playoff games, each one had a very positive impact. Each one is pretty close, though there is a decent gap between Healer and the rest. Here they are ranked by average model output increase:  
+
+1. Healer
+2. Exploder
+3. Flasher
+4. Inconsistent
+5. Splitter
+6. Clutch
+7. Toxic
+8. Reflector
+9. Vampire
+10. Undead
+
+And that's it! If there are any questions, feel free to DM me on Instagram at choward_04 or send a message to my LinkedIn at https://www.linkedin.com/in/carterh/ . Thank you for reading, and I will be sure to update this as I add new things to this ever-growing passion project.
