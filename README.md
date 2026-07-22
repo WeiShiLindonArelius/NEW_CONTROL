@@ -17,30 +17,30 @@ Each **team** is made up of six normal players, one captain, and one coach. The 
 A **tick** is a unit of time in the game. Each game is made up of 72 ticks.  
   
 A **player** object is a collection of ten statistics:  
-Power (x points scored for each tick alive) - integer  
-Attack Speed (player attacks every x ticks) - integer  
-Attack Damage (x damage dealt to a random living player with each attack) - float  
-Critical Chance (x chance to land a critical hit with a given attack) - float  
-Critical Multiplier (base damage multiplied by x for each critical hit) - float  
-Health (x damage can be taken before death) - float  
-Spawn Time (player returns with full health x ticks after dying) - integer  
-Mitigation Chance (x chance to take no damage from an incoming attack) - float  
-Defense % (reduces all incoming attack damage by x%) - float  
-Defense Absolute (reduces all incoming attack damage by x) - integer  
+Power (integer between 50 and 59 inclusive) - team scores x points scored for each tick alive  
+Attack Speed (integer between 6 and 9 inclusive) - player attacks every x ticks  
+Attack Damage (float between 49 and 63 inclusive) - x damage dealt to a random living player with each attack  
+Critical Chance (float between 0.05 and 0.075 inclusive) - 100x% chance to land a critical hit with a given attack  
+Critical Multiplier (float between 6 and 9 inclusive) - base damage multiplied by x for each critical hit  
+Health (float between 190 and 240 inclusive) - x damage can be taken before death  
+Spawn Time (integer between 6 and 8 inclusive) - player returns with full health x ticks after dying  
+Mitigation Chance (float between 0.0175 and 0.0899 inclusive) - 100x% chance to take no damage from an incoming attack  
+Defense % (float between 0.025 and 0.075 inclusive) - reduces all incoming attack damage by 100x%  
+Defense Absolute (integer between 2 and 8 inclusive) - reduces all incoming attack damage by x  
 Players can also have one of twelve primary and/or secondary special traits (one, or both, or neither), but I will get into that later.  
   
 A **captain** object takes a cut of all incoming damage and boosts the team while alive. Unlike players, they do not respawn after death.  
 They are made of five statistics:  
-Damage Taken (x% of all incoming damage is absorbed by the captain)  
-Max Health (x damage can be taken before death)  
-Attack Damage Bonus (all player attack damage multiplied by x while alive)  
-Critical Damage Bonus (all player critical attack damage multiplied by x while alive)  
-Power Bonus (all player power incremented by x while alive)  
+Damage Taken (float between 0.0925 and 0.1125 inclusive) - 100x% of all incoming attack damage is absorbed by the captain  
+Max Health (integer between 90 and 101 inclusive) - x damage can be taken before death  
+Attack Damage Bonus (float between 1.1 and 1.25 inclusive) - all player attack damage multiplied by x while alive  
+Critical Damage Bonus (float between 1.25 and 1.5 inclusive) - all player critical attack damage multiplied by x while alive  
+Power Bonus (float between 0.25 and 0.7 inclusive) - all player power incremented by x while alive  
   
 Finally, **coach** objects boost certain players and traits for the entire game. They have four attributes.  
-Lineup Modifier (changes the order or makeup of lineups within each match, more later)  
-Slots/Attributes Amplified (amplifies one offensive and one defensve statistic for one, two, or three players on the team)  
-Trait Amplified (amplifies special trait effects for all players having a given trait)  
+Lineup Modifier - changes the order or makeup of lineups within each match (see text file lineup_mod_key)  
+Slots/Attributes Amplified - amplifies one offensive and one defensve statistic for one, two, or three players on the team (more later)  
+Trait Amplified - amplifies special trait effects for all players having a given trait  
 
 **How does a match work?**
 
@@ -70,8 +70,44 @@ The simulation starts with a league of 26 teams called the Universal League. Thi
 
 The teams play against one another once each, and are ranked based on their performance. As mentioned before, wins earn three points, draws earn one point, and losses earn zero. The standings of their season show in the following format:
 
-Region_{TeamName}: Game Record (match record) + [0N(game record of 0N lineup), 1N(game record of 1N lineup),...5N(game record of 7N lineup)] [[total point differential]] where the specific records of the team's lineups are green
+Region_{TeamName}: Match Record (game record) + [0N(game record of 0N lineup), 1N(game record of 1N lineup),...5N(game record of 5N lineup)] [[total point differential]] where the specific records of the team's lineups are green.  
 
-Winning_Team(seed) defeat Losing_Team by a score of X-Y [0N(w-l), 1N(w-l)...7N(w-l)] (P of Q [K%] reached a tiebreak, and N of M [L%] were 5-0 sweeps.)
+The names of the teams are color-coded to show the result of their season. In the first Universal League, the top 20 teams remain in the Universal League and the other six are relegated to the qualifying round at the end of the season. 
 
-Where X, Y, w, l, P, Q, K, N, M, and L are placeholder variables and a tiebreak refers to a match in which the 8N lineup was played
+After the first iteration of the Universal League, which is really just to get things started and determine the worst of the original Universal teams, we go into the regional leagues.
+
+Regional leagues contain 22 teams. They play a 1-round round robin, and the top 12 teams make the double elimination playoffs. The playoffs comprise of long series of matches, where a team must beat their opponent a certain number of times by a certain amount. Once the number of matches played exceeds 2.5 times the original victory threshold, the necessary margin of victory decreases as the teams continue to play. After a number of matches equal to the original margin of victory are played, that margin decreases by 1. The margin cannot be decreased by more than 40%. The required margin and threshold increase as the playoffs progress.  
+
+To give an example, Team 1 is playing Team 2 and the threshold is 50 matches with a required margin of victory of 10. If the score reaches 65-60 (125 total games), the required margin of victory would decrease by 1. Should neither team break through and get ahead by the required margin of victory, it would lock at 6 and go on infinitely until one team is ahead by 6.  
+
+Playoff series are printed as follows: Winning_Team(seed) defeat Losing_Team(seed) by a score of W-L [0N(w-l), 1N(w-l)...5N(w-l)] (X of Y [P%] reached a tiebreak, and N of M [L%] were 4-0 sweeps.)  
+Where X, Y, P, N, M, and L are placeholder variables.
+
+Following the end of a region's playoffs, teams are ranked based on where they were eliminated. Within the pools with multiple teams, the ranks are decided by original seed going into the playoffs.  
+Knocked out in Round 1 Loser Bracket: 9th, 10th, 11th, 12th  
+Knocked out in Round 2 Loser Bracket: 7th, 8th  
+Knocked out in Round 3 Loser Bracket: 5th, 6th  
+Lost the Loser Bracket Finals: 4th  
+Lost the Winner Bracket Loser VS Loser Bracket Champ Match: 3rd  
+Lost the Grand Finals: 2nd  
+Won the Grand Finals: 1st  
+
+8 regions go through this process, each named after regions in a fantasy world in books I've written: Darkwing, Shining Core, Diamond Sea, Web of Nations, Ice Wall, Candyland, Hell's Circle, Steel Heart  
+
+After each region is done, we move on to the qualifying rounds where teams in the top 8 of their respective regions have a chance to make it to the Universal League.
+
+The first qualifying round is the Last Stand, made up of teams which placed 5th through 8th in their regions. Teams are sorted into eight groups of four. Each group has one 5th place finisher, one 6th place finisher, one 7th place finisher, and one 8th place finisher. The groups are random with the only restriction being that two teams from the same region can never be in the same group. Each team plays each other team in their group 15 times, and the top two of each group move onto the next stage.  
+
+The next stage is the Pre-Qualifying, made up of teams which advanced from the Last Stand and those which finished 2nd through 4th in their regions. Teams are sorted into four groups of ten. Each group has one 2nd place finisher, one 3rd place finisher, one 4th place finisher, and two random teams that advanced from the Last Stand. The groups are random beyond that with the only other restriction being that no more than two teams from the same region can be in the same group.  
+
+Finally, the Universal Qualifying. In season 1, with only three teams being demoted from the original 26-team Universal League, teams are split into two groups of 19. Each group has three teams demoted from the Universal League, four random 1st place regional finishers, and 12 random teams which advanced from the Pre-Qualifying. The Universal demotees are split to ensure fairness: 26th, 24th, and 21st go to Group One, and 25th, 23rd, and 22nd go to Group Two. The same principle applies in later seasons when 16 teams are demoted from the Universal League to Universal Qualifying. The teams advancing from Pre-Qualifying are split up in a similar manner.  
+
+The top six teams of each Universal Qualifying group automatically advance to the 36-team Universal League, joining the 20 original teams that were not demoted. The 7th place finisher of each group plays the 10th place finisher of the other group starting with a 6-0 lead, and the 8th place finisher of each group plays the 9th place finisher of the other group starting with a 3-0 lead, and the winners of these four play-in series advance to the Universal League.  
+
+From season 1 on out, the Universal League contains 36 teams. The premier league of this game is by far the longest, with six whole rounds of round robin play before the playoffs. Teams finishing 1st through 8th make the single elimination playoff bracket, and teams finishing 9th through 16th will remain in the Universal League the following season. Teams finishing 17th through 24th must play a relegation series for their spot in next season's Universal League. 17th place plays 24th place, 18th plays 23rd, 19th plays 22nd, and 20th plays 21st. The teams with the higher seed are given a head start equal to the regular season point differential between them and their opponent. After this, the playoff teams play a simple single elimination bracket with extremely long series to ensure the best team wins.  
+
+When the Universal League is over and a team is crowned a champion, a lot happens between seasons before we go back to the regional leagues.  
+
+Firstly, players change between seasons. The formula is pretty complicated, so I won't go into it here, but the gist is that players generally get slightly better up until their 5th season in the league, after which they get slightly and then significantly worse before being forced to retire after their 10th season. Anomalies are built in, so sometimes a player will get significantly better or worse out of nowhere, but this happens less than 5% of the time. Captains also change in a similar way.  
+
+More importantly, teams are allowed to get rid of some of their players and replace them with new ones, either freshly created or from another team which got rid of them first. There are several different drafts, each one being different in its makeup of players and eligible teams.
